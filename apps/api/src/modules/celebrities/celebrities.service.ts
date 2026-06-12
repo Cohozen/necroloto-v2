@@ -1,13 +1,19 @@
 import { calculPointByCelebrity, deathYear } from '@necroloto/shared';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
+import { WikidataService, type WikidataSummary } from '../wikidata/wikidata.service';
 import { CreateCelebrityDto } from './dto/create-celebrity.dto';
 import { SearchCelebrityDto } from './dto/search-celebrity.dto';
 import { UpdateCelebrityDto } from './dto/update-celebrity.dto';
 
 @Injectable()
 export class CelebritiesService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        private wikidata: WikidataService,
+        private storage: StorageService,
+    ) {}
 
     async create(createCelebrityDto: CreateCelebrityDto) {
         const celebrity = await this.prisma.celebrity.create({
@@ -95,6 +101,68 @@ export class CelebritiesService {
             where: { id },
             data: { photo },
         });
+    }
+
+    /** Wikidata candidates for a name, for admin disambiguation. */
+    searchWikidata(name: string): Promise<WikidataSummary[]> {
+        return this.wikidata.searchByName(name);
+    }
+
+    /**
+     * Enriches a celebrity from Wikidata: fills birth/death/photo and stores the
+     * linked `wikidataId`. The entity is taken from `wikidataId` (explicit choice),
+     * else the celebrity's existing link, else the best match for its name.
+     * Wikidata values win over existing ones; missing values are left untouched.
+     * Re-runnable; recomputes points afterwards (a death may now be known).
+     */
+    async enrich(id: string, wikidataId?: string) {
+        const celebrity = await this.prisma.celebrity.findUnique({ where: { id } });
+        if (!celebrity) throw new NotFoundException('Celebrity not found');
+
+        const qid = wikidataId ?? celebrity.wikidataId ?? undefined;
+        const summary = qid
+            ? await this.wikidata.getEntity(qid)
+            : (await this.wikidata.searchByName(celebrity.name)).find((c) => c.isHuman);
+        if (!summary) {
+            throw new NotFoundException('No Wikidata match found');
+        }
+
+        const photo = summary.photoFilename
+            ? await this.importPhoto(id, summary.photoFilename)
+            : celebrity.photo;
+
+        const updated = await this.prisma.celebrity.update({
+            where: { id },
+            data: {
+                wikidataId: summary.wikidataId,
+                birth: summary.birth ?? celebrity.birth,
+                death: summary.death ?? celebrity.death,
+                photo,
+            },
+        });
+        await this.recalculatePoints(id);
+        return updated;
+    }
+
+    /**
+     * Downloads a Wikimedia Commons image and re-hosts it in our bucket. Falls
+     * back to the Commons URL if storage is disabled or the download fails.
+     */
+    private async importPhoto(celebrityId: string, filename: string): Promise<string> {
+        const commonsUrl = this.wikidata.photoUrl(filename);
+        if (!this.storage.enabled) return commonsUrl;
+        try {
+            const res = await fetch(commonsUrl, { redirect: 'follow' });
+            if (!res.ok) return commonsUrl;
+            const buffer = Buffer.from(await res.arrayBuffer());
+            const mimetype = res.headers.get('content-type') ?? 'image/jpeg';
+            return await this.storage.uploadCelebrityPhoto(celebrityId, {
+                buffer,
+                mimetype,
+            });
+        } catch {
+            return commonsUrl;
+        }
     }
 
     async search(searchCelebrityDto: SearchCelebrityDto) {

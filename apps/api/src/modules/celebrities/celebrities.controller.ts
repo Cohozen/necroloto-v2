@@ -9,6 +9,7 @@ import {
     ParseFilePipe,
     Patch,
     Post,
+    Query,
     UploadedFile,
     UseGuards,
     UseInterceptors,
@@ -19,6 +20,7 @@ import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
 import { StorageService } from '../storage/storage.service';
 import { CelebritiesService } from './celebrities.service';
 import { CreateCelebrityDto } from './dto/create-celebrity.dto';
+import { EnrichCelebrityDto } from './dto/enrich-celebrity.dto';
 import { SearchCelebrityDto } from './dto/search-celebrity.dto';
 import { UpdateCelebrityDto } from './dto/update-celebrity.dto';
 
@@ -65,6 +67,20 @@ export class CelebritiesController {
     @UseGuards(AdminGuard)
     merge(@Param('sourceId') sourceId: string, @Param('targetId') targetId: string) {
         return this.celebritiesService.merge(sourceId, targetId);
+    }
+
+    // Admin-only: Wikidata candidates for a name (disambiguation before enrich).
+    @Get('wikidata/search')
+    @UseGuards(AdminGuard)
+    searchWikidata(@Query('name') name: string) {
+        return this.celebritiesService.searchWikidata(name);
+    }
+
+    // Admin-only: fill birth/death/photo from Wikidata and link the entity.
+    @Post(':id/enrich')
+    @UseGuards(AdminGuard)
+    enrich(@Param('id') id: string, @Body() dto: EnrichCelebrityDto) {
+        return this.celebritiesService.enrich(id, dto.wikidataId);
     }
 
     @Get()
