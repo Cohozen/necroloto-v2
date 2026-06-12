@@ -7,8 +7,15 @@ import {
   Param,
   Delete,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CelebritiesService } from './celebrities.service';
+import { StorageService } from '../storage/storage.service';
 import { CreateCelebrityDto } from './dto/create-celebrity.dto';
 import { UpdateCelebrityDto } from './dto/update-celebrity.dto';
 import { SearchCelebrityDto } from './dto/search-celebrity.dto';
@@ -18,7 +25,30 @@ import { AdminGuard } from '../auth/guards/admin.guard';
 @UseGuards(ClerkAuthGuard)
 @Controller('celebrities')
 export class CelebritiesController {
-  constructor(private readonly celebritiesService: CelebritiesService) {}
+  constructor(
+    private readonly celebritiesService: CelebritiesService,
+    private readonly storage: StorageService,
+  ) {}
+
+  // Admin-only: upload/replace a celebrity photo (multipart field "file").
+  @Post(':id/photo')
+  @UseGuards(AdminGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadPhoto(
+    @Param('id') id: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /^image\// }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    const url = await this.storage.uploadCelebrityPhoto(id, file);
+    return this.celebritiesService.setPhoto(id, url);
+  }
 
   @Post()
   @UseGuards(AdminGuard)

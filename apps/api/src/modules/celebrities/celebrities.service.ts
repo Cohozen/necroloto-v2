@@ -89,6 +89,14 @@ export class CelebritiesService {
     });
   }
 
+  /** Updates only the photo URL (no scoring recalculation needed). */
+  async setPhoto(id: string, photo: string) {
+    return this.prisma.celebrity.update({
+      where: { id },
+      data: { photo },
+    });
+  }
+
   async search(searchCelebrityDto: SearchCelebrityDto) {
     const { name, isAlive, birthYear } = searchCelebrityDto;
 
