@@ -52,6 +52,7 @@ model Celebrity {
   birth            DateTime?          @db.Date
   death            DateTime?          @db.Date
   photo            String?
+  wikidataId       String?            @unique
   CelebritiesOnBet CelebritiesOnBet[]
 }
 
