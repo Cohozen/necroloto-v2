@@ -1,0 +1,20 @@
+# Reinstalled / regenerated inside the image
+**/node_modules
+**/dist
+**/generated
+**/.turbo
+
+# Never ship secrets — Railway provides env vars at runtime
+**/.env
+**/.env.*
+
+# VCS / editor / misc
+.git
+.idea
+.vscode
+**/*.log
+.DS_Store
+
+# Other apps not needed to build the API
+apps/web
+apps/mobile
