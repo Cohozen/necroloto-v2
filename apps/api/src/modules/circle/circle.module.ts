@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { CircleService } from './circle.service';
-import { CircleController } from './circle.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
+import { CircleController } from './circle.controller';
+import { CircleService } from './circle.service';
 
 @Module({
   imports: [PrismaModule],

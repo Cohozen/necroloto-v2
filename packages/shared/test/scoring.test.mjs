@@ -1,9 +1,9 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { test } from 'node:test';
 import {
   ageInYears,
-  deathYear,
   calculPointByCelebrity,
+  deathYear,
 } from '../dist/index.js';
 
 const d = (s) => new Date(s); // ISO strings parse as UTC midnight

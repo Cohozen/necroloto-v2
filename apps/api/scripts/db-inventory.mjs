@@ -33,14 +33,18 @@ try {
      WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`,
   );
   const existingNames = new Set(existing.map((r) => r.table_name));
-  console.log(`Public tables found: ${[...existingNames].sort().join(', ') || '(none)'}`);
+  console.log(
+    `Public tables found: ${[...existingNames].sort().join(', ') || '(none)'}`,
+  );
 
   for (const t of TABLES) {
     if (!existingNames.has(t)) {
       console.log(`  ${t.padEnd(18)} : (absent)`);
       continue;
     }
-    const { rows } = await client.query(`SELECT COUNT(*)::int AS c FROM "${t}"`);
+    const { rows } = await client.query(
+      `SELECT COUNT(*)::int AS c FROM "${t}"`,
+    );
     console.log(`  ${t.padEnd(18)} : ${rows[0].c}`);
   }
 } catch (err) {

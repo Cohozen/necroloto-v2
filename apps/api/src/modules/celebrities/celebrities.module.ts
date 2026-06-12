@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { CelebritiesService } from './celebrities.service';
-import { CelebritiesController } from './celebrities.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { StorageModule } from '../storage/storage.module';
+import { CelebritiesController } from './celebrities.controller';
+import { CelebritiesService } from './celebrities.service';
 
 @Module({
   imports: [PrismaModule, StorageModule],

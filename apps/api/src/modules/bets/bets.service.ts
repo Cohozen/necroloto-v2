@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CelebritiesService } from '../celebrities/celebrities.service';
-import { CreateBetDto } from './dto/create-bet.dto';
-import { UpdateBetDto } from './dto/update-bet.dto';
 import { AddCelebrityToBetDto } from './dto/add-celebrity-to-bet.dto';
+import { CreateBetDto } from './dto/create-bet.dto';
 import { SearchBetDto } from './dto/search-bet.dto';
+import { UpdateBetDto } from './dto/update-bet.dto';
 import { UpdatePointsDto } from './dto/update-points.dto';
 
 export type SortByRank = 'points' | 'death';
@@ -126,7 +126,8 @@ export class BetsService {
 
     let currentRank = 1;
     return sorted.map((bet, index) => {
-      if (index > 0 && value(bet) !== value(sorted[index - 1])) currentRank += 1;
+      if (index > 0 && value(bet) !== value(sorted[index - 1]))
+        currentRank += 1;
       return { ...bet, rank: currentRank };
     });
   }

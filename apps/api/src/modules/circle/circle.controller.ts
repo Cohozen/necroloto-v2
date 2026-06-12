@@ -1,19 +1,19 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   UseGuards,
 } from '@nestjs/common';
+import { CircleAdminGuard } from '../auth/guards/circle-admin.guard';
+import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
 import { CircleService } from './circle.service';
+import { AddMemberDto } from './dto/add-member.dto';
 import { CreateCircleDto } from './dto/create-circle.dto';
 import { UpdateCircleDto } from './dto/update-circle.dto';
-import { AddMemberDto } from './dto/add-member.dto';
-import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
-import { CircleAdminGuard } from '../auth/guards/circle-admin.guard';
 
 @UseGuards(ClerkAuthGuard)
 @Controller('circle')

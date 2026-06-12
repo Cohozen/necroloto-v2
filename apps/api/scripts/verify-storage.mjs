@@ -30,7 +30,10 @@ const ok = (cond, label) => {
 };
 
 try {
-  ok(storage.enabled, 'StorageService is configured (URL + secret key present)');
+  ok(
+    storage.enabled,
+    'StorageService is configured (URL + secret key present)',
+  );
   if (!storage.enabled) throw new Error('Storage not configured');
 
   const path = `test/upload-check-${Date.now()}`;
@@ -39,7 +42,10 @@ try {
     mimetype: 'image/png',
   });
   console.log(`     uploaded -> ${url}`);
-  ok(typeof url === 'string' && url.includes('/storage/v1/object/public/'), 'public URL returned');
+  ok(
+    typeof url === 'string' && url.includes('/storage/v1/object/public/'),
+    'public URL returned',
+  );
 
   const res = await fetch(url);
   ok(res.status === 200, `public URL reachable (HTTP ${res.status})`);
@@ -50,7 +56,10 @@ try {
 
   await storage.deleteImage(path);
   const after = await fetch(url.split('?')[0]);
-  ok(after.status === 400 || after.status === 404, `deleted (HTTP ${after.status} after remove)`);
+  ok(
+    after.status === 400 || after.status === 404,
+    `deleted (HTTP ${after.status} after remove)`,
+  );
 
   console.log(failures === 0 ? '\n✅ Storage OK' : `\n❌ ${failures} failed`);
   process.exitCode = failures === 0 ? 0 : 1;

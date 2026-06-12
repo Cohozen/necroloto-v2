@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
 import { calculPointByCelebrity, deathYear } from '@necroloto/shared';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCelebrityDto } from './dto/create-celebrity.dto';
-import { UpdateCelebrityDto } from './dto/update-celebrity.dto';
 import { SearchCelebrityDto } from './dto/search-celebrity.dto';
+import { UpdateCelebrityDto } from './dto/update-celebrity.dto';
 
 @Injectable()
 export class CelebritiesService {

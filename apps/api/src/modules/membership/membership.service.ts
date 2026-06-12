@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateMembershipDto } from './dto/create-membership.dto';
-import { UpdateMembershipDto } from './dto/update-membership.dto';
 import { SearchMembershipDto } from './dto/search-membership.dto';
+import { UpdateMembershipDto } from './dto/update-membership.dto';
 
 @Injectable()
 export class MembershipService {

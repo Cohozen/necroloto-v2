@@ -1,25 +1,25 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
+  Controller,
   DefaultValuePipe,
+  Delete,
+  Get,
+  Param,
   ParseIntPipe,
+  Patch,
+  Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
-import { BetsService } from './bets.service';
-import type { SortByRank } from './bets.service';
-import { CreateBetDto } from './dto/create-bet.dto';
-import { UpdateBetDto } from './dto/update-bet.dto';
-import { AddCelebrityToBetDto } from './dto/add-celebrity-to-bet.dto';
-import { SearchBetDto } from './dto/search-bet.dto';
-import { UpdatePointsDto } from './dto/update-points.dto';
-import { ReplaceCelebritiesDto } from './dto/replace-celebrities.dto';
 import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
+import type { SortByRank } from './bets.service';
+import { BetsService } from './bets.service';
+import { AddCelebrityToBetDto } from './dto/add-celebrity-to-bet.dto';
+import { CreateBetDto } from './dto/create-bet.dto';
+import { ReplaceCelebritiesDto } from './dto/replace-celebrities.dto';
+import { SearchBetDto } from './dto/search-bet.dto';
+import { UpdateBetDto } from './dto/update-bet.dto';
+import { UpdatePointsDto } from './dto/update-points.dto';
 
 @UseGuards(ClerkAuthGuard)
 @Controller('bets')
@@ -59,7 +59,11 @@ export class BetsController {
   @Get('circle/:circleId/rank')
   rank(
     @Param('circleId') circleId: string,
-    @Query('year', new DefaultValuePipe(new Date().getUTCFullYear()), ParseIntPipe)
+    @Query(
+      'year',
+      new DefaultValuePipe(new Date().getUTCFullYear()),
+      ParseIntPipe,
+    )
     year: number,
     @Query('sort', new DefaultValuePipe('points')) sort: SortByRank,
   ) {
@@ -70,7 +74,11 @@ export class BetsController {
   position(
     @Param('circleId') circleId: string,
     @Param('userId') userId: string,
-    @Query('year', new DefaultValuePipe(new Date().getUTCFullYear()), ParseIntPipe)
+    @Query(
+      'year',
+      new DefaultValuePipe(new Date().getUTCFullYear()),
+      ParseIntPipe,
+    )
     year: number,
     @Query('sort', new DefaultValuePipe('points')) sort: SortByRank,
   ) {

@@ -17,9 +17,18 @@ pg.types.setTypeParser(1184, (v) => v); // timestamptz
 const DRY_RUN = process.argv.includes('--dry-run');
 
 // Tables in foreign-key-safe insert order.
-const ORDER = ['User', 'Celebrity', 'Circle', 'Bet', 'CelebritiesOnBet', 'Membership'];
+const ORDER = [
+  'User',
+  'Celebrity',
+  'Circle',
+  'Bet',
+  'CelebritiesOnBet',
+  'Membership',
+];
 
-const source = new pg.Client({ connectionString: process.env.NEON_DATABASE_URL });
+const source = new pg.Client({
+  connectionString: process.env.NEON_DATABASE_URL,
+});
 const target = new pg.Client({ connectionString: process.env.DATABASE_URL });
 
 const CHUNK = 100;
@@ -75,7 +84,9 @@ try {
     console.log(
       `  ${table.padEnd(18)} source=${String(rows.length).padStart(5)}  target=${String(
         targetCount,
-      ).padStart(5)}  ${!DRY_RUN && rows.length === targetCount ? 'OK' : DRY_RUN ? '(dry-run)' : 'MISMATCH'}`,
+      ).padStart(
+        5,
+      )}  ${!DRY_RUN && rows.length === targetCount ? 'OK' : DRY_RUN ? '(dry-run)' : 'MISMATCH'}`,
     );
   }
 

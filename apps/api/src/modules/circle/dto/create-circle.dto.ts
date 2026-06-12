@@ -1,4 +1,4 @@
-import { CircleVisibility, CircleStatus } from '@/prisma/enums';
+import { CircleStatus, CircleVisibility } from '@/prisma/enums';
 
 export class CreateCircleDto {
   name: string;

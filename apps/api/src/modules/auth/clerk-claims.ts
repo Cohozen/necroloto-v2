@@ -13,7 +13,9 @@ export interface ClerkClaims {
   [key: string]: unknown;
 }
 
-export function getClerkId(request: { user?: ClerkClaims }): string | undefined {
+export function getClerkId(request: {
+  user?: ClerkClaims;
+}): string | undefined {
   return request.user?.sub;
 }
 
@@ -23,7 +25,8 @@ export function getRolesFromClaims(claims: ClerkClaims | undefined): string[] {
     claims?.metadata?.roles ??
     claims?.publicMetadata?.roles ??
     claims?.public_metadata?.roles;
-  if (Array.isArray(raw)) return raw.filter((r): r is string => typeof r === 'string');
+  if (Array.isArray(raw))
+    return raw.filter((r): r is string => typeof r === 'string');
   return [];
 }
 

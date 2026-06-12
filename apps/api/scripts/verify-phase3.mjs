@@ -4,15 +4,11 @@
 import 'reflect-metadata';
 import 'dotenv/config';
 import { createRequire } from 'node:module';
-import assert from 'node:assert/strict';
 
 const require = createRequire(import.meta.url);
 const { NestFactory } = require('@nestjs/core');
 const { AppModule } = require('../dist/src/app.module.js');
 const { BetsService } = require('../dist/src/modules/bets/bets.service.js');
-const {
-  CelebritiesService,
-} = require('../dist/src/modules/celebrities/celebrities.service.js');
 const { PrismaService } = require('../dist/src/prisma/prisma.service.js');
 const { calculPointByCelebrity, deathYear } = require('@necroloto/shared');
 
@@ -21,7 +17,6 @@ const app = await NestFactory.createApplicationContext(AppModule, {
 });
 const prisma = app.get(PrismaService);
 const bets = app.get(BetsService);
-const celebrities = app.get(CelebritiesService);
 
 let failures = 0;
 const ok = (cond, label) => {
@@ -43,7 +38,9 @@ try {
     let expected = 0;
     if (birth && death) {
       expected =
-        l.bet.year === deathYear(death) ? calculPointByCelebrity(birth, death) : 0;
+        l.bet.year === deathYear(death)
+          ? calculPointByCelebrity(birth, death)
+          : 0;
     }
     if (expected !== 0) scored++;
     if (expected !== l.points) {
@@ -56,19 +53,20 @@ try {
     }
   }
   console.log(`     ${links.length} links, ${scored} expected to score`);
-  ok(mismatches === 0, `stored points match the scoring rule (${mismatches} mismatches)`);
+  ok(
+    mismatches === 0,
+    `stored points match the scoring rule (${mismatches} mismatches)`,
+  );
 
   // 2) Ranking on the real circle / year.
   console.log('\n[2] Leaderboard (real circle, year 2026)');
   const circle = await prisma.circle.findFirst();
   const ranked = await bets.rankByYearAndCircle(circle.id, 2026, 'points');
-  ranked
-    .slice(0, 5)
-    .forEach((r) =>
-      console.log(
-        `     #${r.rank} ${(r.user?.username ?? r.userId).padEnd(20)} total=${r.total} deaths=${r.deathCount}`,
-      ),
+  for (const r of ranked.slice(0, 5)) {
+    console.log(
+      `     #${r.rank} ${(r.user?.username ?? r.userId).padEnd(20)} total=${r.total} deaths=${r.deathCount}`,
     );
+  }
   // rank monotonic & starts at 1
   ok(ranked.length === 0 || ranked[0].rank === 1, 'first rank is 1');
   ok(
@@ -91,7 +89,9 @@ try {
 
   // Avoid colliding with the unique (userId, circleId, year) constraint.
   await prisma.celebritiesOnBet.deleteMany({
-    where: { bet: { userId: someUser.id, circleId: circle.id, year: testYear } },
+    where: {
+      bet: { userId: someUser.id, circleId: circle.id, year: testYear },
+    },
   });
   await prisma.bet.deleteMany({
     where: { userId: someUser.id, circleId: circle.id, year: testYear },
@@ -136,7 +136,9 @@ try {
   console.log('     cleaned up throwaway data');
 
   console.log(
-    failures === 0 ? '\n✅ Phase 3 integration OK' : `\n❌ ${failures} check(s) failed`,
+    failures === 0
+      ? '\n✅ Phase 3 integration OK'
+      : `\n❌ ${failures} check(s) failed`,
   );
   process.exitCode = failures === 0 ? 0 : 1;
 } catch (err) {

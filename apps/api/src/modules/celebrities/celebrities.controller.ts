@@ -1,26 +1,26 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  FileTypeValidator,
+  Get,
+  MaxFileSizeValidator,
+  Param,
+  ParseFilePipe,
+  Patch,
+  Post,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
-  UploadedFile,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { CelebritiesService } from './celebrities.service';
-import { StorageService } from '../storage/storage.service';
-import { CreateCelebrityDto } from './dto/create-celebrity.dto';
-import { UpdateCelebrityDto } from './dto/update-celebrity.dto';
-import { SearchCelebrityDto } from './dto/search-celebrity.dto';
-import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
+import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
+import { StorageService } from '../storage/storage.service';
+import { CelebritiesService } from './celebrities.service';
+import { CreateCelebrityDto } from './dto/create-celebrity.dto';
+import { SearchCelebrityDto } from './dto/search-celebrity.dto';
+import { UpdateCelebrityDto } from './dto/update-celebrity.dto';
 
 @UseGuards(ClerkAuthGuard)
 @Controller('celebrities')

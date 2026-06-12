@@ -1,18 +1,18 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   UseGuards,
 } from '@nestjs/common';
-import { MembershipService } from './membership.service';
-import { CreateMembershipDto } from './dto/create-membership.dto';
-import { UpdateMembershipDto } from './dto/update-membership.dto';
-import { SearchMembershipDto } from './dto/search-membership.dto';
 import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
+import { CreateMembershipDto } from './dto/create-membership.dto';
+import { SearchMembershipDto } from './dto/search-membership.dto';
+import { UpdateMembershipDto } from './dto/update-membership.dto';
+import { MembershipService } from './membership.service';
 
 @UseGuards(ClerkAuthGuard)
 @Controller('membership')

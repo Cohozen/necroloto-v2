@@ -13,6 +13,6 @@ export default defineConfig({
     // connection, so prefer DIRECT_URL (Supabase session pooler, port 5432) and
     // fall back to DATABASE_URL. The runtime client uses DATABASE_URL via the pg
     // adapter in PrismaService, independently of this config.
-    url: process.env['DIRECT_URL'] ?? process.env['DATABASE_URL'],
+    url: process.env.DIRECT_URL ?? process.env.DATABASE_URL,
   },
 });

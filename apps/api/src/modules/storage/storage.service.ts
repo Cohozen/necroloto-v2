@@ -79,7 +79,9 @@ export class StorageService {
   /** Removes an object from the bucket (no-op if storage is not configured). */
   async deleteImage(path: string): Promise<void> {
     if (!this.client) return;
-    const { error } = await this.client.storage.from(this.bucket).remove([path]);
+    const { error } = await this.client.storage
+      .from(this.bucket)
+      .remove([path]);
     if (error) {
       this.logger.error(`Delete failed for ${path}: ${error.message}`);
     }

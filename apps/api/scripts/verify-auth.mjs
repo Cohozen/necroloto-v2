@@ -10,7 +10,9 @@ const { PrismaService } = require('../dist/src/prisma/prisma.service.js');
 const {
   CircleAdminGuard,
 } = require('../dist/src/modules/auth/guards/circle-admin.guard.js');
-const { AdminGuard } = require('../dist/src/modules/auth/guards/admin.guard.js');
+const {
+  AdminGuard,
+} = require('../dist/src/modules/auth/guards/admin.guard.js');
 
 const ctx = (req) => ({ switchToHttp: () => ({ getRequest: () => req }) });
 const app = await NestFactory.createApplicationContext(AppModule, {
@@ -50,7 +52,10 @@ try {
     'circle ADMIN member is allowed',
     () =>
       circleGuard.canActivate(
-        ctx({ user: { sub: adminM.user.clerkId }, params: { id: adminM.circleId } }),
+        ctx({
+          user: { sub: adminM.user.clerkId },
+          params: { id: adminM.circleId },
+        }),
       ),
     true,
   );
@@ -69,7 +74,10 @@ try {
     'unknown user is forbidden',
     () =>
       circleGuard.canActivate(
-        ctx({ user: { sub: 'no-such-clerk-id' }, params: { id: adminM.circleId } }),
+        ctx({
+          user: { sub: 'no-such-clerk-id' },
+          params: { id: adminM.circleId },
+        }),
       ),
     false,
   );
@@ -100,7 +108,9 @@ try {
     false,
   );
 
-  console.log(failures === 0 ? '\n✅ Auth guards OK' : `\n❌ ${failures} failed`);
+  console.log(
+    failures === 0 ? '\n✅ Auth guards OK' : `\n❌ ${failures} failed`,
+  );
   process.exitCode = failures === 0 ? 0 : 1;
 } catch (err) {
   console.error('Auth verify error:', err);

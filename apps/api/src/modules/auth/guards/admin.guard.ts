@@ -1,15 +1,11 @@
+import { createClerkClient } from '@clerk/backend';
 import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import { createClerkClient } from '@clerk/backend';
-import {
-  ClerkClaims,
-  claimsHaveAdmin,
-  getClerkId,
-} from '../clerk-claims';
+import { ClerkClaims, claimsHaveAdmin, getClerkId } from '../clerk-claims';
 
 /**
  * Allows only global admins (manage the celebrity catalog, etc.).
@@ -26,9 +22,7 @@ import {
 @Injectable()
 export class AdminGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context
-      .switchToHttp()
-      .getRequest<{ user?: ClerkClaims }>();
+    const request = context.switchToHttp().getRequest<{ user?: ClerkClaims }>();
 
     if (claimsHaveAdmin(request.user)) return true;
 
