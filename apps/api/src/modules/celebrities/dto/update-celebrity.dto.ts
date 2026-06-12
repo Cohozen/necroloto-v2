@@ -1,6 +1,6 @@
 export class UpdateCelebrityDto {
-  name?: string;
-  birth?: Date;
-  death?: Date;
-  photo?: string;
+    name?: string;
+    birth?: Date;
+    death?: Date;
+    photo?: string;
 }

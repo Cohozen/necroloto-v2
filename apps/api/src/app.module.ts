@@ -9,15 +9,15 @@ import { UsersModule } from './modules/users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
-  imports: [
-    PrismaModule,
-    UsersModule,
-    CelebritiesModule,
-    BetsModule,
-    CircleModule,
-    MembershipModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+    imports: [
+        PrismaModule,
+        UsersModule,
+        CelebritiesModule,
+        BetsModule,
+        CircleModule,
+        MembershipModule,
+    ],
+    controllers: [AppController],
+    providers: [AppService],
 })
 export class AppModule {}

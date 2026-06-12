@@ -1,4 +1,4 @@
 export class UpdateBetDto {
-  year?: number;
-  circleId?: string;
+    year?: number;
+    circleId?: string;
 }

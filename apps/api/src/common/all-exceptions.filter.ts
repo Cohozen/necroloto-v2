@@ -1,10 +1,10 @@
 import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpException,
-  HttpStatus,
-  Logger,
+    ArgumentsHost,
+    Catch,
+    ExceptionFilter,
+    HttpException,
+    HttpStatus,
+    Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
@@ -15,32 +15,30 @@ import { Request, Response } from 'express';
  */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  private readonly logger = new Logger('Exceptions');
+    private readonly logger = new Logger('Exceptions');
 
-  catch(exception: unknown, host: ArgumentsHost): void {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    catch(exception: unknown, host: ArgumentsHost): void {
+        const ctx = host.switchToHttp();
+        const response = ctx.getResponse<Response>();
+        const request = ctx.getRequest<Request>();
 
-    const isHttp = exception instanceof HttpException;
-    const status = isHttp
-      ? exception.getStatus()
-      : HttpStatus.INTERNAL_SERVER_ERROR;
+        const isHttp = exception instanceof HttpException;
+        const status = isHttp ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const payload = isHttp ? exception.getResponse() : 'Internal server error';
+        const payload = isHttp ? exception.getResponse() : 'Internal server error';
 
-    if (!isHttp) {
-      this.logger.error(
-        `${request.method} ${request.url}`,
-        exception instanceof Error ? exception.stack : String(exception),
-      );
+        if (!isHttp) {
+            this.logger.error(
+                `${request.method} ${request.url}`,
+                exception instanceof Error ? exception.stack : String(exception),
+            );
+        }
+
+        response.status(status).json({
+            statusCode: status,
+            path: request.url,
+            timestamp: new Date().toISOString(),
+            ...(typeof payload === 'string' ? { message: payload } : payload),
+        });
     }
-
-    response.status(status).json({
-      statusCode: status,
-      path: request.url,
-      timestamp: new Date().toISOString(),
-      ...(typeof payload === 'string' ? { message: payload } : payload),
-    });
-  }
 }

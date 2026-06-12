@@ -53,6 +53,19 @@ Stack: NestJS 11, Prisma 7 (pg adapter), Supabase Postgres + Storage, Clerk auth
   `Membership.role`, maps JWT `sub` → `User.clerkId`).
 - Celebrity catalog mutations = global admin only. Circle settings/members = circle admin.
 
+## Commit hygiene
+
+Commit **often and in small, coherent steps** — one logical change per commit — so the
+history stays a readable thread and any step can be rolled back in isolation.
+
+- Commit as soon as a unit of work builds and its checks pass; don't batch unrelated
+  changes into one big commit.
+- Write clear messages: `type(scope): summary` (e.g. `feat(api): …`, `chore: …`,
+  `fix(shared): …`), with a short body explaining the *why* when it isn't obvious.
+- Keep each commit green (build + relevant tests pass) so `git bisect` / rollback stays useful.
+- Separate mechanical changes (formatting, renames) from behavioural ones — never mix them
+  in the same commit, or diffs become impossible to review and reverts drag in real changes.
+
 ## Known debt
 
 - DTOs lack class-validator decorators, so the global `ValidationPipe` runs in

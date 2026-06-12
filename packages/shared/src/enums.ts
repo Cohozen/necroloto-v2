@@ -5,22 +5,20 @@
  */
 
 export const CircleStatus = {
-  OPEN: 'OPEN',
-  LOCKED: 'LOCKED',
-  ARCHIVED: 'ARCHIVED',
+    OPEN: 'OPEN',
+    LOCKED: 'LOCKED',
+    ARCHIVED: 'ARCHIVED',
 } as const;
 export type CircleStatus = (typeof CircleStatus)[keyof typeof CircleStatus];
 
 export const MembershipRole = {
-  ADMIN: 'ADMIN',
-  MEMBER: 'MEMBER',
+    ADMIN: 'ADMIN',
+    MEMBER: 'MEMBER',
 } as const;
-export type MembershipRole =
-  (typeof MembershipRole)[keyof typeof MembershipRole];
+export type MembershipRole = (typeof MembershipRole)[keyof typeof MembershipRole];
 
 export const CircleVisibility = {
-  PRIVATE: 'PRIVATE',
-  PUBLIC: 'PUBLIC',
+    PRIVATE: 'PRIVATE',
+    PUBLIC: 'PUBLIC',
 } as const;
-export type CircleVisibility =
-  (typeof CircleVisibility)[keyof typeof CircleVisibility];
+export type CircleVisibility = (typeof CircleVisibility)[keyof typeof CircleVisibility];

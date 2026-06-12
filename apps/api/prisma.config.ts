@@ -4,15 +4,15 @@ import 'dotenv/config';
 import { defineConfig } from 'prisma/config';
 
 export default defineConfig({
-  schema: 'prisma/schema.prisma',
-  migrations: {
-    path: 'prisma/migrations',
-  },
-  datasource: {
-    // Used by the Prisma CLI (migrate/generate) only. Migrations need a session
-    // connection, so prefer DIRECT_URL (Supabase session pooler, port 5432) and
-    // fall back to DATABASE_URL. The runtime client uses DATABASE_URL via the pg
-    // adapter in PrismaService, independently of this config.
-    url: process.env.DIRECT_URL ?? process.env.DATABASE_URL,
-  },
+    schema: 'prisma/schema.prisma',
+    migrations: {
+        path: 'prisma/migrations',
+    },
+    datasource: {
+        // Used by the Prisma CLI (migrate/generate) only. Migrations need a session
+        // connection, so prefer DIRECT_URL (Supabase session pooler, port 5432) and
+        // fall back to DATABASE_URL. The runtime client uses DATABASE_URL via the pg
+        // adapter in PrismaService, independently of this config.
+        url: process.env.DIRECT_URL ?? process.env.DATABASE_URL,
+    },
 });

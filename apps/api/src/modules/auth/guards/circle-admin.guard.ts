@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ClerkClaims, claimsHaveAdmin, getClerkId } from '../clerk-claims';
 
@@ -18,27 +13,27 @@ import { ClerkClaims, claimsHaveAdmin, getClerkId } from '../clerk-claims';
  */
 @Injectable()
 export class CircleAdminGuard implements CanActivate {
-  constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<{
-      user?: ClerkClaims;
-      params: Record<string, string>;
-    }>();
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+        const request = context.switchToHttp().getRequest<{
+            user?: ClerkClaims;
+            params: Record<string, string>;
+        }>();
 
-    if (claimsHaveAdmin(request.user)) return true;
+        if (claimsHaveAdmin(request.user)) return true;
 
-    const clerkId = getClerkId(request);
-    const circleId = request.params.id ?? request.params.circleId;
-    if (!clerkId || !circleId) throw new ForbiddenException();
+        const clerkId = getClerkId(request);
+        const circleId = request.params.id ?? request.params.circleId;
+        if (!clerkId || !circleId) throw new ForbiddenException();
 
-    const membership = await this.prisma.membership.findFirst({
-      where: { circleId, role: 'ADMIN', user: { clerkId } },
-      select: { id: true },
-    });
-    if (!membership) {
-      throw new ForbiddenException('Circle admin role required');
+        const membership = await this.prisma.membership.findFirst({
+            where: { circleId, role: 'ADMIN', user: { clerkId } },
+            select: { id: true },
+        });
+        if (!membership) {
+            throw new ForbiddenException('Circle admin role required');
+        }
+        return true;
     }
-    return true;
-  }
 }

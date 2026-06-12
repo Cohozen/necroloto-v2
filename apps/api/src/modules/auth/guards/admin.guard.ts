@@ -1,10 +1,5 @@
 import { createClerkClient } from '@clerk/backend';
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { ClerkClaims, claimsHaveAdmin, getClerkId } from '../clerk-claims';
 
 /**
@@ -21,24 +16,24 @@ import { ClerkClaims, claimsHaveAdmin, getClerkId } from '../clerk-claims';
  */
 @Injectable()
 export class AdminGuard implements CanActivate {
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<{ user?: ClerkClaims }>();
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+        const request = context.switchToHttp().getRequest<{ user?: ClerkClaims }>();
 
-    if (claimsHaveAdmin(request.user)) return true;
+        if (claimsHaveAdmin(request.user)) return true;
 
-    const clerkId = getClerkId(request);
-    const secretKey = process.env.CLERK_SECRET_KEY;
-    if (clerkId && secretKey) {
-      try {
-        const clerk = createClerkClient({ secretKey });
-        const user = await clerk.users.getUser(clerkId);
-        const roles = (user.publicMetadata?.roles ?? []) as unknown;
-        if (Array.isArray(roles) && roles.includes('admin')) return true;
-      } catch {
-        // fall through to forbidden
-      }
+        const clerkId = getClerkId(request);
+        const secretKey = process.env.CLERK_SECRET_KEY;
+        if (clerkId && secretKey) {
+            try {
+                const clerk = createClerkClient({ secretKey });
+                const user = await clerk.users.getUser(clerkId);
+                const roles = (user.publicMetadata?.roles ?? []) as unknown;
+                if (Array.isArray(roles) && roles.includes('admin')) return true;
+            } catch {
+                // fall through to forbidden
+            }
+        }
+
+        throw new ForbiddenException('Admin role required');
     }
-
-    throw new ForbiddenException('Admin role required');
-  }
 }

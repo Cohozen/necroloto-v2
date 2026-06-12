@@ -5,9 +5,9 @@ import { BetsController } from './bets.controller';
 import { BetsService } from './bets.service';
 
 @Module({
-  imports: [PrismaModule, CelebritiesModule],
-  providers: [BetsService],
-  controllers: [BetsController],
-  exports: [BetsService],
+    imports: [PrismaModule, CelebritiesModule],
+    providers: [BetsService],
+    controllers: [BetsController],
+    exports: [BetsService],
 })
 export class BetsModule {}

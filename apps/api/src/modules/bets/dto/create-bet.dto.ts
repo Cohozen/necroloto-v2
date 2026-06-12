@@ -1,6 +1,6 @@
 export class CreateBetDto {
-  userId: string;
-  circleId?: string;
-  year: number;
-  celebrityIds?: string[];
+    userId: string;
+    circleId?: string;
+    year: number;
+    celebrityIds?: string[];
 }

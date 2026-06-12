@@ -5,9 +5,9 @@ import { CelebritiesController } from './celebrities.controller';
 import { CelebritiesService } from './celebrities.service';
 
 @Module({
-  imports: [PrismaModule, StorageModule],
-  providers: [CelebritiesService],
-  controllers: [CelebritiesController],
-  exports: [CelebritiesService],
+    imports: [PrismaModule, StorageModule],
+    providers: [CelebritiesService],
+    controllers: [CelebritiesController],
+    exports: [CelebritiesService],
 })
 export class CelebritiesModule {}
