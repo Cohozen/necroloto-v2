@@ -1,6 +1,10 @@
+import { ClerkProvider } from '@clerk/clerk-react';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { CLERK_PUBLISHABLE_KEY, isClerkConfigured } from './lib/auth/clerk';
+import { queryClient } from './lib/query';
 import { routeTree } from './routeTree.gen';
 import '@fontsource/space-grotesk/400.css';
 import '@fontsource/space-grotesk/500.css';
@@ -26,8 +30,20 @@ declare module '@tanstack/react-router' {
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Root element #root introuvable');
 
+const app = (
+    <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+    </QueryClientProvider>
+);
+
 createRoot(rootElement).render(
     <StrictMode>
-        <RouterProvider router={router} />
+        {isClerkConfigured ? (
+            <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} afterSignOutUrl="/">
+                {app}
+            </ClerkProvider>
+        ) : (
+            app
+        )}
     </StrictMode>,
 );
