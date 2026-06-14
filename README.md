@@ -46,14 +46,22 @@ necroloto-v2/
 
 - Node ≥ 20
 - pnpm 11 (`corepack enable pnpm`)
+- Pour le dev local de l'API : un moteur Docker (ex. [Colima](https://github.com/abiosoft/colima))
+  + la [Supabase CLI](https://supabase.com/docs/guides/cli) — voir « Démarrage » ci-dessous.
 
 ## Démarrage
 
 ```bash
 pnpm install
 
-# Configurer l'API
-cp apps/api/.env.example apps/api/.env   # puis remplir les valeurs
+# Stack Supabase locale (Postgres + Storage en Docker) — ne dev jamais contre la prod
+colima start                       # démarrer le moteur Docker
+cd apps/api && supabase start      # démarrer la stack (URLs/clés via `supabase status`)
+pnpm exec prisma migrate deploy    # appliquer le schéma à la base locale
+cd ../..
+
+# Configurer l'API (le .env est déjà câblé sur le local après `supabase start`)
+# cp apps/api/.env.example apps/api/.env   # uniquement pour repartir du modèle prod/cloud
 
 # Lancer l'API en dev
 pnpm --filter necroloto-api start:dev
@@ -62,9 +70,11 @@ pnpm --filter necroloto-api start:dev
 pnpm --filter necroloto-web dev
 ```
 
-Variables d'environnement : voir [apps/api/.env.example](apps/api/.env.example)
-(connexions Supabase pooler, clés Clerk, storage). Pour le front (au branchement
-API) : `apps/web/.env.local` avec `VITE_API_URL` et `VITE_CLERK_PUBLISHABLE_KEY`.
+Variables d'environnement : voir [apps/api/.env.example](apps/api/.env.example).
+La procédure de dev local (env local vs prod, clone des données de prod, mise en
+garde sur les fichiers Storage) est détaillée dans la section « Local dev environment »
+de [CLAUDE.md](CLAUDE.md). Pour le front (au branchement API) : `apps/web/.env.local`
+avec `VITE_API_URL` et `VITE_CLERK_PUBLISHABLE_KEY`.
 
 ## Commandes (racine)
 
