@@ -27,6 +27,29 @@ Front: Vite 6, React 19, TanStack Router + Query, Tailwind v4, shadcn/ui.
 - Integration checks (need `apps/api/.env`, run against real Supabase, mostly read-only):
   `node apps/api/scripts/verify-phase3.mjs`, `verify-auth.mjs`, `verify-storage.mjs`.
 
+## Local dev environment
+
+Develop against a **local Supabase stack**, never prod. Prod config stays as-is
+(Railway env vars + prod Supabase project); only `apps/api/.env` differs locally.
+
+- **Prereqs**: a Docker engine (we use **Colima** — `colima start` / `colima stop`,
+  it does not auto-start at login) + the **Supabase CLI** (`brew install supabase/tap/supabase`).
+- **Bring it up**: `cd apps/api && supabase start` (config in `supabase/config.toml`;
+  analytics/vector is disabled there — its container can't mount the Docker socket
+  under Colima). `supabase status` prints the local URLs/keys. `supabase stop` to tear down.
+- **Env split**: prod values live in `apps/api/.env.production.local` (gitignored);
+  `apps/api/.env` points at local — DB `postgresql://postgres:postgres@127.0.0.1:54322/postgres`
+  (both `DATABASE_URL` and `DIRECT_URL`, no pooler), `SUPABASE_URL=http://127.0.0.1:54321`,
+  local `SUPABASE_SECRET_KEY` from `supabase status`. The runtime loads `.env` via
+  `import 'dotenv/config'` at the top of `main.ts` (Railway sets real env vars, no `.env`
+  file → dotenv is a no-op there).
+- **Schema**: `pnpm exec prisma migrate deploy` (from `apps/api`) applies migrations to
+  the local DB. Prisma migrations remain the single source of truth for the schema.
+- **Clone prod data**: `apps/api/scripts/clone-prod-to-local.sh` dumps prod *data only*
+  (schema stays Prisma-owned) and loads it locally. **Storage files (images) are NOT
+  copied** — only DB rows; `storage.objects` will point at missing files. The dump
+  contains real user data — keep it out of git.
+
 ## Gotchas (learned the hard way)
 
 - **Biome `useImportType` is OFF on purpose** (`biome.json`). It converts injected
