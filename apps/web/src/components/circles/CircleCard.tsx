@@ -9,11 +9,12 @@ import { PrivacyBadge } from './PrivacyBadge';
 
 /** Circle summary card (nl-circle) — used on the dashboard and the circles hub. */
 export function CircleCard({ circle }: CircleCardProps) {
-    const { name, members, rank, points, isLeader, topMembers, visibility } = circle;
+    const { id, name, members, rank, points, isLeader, topMembers, visibility } = circle;
     const rankStr = `#${rank}`;
     return (
         <Link
-            to="/circles"
+            to="/circles/$id"
+            params={{ id }}
             className={cn(
                 'relative flex flex-col gap-3.5 rounded-2xl border border-line bg-gradient-to-b from-surface-2 to-surface p-[18px] transition-colors hover:border-line-2',
                 isLeader && 'shadow-glow-green',
