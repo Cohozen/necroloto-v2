@@ -17,7 +17,8 @@ import { Route as DevDesignSystemRouteImport } from './routes/dev.design-system'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppCirclesRouteImport } from './routes/_app/circles'
-import { Route as AppCelebritiesRouteImport } from './routes/_app/celebrities'
+import { Route as AppCelebritiesIndexRouteImport } from './routes/_app/celebrities/index'
+import { Route as AppCelebritiesIdRouteImport } from './routes/_app/celebrities/$id'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -58,76 +59,87 @@ const AppCirclesRoute = AppCirclesRouteImport.update({
   path: '/circles',
   getParentRoute: () => AppRoute,
 } as any)
-const AppCelebritiesRoute = AppCelebritiesRouteImport.update({
-  id: '/celebrities',
-  path: '/celebrities',
+const AppCelebritiesIndexRoute = AppCelebritiesIndexRouteImport.update({
+  id: '/celebrities/',
+  path: '/celebrities/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCelebritiesIdRoute = AppCelebritiesIdRouteImport.update({
+  id: '/celebrities/$id',
+  path: '/celebrities/$id',
   getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/celebrities': typeof AppCelebritiesRoute
   '/circles': typeof AppCirclesRoute
   '/dashboard': typeof AppDashboardRoute
   '/profile': typeof AppProfileRoute
   '/dev/design-system': typeof DevDesignSystemRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
+  '/celebrities/$id': typeof AppCelebritiesIdRoute
+  '/celebrities/': typeof AppCelebritiesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/celebrities': typeof AppCelebritiesRoute
   '/circles': typeof AppCirclesRoute
   '/dashboard': typeof AppDashboardRoute
   '/profile': typeof AppProfileRoute
   '/dev/design-system': typeof DevDesignSystemRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
+  '/celebrities/$id': typeof AppCelebritiesIdRoute
+  '/celebrities': typeof AppCelebritiesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
-  '/_app/celebrities': typeof AppCelebritiesRoute
   '/_app/circles': typeof AppCirclesRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/profile': typeof AppProfileRoute
   '/dev/design-system': typeof DevDesignSystemRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
+  '/_app/celebrities/$id': typeof AppCelebritiesIdRoute
+  '/_app/celebrities/': typeof AppCelebritiesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/celebrities'
     | '/circles'
     | '/dashboard'
     | '/profile'
     | '/dev/design-system'
     | '/sign-in/$'
     | '/sign-up/$'
+    | '/celebrities/$id'
+    | '/celebrities/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/celebrities'
     | '/circles'
     | '/dashboard'
     | '/profile'
     | '/dev/design-system'
     | '/sign-in/$'
     | '/sign-up/$'
+    | '/celebrities/$id'
+    | '/celebrities'
   id:
     | '__root__'
     | '/'
     | '/_app'
-    | '/_app/celebrities'
     | '/_app/circles'
     | '/_app/dashboard'
     | '/_app/profile'
     | '/dev/design-system'
     | '/sign-in/$'
     | '/sign-up/$'
+    | '/_app/celebrities/$id'
+    | '/_app/celebrities/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -196,28 +208,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCirclesRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/celebrities': {
-      id: '/_app/celebrities'
+    '/_app/celebrities/': {
+      id: '/_app/celebrities/'
       path: '/celebrities'
-      fullPath: '/celebrities'
-      preLoaderRoute: typeof AppCelebritiesRouteImport
+      fullPath: '/celebrities/'
+      preLoaderRoute: typeof AppCelebritiesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/celebrities/$id': {
+      id: '/_app/celebrities/$id'
+      path: '/celebrities/$id'
+      fullPath: '/celebrities/$id'
+      preLoaderRoute: typeof AppCelebritiesIdRouteImport
       parentRoute: typeof AppRoute
     }
   }
 }
 
 interface AppRouteChildren {
-  AppCelebritiesRoute: typeof AppCelebritiesRoute
   AppCirclesRoute: typeof AppCirclesRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppCelebritiesIdRoute: typeof AppCelebritiesIdRoute
+  AppCelebritiesIndexRoute: typeof AppCelebritiesIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppCelebritiesRoute: AppCelebritiesRoute,
   AppCirclesRoute: AppCirclesRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppProfileRoute: AppProfileRoute,
+  AppCelebritiesIdRoute: AppCelebritiesIdRoute,
+  AppCelebritiesIndexRoute: AppCelebritiesIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
