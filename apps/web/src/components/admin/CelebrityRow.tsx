@@ -1,0 +1,74 @@
+import { Link } from '@tanstack/react-router';
+import { Pencil, RefreshCw, User } from 'lucide-react';
+import { CelebrityPortrait } from '@/components/celebrities/CelebrityPortrait';
+import { StatusBadge } from '@/components/celebrities/StatusBadge';
+import { cn } from '@/lib/utils';
+import type { AdminCelebrity } from '@/types/admin';
+
+export const CATALOG_COLS = 'grid-cols-[52px_minmax(0,1fr)_96px_150px_96px_78px_92px] gap-3';
+
+/** One catalogue row — portrait, identity, status, points, bettors, actions. */
+export function CelebrityRow({ celeb }: { celeb: AdminCelebrity }) {
+    const dead = celeb.status === 'deceased';
+    return (
+        <div
+            className={cn(
+                'grid items-center border-t border-line px-3 py-2.5 transition-colors hover:bg-surface-2',
+                CATALOG_COLS,
+            )}
+        >
+            <CelebrityPortrait
+                name={celeb.name}
+                status={celeb.status}
+                rounded="rounded-[11px]"
+                className="size-11"
+            />
+            <div className="min-w-0">
+                <div className="truncate text-[14.5px] font-semibold">{celeb.name}</div>
+                <div className="truncate text-xs text-ink-3">{celeb.role}</div>
+            </div>
+            <div className="font-mono text-[13px] text-ink-2">°{celeb.born}</div>
+            <div>
+                <StatusBadge status={celeb.status} />
+            </div>
+            <div>
+                <span
+                    className={cn(
+                        'inline-flex h-7 items-center rounded-full px-2.5 text-[15px] font-bold',
+                        dead
+                            ? 'border border-coral/40 bg-coral/12 text-coral'
+                            : 'bg-surface-3 text-ink',
+                    )}
+                >
+                    {dead ? `+${celeb.points}` : celeb.points}
+                </span>
+            </div>
+            <div className="flex items-center gap-1.5 text-sm font-bold text-ink-2">
+                <User size={14} className="text-ink-3" />
+                {celeb.bettors}
+            </div>
+            <div className="flex items-center justify-end gap-1.5">
+                <Link
+                    to="/admin/celebrities/$id"
+                    params={{ id: celeb.id }}
+                    className="inline-flex size-9 items-center justify-center rounded-[10px] border border-line-2 bg-surface-2 text-ink-2 hover:text-ink"
+                    aria-label={`Éditer ${celeb.name}`}
+                >
+                    <Pencil size={16} />
+                </Link>
+                <button
+                    type="button"
+                    aria-label="Recalculer les points"
+                    className={cn(
+                        'inline-flex size-9 items-center justify-center rounded-[10px] border bg-surface-2',
+                        dead
+                            ? 'border-neon/40 text-neon'
+                            : 'border-line-2 text-ink-2 hover:text-ink',
+                    )}
+                >
+                    <RefreshCw size={16} />
+                </button>
+            </div>
+        </div>
+    );
+}
