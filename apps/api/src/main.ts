@@ -1,3 +1,8 @@
+// Load apps/api/.env into process.env before anything reads it (PrismaService,
+// guards, StorageService). Must stay first. In prod (Railway) the real env vars
+// are already set and no .env file exists, so dotenv is a harmless no-op and
+// never overrides them.
+import 'dotenv/config';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
