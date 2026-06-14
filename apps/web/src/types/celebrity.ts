@@ -1,5 +1,19 @@
 export type CelebrityStatus = 'alive' | 'deceased';
 
+export interface CelebritySummary {
+    id: string;
+    name: string;
+    age: number;
+    /** Birth year. */
+    born: number;
+    role: string;
+    status: CelebrityStatus;
+    /** Betting odds (cote). */
+    odds: number;
+    /** Coarse category used for filtering. */
+    category: string;
+}
+
 export interface Bettor {
     id: string;
     name: string;
