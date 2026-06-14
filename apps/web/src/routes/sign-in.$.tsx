@@ -1,6 +1,9 @@
 import { SignIn } from '@clerk/clerk-react';
 import { createFileRoute } from '@tanstack/react-router';
+import { AuthDevNotice } from '@/components/auth/AuthDevNotice';
+import { AuthLayout } from '@/components/auth/AuthLayout';
 import { isClerkConfigured } from '@/lib/auth/clerk';
+import { clerkAppearance } from '@/lib/auth/clerk-appearance';
 
 export const Route = createFileRoute('/sign-in/$')({
     component: SignInPage,
@@ -8,15 +11,17 @@ export const Route = createFileRoute('/sign-in/$')({
 
 function SignInPage() {
     return (
-        <div className="flex min-h-dvh items-center justify-center p-6">
+        <AuthLayout>
             {isClerkConfigured ? (
-                <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" />
+                <SignIn
+                    routing="path"
+                    path="/sign-in"
+                    signUpUrl="/sign-up"
+                    appearance={clerkAppearance}
+                />
             ) : (
-                <p className="text-ink-2">
-                    Auth non configurée — définissez{' '}
-                    <code className="font-mono">VITE_CLERK_PUBLISHABLE_KEY</code>.
-                </p>
+                <AuthDevNotice title="Connexion" />
             )}
-        </div>
+        </AuthLayout>
     );
 }

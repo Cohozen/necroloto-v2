@@ -1,5 +1,12 @@
-import { RedirectToSignIn, SignedIn, SignedOut } from '@clerk/clerk-react';
+import {
+    ClerkLoaded,
+    ClerkLoading,
+    RedirectToSignIn,
+    SignedIn,
+    SignedOut,
+} from '@clerk/clerk-react';
 import { createFileRoute } from '@tanstack/react-router';
+import { AppLoadingGate } from '@/components/auth/AppLoadingGate';
 import { AppShell } from '@/components/layout/AppShell';
 import { isClerkConfigured } from '@/lib/auth/clerk';
 
@@ -13,12 +20,17 @@ function AppLayout() {
 
     return (
         <>
-            <SignedIn>
-                <AppShell />
-            </SignedIn>
-            <SignedOut>
-                <RedirectToSignIn />
-            </SignedOut>
+            <ClerkLoading>
+                <AppLoadingGate />
+            </ClerkLoading>
+            <ClerkLoaded>
+                <SignedIn>
+                    <AppShell />
+                </SignedIn>
+                <SignedOut>
+                    <RedirectToSignIn />
+                </SignedOut>
+            </ClerkLoaded>
         </>
     );
 }
