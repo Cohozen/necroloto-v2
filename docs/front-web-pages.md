@@ -6,6 +6,12 @@ rapport à la v1 (Next.js), pensée **mobile-first** (DA néon / arcade sombre).
 > Note : ce sont des écrans/flux, pas des routes figées. Le routing réel sera décidé
 > à l'implémentation (Vite + TanStack Router). Les chemins ci-dessous sont indicatifs.
 
+> **Statut d'implémentation (`apps/web`)** — la nav réelle suit les labels des maquettes
+> (Accueil / Classement / Mon pari / Profil + FAB), pas exactement le modèle ci-dessous.
+> Faits (données mock) : **Dashboard** `/dashboard`, **Classement** `/circles/$id`,
+> **Fiche célébrité** `/celebrities/$id`, **Mon pari / catalogue** `/celebrities`.
+> À venir : hub cercles, créer/rejoindre, profil, landing, puis branchement API.
+
 ## Modèle de navigation
 
 - **Bottom tab bar** (4 onglets, mobile-first) :

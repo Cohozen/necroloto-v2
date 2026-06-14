@@ -6,16 +6,17 @@ susceptibles de mourir l'année suivante. Un décès rapporte des points (1 à 5
 
 Cette V2 reconstruit le projet sur une base propre et découplée, prête pour une
 app mobile : une **API NestJS** comme backend unique, **Supabase** (Postgres +
-storage), **Clerk** pour l'authentification, et un front web à venir.
+storage), **Clerk** pour l'authentification, et un **front web** (Vite/React,
+en cours — UI construite, branchement API à venir).
 
 ## Architecture
 
 ```
-Front web (à venir, Vite/React)  ─┐
-App mobile (à venir, Expo)        ─┼── HTTP ──▶  API NestJS  ──Prisma──▶ Supabase Postgres
-                                   ┘               │                     Supabase Storage (images)
-                                                   ├─ Clerk (vérif JWT)
-                                                   └─ (à venir) jobs Wikidata : décès + enrichissement
+Front web (Vite/React, en cours)  ─┐
+App mobile (à venir, Expo)         ─┼── HTTP ──▶  API NestJS  ──Prisma──▶ Supabase Postgres
+                                    ┘               │                     Supabase Storage (images)
+                                                    ├─ Clerk (vérif JWT)
+                                                    └─ jobs Wikidata : décès + enrichissement
 ```
 
 - **Backend = cerveau unique** : toute la logique métier (scoring, classements,
@@ -28,7 +29,11 @@ App mobile (à venir, Expo)        ─┼── HTTP ──▶  API NestJS  ─�
 ```
 necroloto-v2/
 ├── apps/
-│   └── api/            # API NestJS (voir apps/api/DEPLOY.md)
+│   ├── api/            # API NestJS (voir apps/api/DEPLOY.md)
+│   └── web/            # Front web (Vite + React + Tailwind v4 + shadcn)
+├── docs/
+│   ├── mockups/        # design system néon/arcade généré (source du thème web)
+│   └── front-web-pages.md  # navigation V2 + écrans
 ├── packages/
 │   └── shared/         # @necroloto/shared : scoring + enums partagés
 ├── Dockerfile          # build de l'API (contexte = racine)
@@ -52,10 +57,14 @@ cp apps/api/.env.example apps/api/.env   # puis remplir les valeurs
 
 # Lancer l'API en dev
 pnpm --filter necroloto-api start:dev
+
+# Lancer le front web en dev (port 5173)
+pnpm --filter necroloto-web dev
 ```
 
 Variables d'environnement : voir [apps/api/.env.example](apps/api/.env.example)
-(connexions Supabase pooler, clés Clerk, storage).
+(connexions Supabase pooler, clés Clerk, storage). Pour le front (au branchement
+API) : `apps/web/.env.local` avec `VITE_API_URL` et `VITE_CLERK_PUBLISHABLE_KEY`.
 
 ## Commandes (racine)
 
