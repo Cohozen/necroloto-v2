@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    DefaultValuePipe,
+    Delete,
+    Get,
+    Param,
+    ParseIntPipe,
+    Patch,
+    Post,
+    Query,
+    UseGuards,
+} from '@nestjs/common';
 import { CircleAdminGuard } from '../auth/guards/circle-admin.guard';
 import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
 import { CircleService } from './circle.service';
@@ -34,6 +46,15 @@ export class CircleController {
     @Get('user/:userId')
     findByUser(@Param('userId') userId: string) {
         return this.circleService.findByUser(userId);
+    }
+
+    @Get('user/:userId/summary')
+    findUserSummaries(
+        @Param('userId') userId: string,
+        @Query('year', new DefaultValuePipe(new Date().getUTCFullYear()), ParseIntPipe)
+        year: number,
+    ) {
+        return this.circleService.findUserSummaries(userId, year);
     }
 
     @Patch(':id')

@@ -6,4 +6,6 @@ export class CreateCircleDto {
     status?: CircleStatus;
     code?: string;
     allowNewBet: boolean;
+    /** Clerk-resolved creator; added as the circle's first ADMIN member. */
+    creatorUserId?: string;
 }
