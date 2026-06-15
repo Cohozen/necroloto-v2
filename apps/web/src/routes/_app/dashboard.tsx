@@ -1,70 +1,48 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Plus } from 'lucide-react';
+import { useMemo } from 'react';
 import { CircleCard } from '@/components/circles/CircleCard';
 import { BetProgressCard } from '@/components/dashboard/BetProgressCard';
 import { DeathFeedItem } from '@/components/dashboard/DeathFeedItem';
 import { ScoreBand } from '@/components/dashboard/ScoreBand';
-import type { CircleSummary } from '@/types/circle';
-import type { DeathFeedEntry } from '@/types/feed';
+import { toCircleSummary, toDeathFeedEntry } from '@/lib/api/adapters';
+import { useCurrentUser } from '@/lib/api/currentUser';
+import { CURRENT_YEAR, useCircleSummaries, useDeathFeed, useUserBets } from '@/lib/api/queries';
 
 export const Route = createFileRoute('/_app/dashboard')({
     component: Dashboard,
 });
 
-// TEMP mock data — replaced by the API (lib/api + TanStack Query) in the data step.
-const YEAR = new Date().getFullYear();
-
-const CIRCLES: CircleSummary[] = [
-    {
-        id: '2',
-        name: 'Bureau & Macchabées',
-        visibility: 'PUBLIC',
-        members: 24,
-        rank: 1,
-        points: 615,
-        isLeader: true,
-        topMembers: [
-            { id: 'a', initials: 'SV', ring: 'mag' },
-            { id: 'b', initials: 'LE' },
-            { id: 'c', initials: 'PR' },
-        ],
-    },
-    {
-        id: '1',
-        name: 'Les Faucheurs du Dimanche',
-        visibility: 'PRIVATE',
-        members: 8,
-        rank: 2,
-        points: 420,
-        isLeader: false,
-        topMembers: [
-            { id: 'd', initials: 'MO' },
-            { id: 'e', initials: 'LE' },
-            { id: 'f', initials: 'GG' },
-        ],
-    },
-];
-
-const FEED: DeathFeedEntry[] = [
-    {
-        id: 'g',
-        celebrityName: 'Dame Gloria Ravensworth',
-        age: 96,
-        scorers: 3,
-        when: 'il y a 2 j',
-        points: 140,
-    },
-    {
-        id: 'b',
-        celebrityName: 'Buck Thunderlane',
-        age: 87,
-        scorers: 1,
-        when: 'il y a 5 j',
-        points: 90,
-    },
-];
+const YEAR = CURRENT_YEAR;
 
 function Dashboard() {
+    const { user } = useCurrentUser();
+    const summariesQuery = useCircleSummaries(user?.id);
+    const betsQuery = useUserBets(user?.id);
+    const feedQuery = useDeathFeed();
+
+    const circles = useMemo(
+        () => (summariesQuery.data ?? []).map(toCircleSummary),
+        [summariesQuery.data],
+    );
+    const feed = useMemo(() => (feedQuery.data ?? []).map(toDeathFeedEntry), [feedQuery.data]);
+
+    // Score band is composed client-side from the user's bets for the year.
+    const stats = useMemo(() => {
+        const yearBets = (betsQuery.data ?? []).filter((bet) => bet.year === YEAR);
+        const score = yearBets.reduce(
+            (acc, bet) => acc + bet.CelebritiesOnBet.reduce((s, c) => s + c.points, 0),
+            0,
+        );
+        const deaths = yearBets.reduce(
+            (acc, bet) => acc + bet.CelebritiesOnBet.filter((c) => c.points > 0).length,
+            0,
+        );
+        const ranks = circles.map((c) => c.rank).filter((r) => r > 0);
+        const bestRank = ranks.length ? `#${Math.min(...ranks)}` : '—';
+        return { score, deaths, bestRank };
+    }, [betsQuery.data, circles]);
+
     return (
         <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
             <div className="grid gap-4 md:gap-[18px] lg:grid-cols-[1.7fr_1fr]">
@@ -72,12 +50,12 @@ function Dashboard() {
                 <div className="flex flex-col gap-4 md:gap-[18px]">
                     <ScoreBand
                         year={YEAR}
-                        score={1630}
-                        streak={3}
-                        weekDelta={185}
-                        circles={4}
-                        deaths={9}
-                        bestRank="#2"
+                        score={stats.score}
+                        streak={0}
+                        weekDelta={0}
+                        circles={circles.length}
+                        deaths={stats.deaths}
+                        bestRank={stats.bestRank}
                     />
                     <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold">Vos cercles</h2>
@@ -88,18 +66,30 @@ function Dashboard() {
                             <Plus size={14} /> Nouveau cercle
                         </Link>
                     </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {CIRCLES.map((circle) => (
-                            <CircleCard key={circle.id} circle={circle} />
-                        ))}
-                    </div>
+                    {summariesQuery.isLoading ? (
+                        <p className="text-[13px] text-ink-3">Chargement de vos cercles…</p>
+                    ) : circles.length === 0 ? (
+                        <p className="text-[13px] text-ink-3">
+                            Vous n'avez pas encore de cercle.{' '}
+                            <Link to="/circles/new" className="font-semibold text-neon">
+                                Créez-en un
+                            </Link>
+                            .
+                        </p>
+                    ) : (
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            {circles.map((circle) => (
+                                <CircleCard key={circle.id} circle={circle} />
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* right rail */}
                 <div className="flex flex-col gap-4 md:gap-[18px]">
                     <BetProgressCard
                         year={YEAR}
-                        selected={12}
+                        selected={0}
                         total={15}
                         closesLabel="clôture 31 déc."
                     />
@@ -107,11 +97,17 @@ function Dashboard() {
                         <h2 className="text-lg font-semibold">Décès récents</h2>
                         <span className="text-xs text-ink-3">qui ont marqué</span>
                     </div>
-                    <div className="flex flex-col gap-2.5">
-                        {FEED.map((entry) => (
-                            <DeathFeedItem key={entry.id} entry={entry} />
-                        ))}
-                    </div>
+                    {feedQuery.isLoading ? (
+                        <p className="text-[13px] text-ink-3">Chargement…</p>
+                    ) : feed.length === 0 ? (
+                        <p className="text-[13px] text-ink-3">Aucun décès cette saison.</p>
+                    ) : (
+                        <div className="flex flex-col gap-2.5">
+                            {feed.map((entry) => (
+                                <DeathFeedItem key={entry.id} entry={entry} />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
