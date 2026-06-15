@@ -22,7 +22,10 @@ import { Route as AppCirclesNewRouteImport } from './routes/_app/circles/new'
 import { Route as AppCirclesJoinRouteImport } from './routes/_app/circles/join'
 import { Route as AppCirclesIdRouteImport } from './routes/_app/circles/$id'
 import { Route as AppCelebritiesIdRouteImport } from './routes/_app/celebrities/$id'
+import { Route as AppCirclesIdIndexRouteImport } from './routes/_app/circles/$id/index'
 import { Route as AppAdminCelebritiesIndexRouteImport } from './routes/_app/admin/celebrities/index'
+import { Route as AppCirclesIdSettingsRouteImport } from './routes/_app/circles/$id/settings'
+import { Route as AppCirclesIdMembersRouteImport } from './routes/_app/circles/$id/members'
 import { Route as AppAdminCelebritiesNewRouteImport } from './routes/_app/admin/celebrities/new'
 import { Route as AppAdminCelebritiesIdRouteImport } from './routes/_app/admin/celebrities/$id'
 
@@ -90,12 +93,27 @@ const AppCelebritiesIdRoute = AppCelebritiesIdRouteImport.update({
   path: '/celebrities/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCirclesIdIndexRoute = AppCirclesIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppCirclesIdRoute,
+} as any)
 const AppAdminCelebritiesIndexRoute =
   AppAdminCelebritiesIndexRouteImport.update({
     id: '/admin/celebrities/',
     path: '/admin/celebrities/',
     getParentRoute: () => AppRoute,
   } as any)
+const AppCirclesIdSettingsRoute = AppCirclesIdSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppCirclesIdRoute,
+} as any)
+const AppCirclesIdMembersRoute = AppCirclesIdMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => AppCirclesIdRoute,
+} as any)
 const AppAdminCelebritiesNewRoute = AppAdminCelebritiesNewRouteImport.update({
   id: '/admin/celebrities/new',
   path: '/admin/celebrities/new',
@@ -115,14 +133,17 @@ export interface FileRoutesByFullPath {
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
   '/celebrities/$id': typeof AppCelebritiesIdRoute
-  '/circles/$id': typeof AppCirclesIdRoute
+  '/circles/$id': typeof AppCirclesIdRouteWithChildren
   '/circles/join': typeof AppCirclesJoinRoute
   '/circles/new': typeof AppCirclesNewRoute
   '/celebrities/': typeof AppCelebritiesIndexRoute
   '/circles/': typeof AppCirclesIndexRoute
   '/admin/celebrities/$id': typeof AppAdminCelebritiesIdRoute
   '/admin/celebrities/new': typeof AppAdminCelebritiesNewRoute
+  '/circles/$id/members': typeof AppCirclesIdMembersRoute
+  '/circles/$id/settings': typeof AppCirclesIdSettingsRoute
   '/admin/celebrities/': typeof AppAdminCelebritiesIndexRoute
+  '/circles/$id/': typeof AppCirclesIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -132,14 +153,16 @@ export interface FileRoutesByTo {
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
   '/celebrities/$id': typeof AppCelebritiesIdRoute
-  '/circles/$id': typeof AppCirclesIdRoute
   '/circles/join': typeof AppCirclesJoinRoute
   '/circles/new': typeof AppCirclesNewRoute
   '/celebrities': typeof AppCelebritiesIndexRoute
   '/circles': typeof AppCirclesIndexRoute
   '/admin/celebrities/$id': typeof AppAdminCelebritiesIdRoute
   '/admin/celebrities/new': typeof AppAdminCelebritiesNewRoute
+  '/circles/$id/members': typeof AppCirclesIdMembersRoute
+  '/circles/$id/settings': typeof AppCirclesIdSettingsRoute
   '/admin/celebrities': typeof AppAdminCelebritiesIndexRoute
+  '/circles/$id': typeof AppCirclesIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -151,14 +174,17 @@ export interface FileRoutesById {
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
   '/_app/celebrities/$id': typeof AppCelebritiesIdRoute
-  '/_app/circles/$id': typeof AppCirclesIdRoute
+  '/_app/circles/$id': typeof AppCirclesIdRouteWithChildren
   '/_app/circles/join': typeof AppCirclesJoinRoute
   '/_app/circles/new': typeof AppCirclesNewRoute
   '/_app/celebrities/': typeof AppCelebritiesIndexRoute
   '/_app/circles/': typeof AppCirclesIndexRoute
   '/_app/admin/celebrities/$id': typeof AppAdminCelebritiesIdRoute
   '/_app/admin/celebrities/new': typeof AppAdminCelebritiesNewRoute
+  '/_app/circles/$id/members': typeof AppCirclesIdMembersRoute
+  '/_app/circles/$id/settings': typeof AppCirclesIdSettingsRoute
   '/_app/admin/celebrities/': typeof AppAdminCelebritiesIndexRoute
+  '/_app/circles/$id/': typeof AppCirclesIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -177,7 +203,10 @@ export interface FileRouteTypes {
     | '/circles/'
     | '/admin/celebrities/$id'
     | '/admin/celebrities/new'
+    | '/circles/$id/members'
+    | '/circles/$id/settings'
     | '/admin/celebrities/'
+    | '/circles/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -187,14 +216,16 @@ export interface FileRouteTypes {
     | '/sign-in/$'
     | '/sign-up/$'
     | '/celebrities/$id'
-    | '/circles/$id'
     | '/circles/join'
     | '/circles/new'
     | '/celebrities'
     | '/circles'
     | '/admin/celebrities/$id'
     | '/admin/celebrities/new'
+    | '/circles/$id/members'
+    | '/circles/$id/settings'
     | '/admin/celebrities'
+    | '/circles/$id'
   id:
     | '__root__'
     | '/'
@@ -212,7 +243,10 @@ export interface FileRouteTypes {
     | '/_app/circles/'
     | '/_app/admin/celebrities/$id'
     | '/_app/admin/celebrities/new'
+    | '/_app/circles/$id/members'
+    | '/_app/circles/$id/settings'
     | '/_app/admin/celebrities/'
+    | '/_app/circles/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -316,12 +350,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCelebritiesIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/circles/$id/': {
+      id: '/_app/circles/$id/'
+      path: '/'
+      fullPath: '/circles/$id/'
+      preLoaderRoute: typeof AppCirclesIdIndexRouteImport
+      parentRoute: typeof AppCirclesIdRoute
+    }
     '/_app/admin/celebrities/': {
       id: '/_app/admin/celebrities/'
       path: '/admin/celebrities'
       fullPath: '/admin/celebrities/'
       preLoaderRoute: typeof AppAdminCelebritiesIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/_app/circles/$id/settings': {
+      id: '/_app/circles/$id/settings'
+      path: '/settings'
+      fullPath: '/circles/$id/settings'
+      preLoaderRoute: typeof AppCirclesIdSettingsRouteImport
+      parentRoute: typeof AppCirclesIdRoute
+    }
+    '/_app/circles/$id/members': {
+      id: '/_app/circles/$id/members'
+      path: '/members'
+      fullPath: '/circles/$id/members'
+      preLoaderRoute: typeof AppCirclesIdMembersRouteImport
+      parentRoute: typeof AppCirclesIdRoute
     }
     '/_app/admin/celebrities/new': {
       id: '/_app/admin/celebrities/new'
@@ -340,11 +395,27 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppCirclesIdRouteChildren {
+  AppCirclesIdMembersRoute: typeof AppCirclesIdMembersRoute
+  AppCirclesIdSettingsRoute: typeof AppCirclesIdSettingsRoute
+  AppCirclesIdIndexRoute: typeof AppCirclesIdIndexRoute
+}
+
+const AppCirclesIdRouteChildren: AppCirclesIdRouteChildren = {
+  AppCirclesIdMembersRoute: AppCirclesIdMembersRoute,
+  AppCirclesIdSettingsRoute: AppCirclesIdSettingsRoute,
+  AppCirclesIdIndexRoute: AppCirclesIdIndexRoute,
+}
+
+const AppCirclesIdRouteWithChildren = AppCirclesIdRoute._addFileChildren(
+  AppCirclesIdRouteChildren,
+)
+
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppProfileRoute: typeof AppProfileRoute
   AppCelebritiesIdRoute: typeof AppCelebritiesIdRoute
-  AppCirclesIdRoute: typeof AppCirclesIdRoute
+  AppCirclesIdRoute: typeof AppCirclesIdRouteWithChildren
   AppCirclesJoinRoute: typeof AppCirclesJoinRoute
   AppCirclesNewRoute: typeof AppCirclesNewRoute
   AppCelebritiesIndexRoute: typeof AppCelebritiesIndexRoute
@@ -358,7 +429,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppProfileRoute: AppProfileRoute,
   AppCelebritiesIdRoute: AppCelebritiesIdRoute,
-  AppCirclesIdRoute: AppCirclesIdRoute,
+  AppCirclesIdRoute: AppCirclesIdRouteWithChildren,
   AppCirclesJoinRoute: AppCirclesJoinRoute,
   AppCirclesNewRoute: AppCirclesNewRoute,
   AppCelebritiesIndexRoute: AppCelebritiesIndexRoute,

@@ -41,3 +41,19 @@ export interface HubCircle {
     /** Top three, ordered by place (1, 2, 3). */
     podium: PodiumSlot[];
 }
+
+/** In-circle role, from Membership.role (not the global account role). */
+export type MemberRole = 'admin' | 'member';
+
+export interface CircleMember {
+    id: string;
+    name: string;
+    /** @handle. */
+    handle: string;
+    initials: string;
+    rank: number;
+    points: number;
+    role: MemberRole;
+    isYou?: boolean;
+    isCreator?: boolean;
+}
