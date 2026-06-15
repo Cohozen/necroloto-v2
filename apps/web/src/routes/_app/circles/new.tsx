@@ -1,18 +1,47 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { ChevronLeft, Eye, Globe, Lock, Ticket, Users, WalletCards, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { ChoiceCard } from '@/components/circles/ChoiceCard';
 import { SettingToggleRow } from '@/components/circles/SettingToggleRow';
 import { Button } from '@/components/ui/button';
+import { useCurrentUser } from '@/lib/api/currentUser';
+import { useCreateCircle } from '@/lib/api/queries';
 
 export const Route = createFileRoute('/_app/circles/new')({
     component: CreateCircle,
 });
 
 const YEAR = new Date().getFullYear();
+const MAX_NAME = 30;
 
 function CreateCircle() {
+    const navigate = useNavigate();
+    const { user } = useCurrentUser();
+    const createCircle = useCreateCircle();
+
+    const [name, setName] = useState('');
     const [visibility, setVisibility] = useState<'private' | 'public'>('private');
+    const [allowNewBet, setAllowNewBet] = useState(true);
+
+    const trimmedName = name.trim();
+    const canSubmit = !!user && trimmedName.length > 0 && !createCircle.isPending;
+
+    const handleSubmit = () => {
+        if (!canSubmit || !user) return;
+        createCircle.mutate(
+            {
+                name: trimmedName,
+                visibility: visibility === 'private' ? 'PRIVATE' : 'PUBLIC',
+                allowNewBet,
+                creatorUserId: user.id,
+            },
+            {
+                onSuccess: (circle) => {
+                    navigate({ to: '/circles/$id', params: { id: circle.id } });
+                },
+            },
+        );
+    };
 
     return (
         <div className="mx-auto flex w-full max-w-[560px] flex-col gap-6 p-4 md:p-6">
@@ -42,12 +71,15 @@ function CreateCircle() {
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between gap-2.5">
                         <span className="text-[13px] font-semibold text-ink-2">Nom du cercle</span>
-                        <span className="font-mono text-[11px] text-ink-3">16 / 30</span>
+                        <span className="font-mono text-[11px] text-ink-3">
+                            {name.length} / {MAX_NAME}
+                        </span>
                     </div>
                     <div className="flex h-[50px] items-center gap-2.5 rounded-xl border border-line-2 bg-surface-2 px-3.5 transition-colors focus-within:border-neon/50 focus-within:ring-2 focus-within:ring-neon/30">
                         <Users size={18} className="shrink-0 text-ink-3" />
                         <input
-                            defaultValue="Les Croque-Morts"
+                            value={name}
+                            onChange={(e) => setName(e.target.value.slice(0, MAX_NAME))}
                             placeholder="Nom du cercle"
                             className="min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-3"
                         />
@@ -87,7 +119,8 @@ function CreateCircle() {
                         icon={Ticket}
                         title="Autoriser de nouveaux paris"
                         description="Les membres peuvent rejoindre en cours d'année"
-                        defaultChecked
+                        checked={allowNewBet}
+                        onCheckedChange={setAllowNewBet}
                     />
                     <SettingToggleRow
                         icon={WalletCards}
@@ -102,8 +135,19 @@ function CreateCircle() {
                     />
                 </div>
 
-                <Button size="lg" className="mt-0.5 w-full">
-                    <Zap size={17} /> Créer le cercle
+                {createCircle.isError && (
+                    <p className="text-[13px] text-coral">
+                        La création a échoué. Vérifiez votre connexion et réessayez.
+                    </p>
+                )}
+
+                <Button
+                    size="lg"
+                    className="mt-0.5 w-full"
+                    disabled={!canSubmit}
+                    onClick={handleSubmit}
+                >
+                    <Zap size={17} /> {createCircle.isPending ? 'Création…' : 'Créer le cercle'}
                 </Button>
             </div>
         </div>

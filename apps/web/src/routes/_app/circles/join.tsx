@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { ChevronLeft, ChevronRight, Ticket } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     InputOTP,
@@ -7,6 +8,8 @@ import {
     InputOTPSeparator,
     InputOTPSlot,
 } from '@/components/ui/input-otp';
+import { useCurrentUser } from '@/lib/api/currentUser';
+import { useJoinCircleByCode } from '@/lib/api/queries';
 
 export const Route = createFileRoute('/_app/circles/join')({
     component: JoinCircle,
@@ -16,6 +19,25 @@ const slotClass =
     'size-12 rounded-xl border-[1.5px] border-line-2 bg-surface font-display text-[26px] font-extrabold text-ink sm:size-[52px] sm:text-[30px] data-[active=true]:border-neon/80 data-[active=true]:text-neon data-[active=true]:ring-[3px] data-[active=true]:ring-neon/20';
 
 function JoinCircle() {
+    const navigate = useNavigate();
+    const { user } = useCurrentUser();
+    const joinCircle = useJoinCircleByCode();
+    const [code, setCode] = useState('');
+
+    const canSubmit = !!user && code.length === 6 && !joinCircle.isPending;
+
+    const handleJoin = () => {
+        if (!canSubmit || !user) return;
+        joinCircle.mutate(
+            { code, userId: user.id },
+            {
+                onSuccess: (circle) => {
+                    navigate({ to: '/circles/$id', params: { id: circle.id } });
+                },
+            },
+        );
+    };
+
     return (
         <div className="mx-auto flex w-full max-w-[500px] flex-col gap-6 p-4 md:p-6">
             <Link
@@ -50,7 +72,12 @@ function JoinCircle() {
                     </p>
                 </div>
 
-                <InputOTP maxLength={6} containerClassName="gap-2.5">
+                <InputOTP
+                    maxLength={6}
+                    containerClassName="gap-2.5"
+                    value={code}
+                    onChange={(value) => setCode(value.toUpperCase())}
+                >
                     <InputOTPGroup className="gap-2.5">
                         <InputOTPSlot index={0} className={slotClass} />
                         <InputOTPSlot index={1} className={slotClass} />
@@ -64,10 +91,19 @@ function JoinCircle() {
                     </InputOTPGroup>
                 </InputOTP>
 
-                <p className="text-xs text-ink-3">ex. NEC–7F3</p>
+                {joinCircle.isError ? (
+                    <p className="text-xs text-coral">
+                        {joinCircle.error instanceof Error
+                            ? joinCircle.error.message
+                            : 'Impossible de rejoindre ce cercle.'}
+                    </p>
+                ) : (
+                    <p className="text-xs text-ink-3">ex. NEC7F3</p>
+                )}
 
-                <Button size="lg" className="w-full">
-                    Rejoindre le cercle <ChevronRight size={16} />
+                <Button size="lg" className="w-full" disabled={!canSubmit} onClick={handleJoin}>
+                    {joinCircle.isPending ? 'Connexion…' : 'Rejoindre le cercle'}{' '}
+                    <ChevronRight size={16} />
                 </Button>
                 <p className="text-[13px]">
                     <span className="text-ink-3">Pas de code ? </span>

@@ -6,6 +6,9 @@ interface SettingToggleRowProps {
     title: string;
     description: string;
     defaultChecked?: boolean;
+    /** Controlled state (optional — falls back to defaultChecked when omitted). */
+    checked?: boolean;
+    onCheckedChange?: (checked: boolean) => void;
 }
 
 /** Season-setting row (nl-setrow) — icon, label, description and a toggle. */
@@ -14,6 +17,8 @@ export function SettingToggleRow({
     title,
     description,
     defaultChecked,
+    checked,
+    onCheckedChange,
 }: SettingToggleRowProps) {
     return (
         <div className="flex items-center gap-3.5 rounded-[13px] border border-line bg-surface p-3.5">
@@ -24,7 +29,11 @@ export function SettingToggleRow({
                 <div className="text-sm font-semibold">{title}</div>
                 <div className="mt-0.5 text-xs text-ink-3">{description}</div>
             </div>
-            <Switch defaultChecked={defaultChecked} />
+            <Switch
+                defaultChecked={checked === undefined ? defaultChecked : undefined}
+                checked={checked}
+                onCheckedChange={onCheckedChange}
+            />
         </div>
     );
 }
