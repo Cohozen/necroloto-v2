@@ -7,6 +7,7 @@ import {
 } from '@clerk/clerk-react';
 import { createFileRoute } from '@tanstack/react-router';
 import { AppLoadingGate } from '@/components/auth/AppLoadingGate';
+import { CurrentUserProvider } from '@/components/auth/CurrentUserProvider';
 import { AppShell } from '@/components/layout/AppShell';
 import { isClerkConfigured } from '@/lib/auth/clerk';
 
@@ -16,7 +17,12 @@ export const Route = createFileRoute('/_app')({
 
 function AppLayout() {
     // Dev fallback: without Clerk keys, render the shell so the UI is previewable.
-    if (!isClerkConfigured) return <AppShell />;
+    if (!isClerkConfigured)
+        return (
+            <CurrentUserProvider>
+                <AppShell />
+            </CurrentUserProvider>
+        );
 
     return (
         <>
@@ -25,7 +31,9 @@ function AppLayout() {
             </ClerkLoading>
             <ClerkLoaded>
                 <SignedIn>
-                    <AppShell />
+                    <CurrentUserProvider>
+                        <AppShell />
+                    </CurrentUserProvider>
                 </SignedIn>
                 <SignedOut>
                     <RedirectToSignIn />
