@@ -51,9 +51,11 @@ export function createApiClient(getToken: TokenGetter): ApiClient {
             throw new ApiError(res.status, message, errorBody);
         }
 
-        if (res.status === 204) return undefined as T;
+        // Empty body (204, or Nest serializing a `null` return) -> null, never
+        // undefined: TanStack Query forbids undefined as query data.
+        if (res.status === 204) return null as T;
         const text = await res.text();
-        return (text ? JSON.parse(text) : undefined) as T;
+        return (text ? JSON.parse(text) : null) as T;
     }
 
     return {
