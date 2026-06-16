@@ -17,6 +17,7 @@ import { CircleService } from './circle.service';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateCircleDto } from './dto/create-circle.dto';
 import { UpdateCircleDto } from './dto/update-circle.dto';
+import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 
 @UseGuards(ClerkAuthGuard)
 @Controller('circle')
@@ -67,6 +68,16 @@ export class CircleController {
     @UseGuards(CircleAdminGuard)
     addMember(@Param('id') id: string, @Body() dto: AddMemberDto) {
         return this.circleService.addMember(id, dto);
+    }
+
+    @Patch(':id/members/:userId')
+    @UseGuards(CircleAdminGuard)
+    updateMemberRole(
+        @Param('id') id: string,
+        @Param('userId') userId: string,
+        @Body() dto: UpdateMemberRoleDto,
+    ) {
+        return this.circleService.updateMemberRole(id, userId, dto);
     }
 
     @Delete(':id/members/:userId')

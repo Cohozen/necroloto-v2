@@ -5,6 +5,7 @@ import { BetsService } from '../bets/bets.service';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateCircleDto } from './dto/create-circle.dto';
 import { UpdateCircleDto } from './dto/update-circle.dto';
+import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 
 /** One podium slot (top 3) in a circle summary. */
 export interface PodiumSlot {
@@ -216,6 +217,22 @@ export class CircleService {
                 userId: dto.userId,
                 role: dto.role || 'MEMBER',
             },
+            include: {
+                user: true,
+                circle: true,
+            },
+        });
+    }
+
+    async updateMemberRole(circleId: string, userId: string, dto: UpdateMemberRoleDto) {
+        return this.prisma.membership.update({
+            where: {
+                userId_circleId: {
+                    userId,
+                    circleId,
+                },
+            },
+            data: { role: dto.role },
             include: {
                 user: true,
                 circle: true,
