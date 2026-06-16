@@ -8,7 +8,8 @@ rapport à la v1 (Next.js), pensée **mobile-first** (DA néon / arcade sombre).
 
 > **Statut d'implémentation (`apps/web`)** — la nav réelle suit les labels des maquettes
 > (Accueil / Classement / Mon pari / Profil + FAB), pas exactement le modèle ci-dessous.
-> **Tous les écrans des maquettes sont portés (données mock `// TEMP`)** :
+> **Tous les écrans des maquettes sont portés** ; **1re tranche API branchée** (cercles +
+> dashboard via `src/lib/api/`), le reste encore en données mock `// TEMP` :
 > - Public/Auth : **Landing** `/`, **Connexion/Inscription** `/sign-in` `/sign-up` (Clerk thémé).
 > - **Dashboard** `/dashboard` · **Profil** `/profile`.
 > - Cercles : **hub** `/circles`, **Créer** `/circles/new`, **Rejoindre** `/circles/join` ;
@@ -17,7 +18,8 @@ rapport à la v1 (Next.js), pensée **mobile-first** (DA néon / arcade sombre).
 > - Catalogue : **Mon pari/catalogue** `/celebrities`, **Fiche** `/celebrities/$id`,
 >   **Admin catalogue** `/admin/celebrities` (+ `/$id` éditer, `/new` créer — admin global).
 >
-> Reste : **branchement API** (remplacer les `// TEMP` par client typé + TanStack Query).
+> Branchés : hub `/circles`, `/circles/new`, `/circles/join`, `/circles/$id` (classement),
+> `/dashboard`. Restent en `// TEMP` : profil, catalogue célébrités, paris, admin.
 > Onglet « Paris » du cercle pas encore construit (inerte dans la barre d'onglets).
 
 ## Modèle de navigation

@@ -7,7 +7,7 @@ susceptibles de mourir l'année suivante. Un décès rapporte des points (1 à 5
 Cette V2 reconstruit le projet sur une base propre et découplée, prête pour une
 app mobile : une **API NestJS** comme backend unique, **Supabase** (Postgres +
 storage), **Clerk** pour l'authentification, et un **front web** (Vite/React,
-en cours — UI construite, branchement API à venir).
+en cours — UI construite, 1re tranche d'API branchée : cercles + dashboard).
 
 ## Architecture
 

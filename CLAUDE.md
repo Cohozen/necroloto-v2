@@ -8,7 +8,8 @@ Necroloto V2 — a "celebrity death pool" game. Monorepo (pnpm + Turborepo):
 
 - `apps/api` — **NestJS API, the single backend brain**. All business logic lives here.
 - `apps/web` — **front web** (Vite + React 19 + TS, TanStack Router/Query, Tailwind v4 +
-  shadcn, Clerk). UI built; not yet wired to the API (screens use mock data marked `// TEMP`).
+  shadcn, Clerk). All mockup screens built; **first API slice wired** (circles + dashboard) via a
+  typed client in `src/lib/api/`. Remaining screens still use mock data marked `// TEMP`.
   See the "Front web" section below.
 - `packages/shared` — `@necroloto/shared`: scoring (`calculPointByCelebrity`, `deathYear`, UTC-based) and enums. Built with `tsc`, consumed by the API.
 - Mobile (Expo) is planned, not built yet.
@@ -95,14 +96,26 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
 - **Conventions**: one component per file / one file per component; types & interfaces in
   separate files (`*.types.ts` co-located, domain models in `src/types/`). shadcn primitives
   in `src/components/ui/` are re-themed in place. Layout chrome in `src/components/layout/`.
-- **Mock data**: screens currently render mock data marked `// TEMP` — to be replaced by a
-  typed API client (`src/lib/api/`) + TanStack Query. The API has **no Swagger**, so types
-  are hand-written; reuse `@necroloto/shared` enums where possible.
+- **API client** (`src/lib/api/`): a Clerk-authenticated fetch wrapper (`client.ts` — Bearer
+  token, `ApiError`) provided via `ApiClientProvider`/`context.ts` (anonymous variant when Clerk
+  is unconfigured, so the UI stays previewable); hand-written DTOs (`types.ts` — the API has **no
+  Swagger**; reuse `@necroloto/shared` enums), centralized `queryKeys` (`keys.ts`), TanStack Query
+  hooks (`queries.ts`), and `Api*→UI` adapters (`adapters.ts`). The Clerk user is resolved to a DB
+  `User` row and **provisioned on first sign-in** by `CurrentUserProvider` (GET `/users/clerk/:id`,
+  POST `/users` on miss); read it via `useCurrentUser()`. Reuse this pattern for new slices.
+  ⚠️ Nest serializes a `null` handler return as an **empty body** — `client.ts` returns `null`
+  (not `undefined`) on 204/empty, else TanStack Query throws "query data cannot be undefined".
+- **Wired vs mock**: wired = hub `/circles`, `/circles/new`, `/circles/join`, leaderboard
+  `/circles/$id`, `/dashboard`. Still mock (`// TEMP`): profile, celebrity catalog, bets, admin.
+  UI aggregates the raw CRUD doesn't expose get dedicated endpoints (`GET /circle/user/:id/summary`,
+  `GET /celebrities/deaths/feed`); simpler ones (e.g. the dashboard score band) are composed
+  client-side from existing endpoints.
 - **Auth**: `ClerkProvider` is mounted **only if** `VITE_CLERK_PUBLISHABLE_KEY` is set (see
   `src/lib/auth/clerk.ts`), so the UI stays previewable without keys. The auth gate lives in
   `src/routes/_app.tsx` (`SignedIn` / `RedirectToSignIn`). Needs `VITE_API_URL` +
   `VITE_CLERK_PUBLISHABLE_KEY` (in `apps/web/.env.local`) and `http://localhost:5173` added
-  to the API's `FRONTEND_ORIGIN` to talk to a real backend.
+  to the API's `FRONTEND_ORIGIN` to talk to a real backend. A dedicated **e2e test account**
+  (password login on the Clerk dev instance) lives in `apps/web/.env.test.local` (gitignored).
 - **Biome**: `css.parser.tailwindDirectives: true` lets Biome parse Tailwind v4 at-rules
   (`@theme`, `@utility`). `routeTree.gen.ts` and `docs/mockups/**` are ignored; `apps/web/
   src/components/ui/**` has a11y rule overrides for vendored shadcn patterns.
