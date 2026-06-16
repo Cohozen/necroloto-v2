@@ -112,6 +112,33 @@ hôte (non résolu par le navigateur) — sans impact sur le reste, mais pour bo
 
 ---
 
+### Données de prod en local (optionnel)
+
+`supabase start` démarre une base **vide** (le schéma est appliqué par `prisma migrate
+deploy`). Pour travailler sur de vraies données, clone les données de prod :
+
+```bash
+apps/api/scripts/clone-prod-to-local.sh
+```
+
+Prérequis : le `DIRECT_URL` de prod dans `apps/api/.env.production.local`. Le script copie
+**uniquement les lignes de la base** — **pas les fichiers Storage** (images), donc les URLs
+photo pointeront vers des fichiers absents en local. Les données **persistent** dans le volume
+Docker entre `supabase stop`/`start` : c'est un instantané figé à la date du dernier clone.
+
+Pour **rafraîchir** depuis la prod, repars d'une base vide (le clone charge par-dessus
+l'existant, sans purge) :
+
+```bash
+supabase stop --no-backup                                 # ⚠️ supprime le volume de données local
+supabase start --workdir apps/api
+pnpm --filter necroloto-api exec prisma migrate deploy
+apps/api/scripts/clone-prod-to-local.sh
+```
+
+> `supabase db reset` n'est pas adapté ici : le schéma est géré par les migrations **Prisma**,
+> pas par `supabase/migrations`.
+
 Référence des variables : [apps/api/.env.example](apps/api/.env.example) (API) et
 [.env.docker.example](.env.docker.example) (variante Docker). La procédure complète de dev
 local (env local vs prod, clone des données de prod, mise en garde sur les fichiers Storage)
