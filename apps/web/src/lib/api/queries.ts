@@ -6,14 +6,17 @@ import { useApiClient } from './context';
 import { queryKeys } from './keys';
 import type {
     ApiBet,
+    ApiCelebrity,
     ApiCircle,
     ApiMembership,
     ApiUser,
     CircleSummaryDto,
+    CreateBetPayload,
     CreateCirclePayload,
     CreateMembershipPayload,
     DeathFeedEntryDto,
     RankedBet,
+    ReplaceCelebritiesPayload,
     SortByRank,
     UpdateCirclePayload,
     UpdateMemberRolePayload,
@@ -184,7 +187,43 @@ export function useUserBets(userId: string | undefined) {
     });
 }
 
+// --- Bets (draft) ---
+
+export function useCreateBet() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: CreateBetPayload) => api.post<ApiBet>('/bets', payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['bets'] });
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+/** Replace a bet's full celebrity list (PATCH /bets/:id/celebrities). */
+export function useReplaceBetCelebrities() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ betId, celebrities }: { betId: string } & ReplaceCelebritiesPayload) =>
+            api.patch<ApiBet>(`/bets/${betId}/celebrities`, { celebrities }),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['bets'] });
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
 // --- Celebrities ---
+
+export function useCelebrities() {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: queryKeys.celebrities.list(),
+        queryFn: () => api.get<ApiCelebrity[]>('/celebrities'),
+    });
+}
 
 export function useDeathFeed(year = CURRENT_YEAR, limit = 10) {
     const api = useApiClient();

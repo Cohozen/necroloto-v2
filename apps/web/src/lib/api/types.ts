@@ -32,6 +32,8 @@ export interface ApiCelebrity {
     death: string | null;
     photo: string | null;
     wikidataId: string | null;
+    role: string | null;
+    category: string | null;
 }
 
 export interface ApiCelebritiesOnBet {
@@ -166,4 +168,16 @@ export interface UpdateCirclePayload {
 
 export interface UpdateMemberRolePayload {
     role: MembershipRole;
+}
+
+export interface CreateBetPayload {
+    userId: string;
+    year: number;
+    circleId?: string;
+    celebrityIds?: string[];
+}
+
+export interface ReplaceCelebritiesPayload {
+    /** Celebrity ids, existing names, or new names to create on the fly. */
+    celebrities: string[];
 }

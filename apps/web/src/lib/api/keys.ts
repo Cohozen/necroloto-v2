@@ -16,6 +16,7 @@ export const queryKeys = {
         byUser: (userId: string) => ['bets', 'user', userId] as const,
     },
     celebrities: {
+        list: () => ['celebrities', 'list'] as const,
         deathFeed: (year: number, limit: number) => ['celebrities', 'deaths', year, limit] as const,
     },
 } as const;

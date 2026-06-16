@@ -1,7 +1,7 @@
 // Maps API DTOs (Api*) to the UI domain types consumed by the screens. Keeps the
 // transformation in one place so routes only deal with view models.
 
-import type { CelebrityStatus } from '@/types/celebrity';
+import type { CelebrityStatus, CelebritySummary } from '@/types/celebrity';
 import type {
     CircleMember,
     CircleSummary,
@@ -13,6 +13,7 @@ import type { DeathFeedEntry } from '@/types/feed';
 import type { LeaderboardEntry, LeaderPick } from '@/types/leaderboard';
 import type { AvatarPerson } from '@/types/user';
 import type {
+    ApiCelebrity,
     ApiMembership,
     ApiUser,
     CircleSummaryDto,
@@ -172,6 +173,21 @@ export function toLeaderboardEntry(bet: RankedBet, currentUserId?: string): Lead
 }
 
 const celebrityStatus = (death: string | null): CelebrityStatus => (death ? 'deceased' : 'alive');
+
+/** API celebrity → catalogue card view model. Age/born derived from `birth`. */
+export function toCelebritySummary(c: ApiCelebrity): CelebritySummary {
+    const bornYear = c.birth ? new Date(c.birth).getUTCFullYear() : 0;
+    const age = c.birth ? yearsBetween(c.birth, c.death ?? new Date().toISOString()) : 0;
+    return {
+        id: c.id,
+        name: c.name,
+        age,
+        born: bornYear,
+        role: c.role ?? undefined,
+        status: celebrityStatus(c.death),
+        category: c.category ?? undefined,
+    };
+}
 
 /** The picks of a single bet (used to show the leader's roster). */
 export function toLeaderPicks(bet: RankedBet): LeaderPick[] {
