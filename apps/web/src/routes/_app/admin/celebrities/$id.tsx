@@ -1,30 +1,57 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { CelebrityForm } from '@/components/admin/CelebrityForm';
-import type { CelebrityFormData } from '@/types/admin';
+import {
+    useCelebrity,
+    useDeleteCelebrity,
+    useEnrichCelebrity,
+    useUpdateCelebrity,
+} from '@/lib/api/queries';
+import type { CreateCelebrityPayload } from '@/lib/api/types';
 
 export const Route = createFileRoute('/_app/admin/celebrities/$id')({
     component: AdminEditCelebrity,
 });
 
-// TEMP mock data — replaced by the API (fetch by id) in the data step.
-const CELEB: CelebrityFormData = {
-    id: 'gloria',
-    name: 'Dame Gloria Ravensworth',
-    bornLabel: '12 février 1929',
-    bornYear: 1929,
-    wikidataQid: 'Q462359',
-    deceased: true,
-    deathLabel: '14 mars 2026',
-    points: 140,
-    bettors: 3,
-};
-
 function AdminEditCelebrity() {
+    const { id } = Route.useParams();
+    const navigate = useNavigate();
+    const { data: celebrity, isLoading, isError } = useCelebrity(id);
+    const updateCelebrity = useUpdateCelebrity(id);
+    const deleteCelebrity = useDeleteCelebrity();
+    const enrichCelebrity = useEnrichCelebrity();
+
+    const handleSave = (payload: CreateCelebrityPayload) => {
+        updateCelebrity.mutate(payload);
+    };
+
+    const handleDelete = () => {
+        deleteCelebrity.mutate(id, {
+            onSuccess: () => navigate({ to: '/admin/celebrities' }),
+        });
+    };
+
     return (
         <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5 p-4 md:p-6">
             <AdminHeader crumb="Éditer" />
-            <CelebrityForm mode="edit" celeb={CELEB} />
+            {isLoading ? (
+                <p className="py-12 text-center text-sm text-ink-3">Chargement de la fiche…</p>
+            ) : isError || !celebrity ? (
+                <p className="py-12 text-center text-sm text-coral">Cette fiche est introuvable.</p>
+            ) : (
+                <CelebrityForm
+                    mode="edit"
+                    celebrity={celebrity}
+                    bettors={celebrity.CelebritiesOnBet.length}
+                    onSave={handleSave}
+                    onDelete={handleDelete}
+                    onEnrich={(wikidataId) => enrichCelebrity.mutate({ id, wikidataId })}
+                    isSaving={updateCelebrity.isPending}
+                    isDeleting={deleteCelebrity.isPending}
+                    isEnriching={enrichCelebrity.isPending}
+                    saveError={updateCelebrity.isError}
+                />
+            )}
         </div>
     );
 }

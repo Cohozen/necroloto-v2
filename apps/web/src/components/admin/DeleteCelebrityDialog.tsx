@@ -14,6 +14,8 @@ interface DeleteCelebrityDialogProps {
     /** Points the affected lists would lose. */
     points: number;
     bettors: number;
+    onConfirm: () => void;
+    isPending?: boolean;
     children: ReactNode;
 }
 
@@ -22,6 +24,8 @@ export function DeleteCelebrityDialog({
     name,
     points,
     bettors,
+    onConfirm,
+    isPending,
     children,
 }: DeleteCelebrityDialogProps) {
     return (
@@ -54,8 +58,14 @@ export function DeleteCelebrityDialog({
                             Annuler
                         </Button>
                     </DialogClose>
-                    <Button variant="destructive" className="h-12 flex-[1.4]">
-                        <Skull size={16} strokeWidth={2} /> Supprimer définitivement
+                    <Button
+                        variant="destructive"
+                        className="h-12 flex-[1.4]"
+                        onClick={onConfirm}
+                        disabled={isPending}
+                    >
+                        <Skull size={16} strokeWidth={2} />
+                        {isPending ? 'Suppression…' : 'Supprimer définitivement'}
                     </Button>
                 </div>
             </DialogContent>

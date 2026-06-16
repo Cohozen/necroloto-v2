@@ -7,9 +7,14 @@ type FieldState = 'default' | 'ok' | 'error';
 interface IconFieldProps {
     label: string;
     icon: LucideIcon;
-    /** Pre-filled value (mock data) — fields are display-only until wired. */
+    /** Controlled value (preferred). */
+    value?: string;
+    onChange?: (value: string) => void;
+    /** Uncontrolled fallback. */
     defaultValue?: string;
     placeholder?: string;
+    /** Native input type (e.g. "date", "text"). */
+    type?: string;
     /** Char counter or hint shown next to the label. */
     sub?: string;
     state?: FieldState;
@@ -30,13 +35,17 @@ const stateRing = {
 export function IconField({
     label,
     icon: Icon,
+    value,
+    onChange,
     defaultValue,
     placeholder,
+    type = 'text',
     sub,
     state = 'default',
     trailing,
     message,
 }: IconFieldProps) {
+    const controlled = onChange !== undefined;
     return (
         <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-2.5">
@@ -51,9 +60,12 @@ export function IconField({
             >
                 <Icon size={18} className="shrink-0 text-ink-3" />
                 <input
-                    defaultValue={defaultValue}
+                    type={type}
+                    {...(controlled
+                        ? { value: value ?? '', onChange: (e) => onChange?.(e.target.value) }
+                        : { defaultValue })}
                     placeholder={placeholder}
-                    className="min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-3"
+                    className="min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-3 [color-scheme:dark]"
                 />
                 {trailing}
                 {state === 'ok' && !trailing && <Check size={18} className="shrink-0 text-neon" />}
