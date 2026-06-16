@@ -2,7 +2,13 @@
 // transformation in one place so routes only deal with view models.
 
 import type { CelebrityStatus } from '@/types/celebrity';
-import type { CircleMember, CircleSummary, HubCircle, MemberRole, PodiumSlot } from '@/types/circle';
+import type {
+    CircleMember,
+    CircleSummary,
+    HubCircle,
+    MemberRole,
+    PodiumSlot,
+} from '@/types/circle';
 import type { DeathFeedEntry } from '@/types/feed';
 import type { LeaderboardEntry, LeaderPick } from '@/types/leaderboard';
 import type { AvatarPerson } from '@/types/user';

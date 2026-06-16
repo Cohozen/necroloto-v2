@@ -1,125 +1,107 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { Plus } from 'lucide-react';
+import { useMemo } from 'react';
 import { CircleAdminHeader } from '@/components/circles/CircleAdminHeader';
 import { MemberRow } from '@/components/circles/MemberRow';
+import { toCircleMember } from '@/lib/api/adapters';
+import { useCurrentUser } from '@/lib/api/currentUser';
+import {
+    useCircleDetail,
+    useCircleRank,
+    useRemoveMember,
+    useUpdateMemberRole,
+} from '@/lib/api/queries';
+import type { ApiCircle } from '@/lib/api/types';
 import type { CircleMember } from '@/types/circle';
 
 export const Route = createFileRoute('/_app/circles/$id/members')({
     component: CircleMembers,
 });
 
-const CIRCLE = { name: 'Les Faucheurs du Dimanche', members: 8 };
+/** Earliest-joined ADMIN, used as the circle creator (no creator field in DB). */
+function creatorUserId(circle: ApiCircle): string | undefined {
+    const admins = (circle.memberships ?? [])
+        .filter((m) => m.role === 'ADMIN')
+        .sort((a, b) => a.joinedAt.localeCompare(b.joinedAt));
+    return admins[0]?.userId;
+}
 
-// TEMP mock data — replaced by the API (membership roster) in the data step.
-const MEMBERS: CircleMember[] = [
-    {
-        id: 'sasha',
-        name: 'Sasha Volkov',
-        handle: '@sasha_v',
-        initials: 'SV',
-        rank: 1,
-        points: 615,
-        role: 'admin',
-    },
-    {
-        id: 'you',
-        name: 'Vous',
-        handle: '@croque_mort',
-        initials: 'CV',
-        rank: 2,
-        points: 420,
-        role: 'admin',
-        isYou: true,
-        isCreator: true,
-    },
-    {
-        id: 'priya',
-        name: 'Priya Raman',
-        handle: '@priya',
-        initials: 'PR',
-        rank: 3,
-        points: 360,
-        role: 'member',
-    },
-    {
-        id: 'mort',
-        name: 'Mortimer Lake',
-        handle: '@mortimer',
-        initials: 'MO',
-        rank: 4,
-        points: 300,
-        role: 'member',
-    },
-    {
-        id: 'lea',
-        name: 'Léa Khoury',
-        handle: '@lea_k',
-        initials: 'LK',
-        rank: 5,
-        points: 280,
-        role: 'member',
-    },
-    {
-        id: 'babet',
-        name: 'Babette Lenoir',
-        handle: '@babette',
-        initials: 'BA',
-        rank: 6,
-        points: 210,
-        role: 'member',
-    },
-    {
-        id: 'glen',
-        name: 'Glen Hawksworth',
-        handle: '@glen',
-        initials: 'GL',
-        rank: 7,
-        points: 180,
-        role: 'member',
-    },
-    {
-        id: 'gege',
-        name: 'Tonton Gégé',
-        handle: '@gege',
-        initials: 'GG',
-        rank: 8,
-        points: 120,
-        role: 'member',
-    },
-];
+/** Rank ascending; members without a bet this year (rank 0) sink to the bottom. */
+function byRank(a: CircleMember, b: CircleMember): number {
+    if (a.rank === 0 && b.rank === 0) return 0;
+    if (a.rank === 0) return 1;
+    if (b.rank === 0) return -1;
+    return a.rank - b.rank;
+}
 
 function CircleMembers() {
     const { id } = Route.useParams();
-    const admins = MEMBERS.filter((member) => member.role === 'admin').length;
+    const { user } = useCurrentUser();
+    const circleQuery = useCircleDetail(id);
+    const rankQuery = useCircleRank(id);
+    const removeMember = useRemoveMember(id);
+    const updateRole = useUpdateMemberRole(id);
+
+    const circle = circleQuery.data;
+
+    const members = useMemo<CircleMember[]>(() => {
+        if (!circle) return [];
+        const rankByUser = new Map((rankQuery.data ?? []).map((bet) => [bet.userId, bet]));
+        const creatorId = creatorUserId(circle);
+        return (circle.memberships ?? [])
+            .map((m) => toCircleMember(m, rankByUser.get(m.userId), user?.id, creatorId))
+            .sort(byRank);
+    }, [circle, rankQuery.data, user?.id]);
+
+    if (circleQuery.isLoading) {
+        return <p className="p-6 text-sm text-ink-3">Chargement…</p>;
+    }
+    if (!circle) {
+        return <p className="p-6 text-sm text-coral">Cercle introuvable.</p>;
+    }
+
+    const total = members.length;
+    const admins = members.filter((member) => member.role === 'admin').length;
+    const pending = removeMember.isPending || updateRole.isPending;
 
     return (
         <div className="mx-auto flex w-full max-w-[680px] flex-col gap-5 p-4 md:p-6">
             <CircleAdminHeader
                 id={id}
-                name={CIRCLE.name}
-                visibility="PRIVATE"
-                members={CIRCLE.members}
+                name={circle.name}
+                visibility={circle.visibility}
+                members={total}
                 active="members"
             />
 
             <div className="flex items-center gap-3">
                 <div>
-                    <h2 className="text-lg font-semibold">Membres · {CIRCLE.members}</h2>
+                    <h2 className="text-lg font-semibold">Membres · {total}</h2>
                     <p className="mt-0.5 text-xs text-ink-3">
-                        {admins} admins · {CIRCLE.members - admins} membres
+                        {admins} admins · {total - admins} membres
                     </p>
                 </div>
-                <button
-                    type="button"
+                {/* Invitations go through the shared code on the settings tab —
+                    there is no add-by-search endpoint. */}
+                <Link
+                    to="/circles/$id/settings"
+                    params={{ id }}
                     className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-neon/50 bg-neon/[0.08] px-3 text-[13px] font-semibold text-neon"
                 >
                     <Plus size={14} strokeWidth={2.2} /> Inviter
-                </button>
+                </Link>
             </div>
 
             <div className="flex flex-col gap-2.5">
-                {MEMBERS.map((member) => (
-                    <MemberRow key={member.id} member={member} />
+                {members.map((member) => (
+                    <MemberRow
+                        key={member.id}
+                        member={member}
+                        pending={pending}
+                        onPromote={() => updateRole.mutate({ userId: member.id, role: 'ADMIN' })}
+                        onDemote={() => updateRole.mutate({ userId: member.id, role: 'MEMBER' })}
+                        onRemove={() => removeMember.mutate(member.id)}
+                    />
                 ))}
             </div>
         </div>
