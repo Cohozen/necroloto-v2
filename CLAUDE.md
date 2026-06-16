@@ -131,8 +131,9 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   update server-side). The form sends ISO dates; `wikidataId` is set only via `POST
   /celebrities/:id/enrich` (no field on the create/update DTOs), reached through the
   `WikidataSearchDialog`. Photo upload (`POST /celebrities/:id/photo`, multipart) is **not wired
-  yet** — the client only does JSON. Needs the Clerk account to have `admin` in
-  `public_metadata.roles`.
+  yet** — the client only does JSON. All `/admin/*` routes are gated by the `_app/admin.tsx` layout
+  route on the Clerk `public_metadata.roles` admin claim (mirrors the API `AdminGuard`); non-admins
+  get the `AdminForbidden` screen. The gate is bypassed when Clerk is unconfigured (previewable dev).
 - **Bet model**: a bet is unique per `(userId, circleId, year)` — in practice one bet per user per
   season. The `/celebrities` draft is "Mon pari": it edits the bet of the **selected circle** (a
   circle selector defaults to the bet's circle, or the user's first), seeding the celebrity
