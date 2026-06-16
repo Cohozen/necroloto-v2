@@ -74,10 +74,18 @@ export class CelebritiesService {
     }
 
     async findOne(id: string) {
+        // Includes each bet's user + circle so the front can list "who bet on
+        // this celebrity" (filtered to the viewer's circles client-side).
         return this.prisma.celebrity.findUnique({
             where: { id },
             include: {
-                CelebritiesOnBet: true,
+                CelebritiesOnBet: {
+                    include: {
+                        bet: {
+                            include: { user: true, Circle: true },
+                        },
+                    },
+                },
             },
         });
     }
