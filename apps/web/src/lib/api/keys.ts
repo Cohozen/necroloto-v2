@@ -17,6 +17,7 @@ export const queryKeys = {
     },
     celebrities: {
         list: () => ['celebrities', 'list'] as const,
+        detail: (id: string) => ['celebrities', 'detail', id] as const,
         deathFeed: (year: number, limit: number) => ['celebrities', 'deaths', year, limit] as const,
     },
 } as const;

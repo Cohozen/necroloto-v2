@@ -135,6 +135,9 @@ importers:
       '@fontsource/space-mono':
         specifier: ^5.2.5
         version: 5.2.9
+      '@necroloto/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@tanstack/react-query':
         specifier: ^5.69.0
         version: 5.101.0(react@19.2.7)

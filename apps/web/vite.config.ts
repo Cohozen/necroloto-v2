@@ -12,4 +12,16 @@ export default defineConfig({
             '@': fileURLToPath(new URL('./src', import.meta.url)),
         },
     },
+    // @necroloto/shared is CommonJS; import scoring from its own module (not the
+    // barrel, whose __exportStar re-export isn't statically analyzable by rollup).
+    optimizeDeps: {
+        include: ['@necroloto/shared/scoring'],
+    },
+    build: {
+        // The shared package is a linked CJS workspace dep (outside node_modules),
+        // so rollup's commonjs transform must be told to cover it too.
+        commonjsOptions: {
+            include: [/node_modules/, /packages\/shared/],
+        },
+    },
 });

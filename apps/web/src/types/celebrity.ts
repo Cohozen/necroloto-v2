@@ -28,17 +28,17 @@ export interface Bettor {
 export interface CelebrityDetail {
     id: string;
     name: string;
-    /** Category / occupation, e.g. "Acteur". */
-    role: string;
-    /** Birth year. */
+    /** Occupation, e.g. "Acteur", when known. */
+    role?: string;
+    /** Coarse category used for the chip, when known. */
+    category?: string;
+    /** Birth year, 0 when unknown. */
     born: number;
     age: number;
     status: CelebrityStatus;
     /** Human-readable death date, when deceased. */
     deathLabel?: string;
-    /** Betting odds (cote). */
-    odds: number;
-    /** Points awarded (deceased) or potential (alive). */
+    /** Points awarded (deceased) or potential if death this year (alive). */
     points: number;
     bettors: Bettor[];
 }

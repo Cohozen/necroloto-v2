@@ -6,13 +6,12 @@ interface PointsHeroProps {
     status: CelebrityStatus;
     points: number;
     year: number;
-    odds: number;
     bettors: number;
     deathLabel?: string;
 }
 
 /** Points banner — awarded (deceased, coral) or potential (alive, neon). */
-export function PointsHero({ status, points, year, odds, bettors, deathLabel }: PointsHeroProps) {
+export function PointsHero({ status, points, year, bettors, deathLabel }: PointsHeroProps) {
     const dead = status === 'deceased';
     return (
         <div
@@ -47,7 +46,7 @@ export function PointsHero({ status, points, year, odds, bettors, deathLabel }: 
                     <span className="text-sm text-ink-2">
                         {dead
                             ? `à ${bettors} joueur·s${deathLabel ? ` · ${deathLabel}` : ''}`
-                            : `cote ${odds} · ${bettors} parieur·s`}
+                            : `${bettors} parieur·s`}
                     </span>
                 </div>
             </div>

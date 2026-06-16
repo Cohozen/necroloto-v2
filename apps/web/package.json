@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "@clerk/clerk-react": "^5.51.0",
+        "@necroloto/shared": "workspace:*",
         "@fontsource/pixelify-sans": "^5.2.5",
         "@fontsource/saira-condensed": "^5.2.5",
         "@fontsource/space-grotesk": "^5.2.5",

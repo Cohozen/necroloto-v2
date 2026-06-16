@@ -1,7 +1,8 @@
 // Maps API DTOs (Api*) to the UI domain types consumed by the screens. Keeps the
 // transformation in one place so routes only deal with view models.
 
-import type { CelebrityStatus, CelebritySummary } from '@/types/celebrity';
+import { calculPointByCelebrity } from '@necroloto/shared/scoring';
+import type { Bettor, CelebrityDetail, CelebrityStatus, CelebritySummary } from '@/types/celebrity';
 import type {
     CircleMember,
     CircleSummary,
@@ -14,6 +15,7 @@ import type { LeaderboardEntry, LeaderPick } from '@/types/leaderboard';
 import type { AvatarPerson } from '@/types/user';
 import type {
     ApiCelebrity,
+    ApiCelebrityDetail,
     ApiMembership,
     ApiUser,
     CircleSummaryDto,
@@ -186,6 +188,70 @@ export function toCelebritySummary(c: ApiCelebrity): CelebritySummary {
         role: c.role ?? undefined,
         status: celebrityStatus(c.death),
         category: c.category ?? undefined,
+    };
+}
+
+/** French long date, e.g. "12 mars 2026". */
+function longDateLabel(iso: string): string {
+    return new Intl.DateTimeFormat('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    }).format(new Date(iso));
+}
+
+/**
+ * Celebrity points: awarded points if deceased, else the potential value if they
+ * died at the end of the current year. Uses the shared scoring source of truth.
+ */
+function celebrityPoints(c: Pick<ApiCelebrity, 'birth' | 'death'>): number {
+    if (!c.birth) return 0;
+    const birth = new Date(c.birth);
+    const death = c.death
+        ? new Date(c.death)
+        : new Date(Date.UTC(new Date().getFullYear(), 11, 31));
+    return calculPointByCelebrity(birth, death);
+}
+
+/**
+ * API celebrity detail → fiche view model. Bettors are limited to bets placed in
+ * one of the viewer's circles (`myCircleIds`); `currentUserId` marks your row.
+ */
+export function toCelebrityDetail(
+    c: ApiCelebrityDetail,
+    myCircleIds: Set<string>,
+    currentUserId: string | undefined,
+): CelebrityDetail {
+    const dead = !!c.death;
+    const points = celebrityPoints(c);
+    const summary = toCelebritySummary(c);
+
+    const bettors: Bettor[] = c.CelebritiesOnBet.filter(
+        (e) => e.bet.circleId && myCircleIds.has(e.bet.circleId),
+    ).map((e) => {
+        const isYou = e.bet.userId === currentUserId;
+        const name = userDisplayName(e.bet.user);
+        return {
+            id: e.bet.id,
+            name: isYou ? 'Vous' : name,
+            initials: isYou ? 'ME' : initialsOf(name),
+            circle: e.bet.Circle?.name ?? '—',
+            isYou,
+            points: dead ? e.points : points,
+        };
+    });
+
+    return {
+        id: c.id,
+        name: c.name,
+        role: c.role ?? undefined,
+        category: c.category ?? undefined,
+        born: summary.born,
+        age: summary.age,
+        status: dead ? 'deceased' : 'alive',
+        deathLabel: c.death ? longDateLabel(c.death) : undefined,
+        points,
+        bettors,
     };
 }
 

@@ -7,6 +7,7 @@ import { queryKeys } from './keys';
 import type {
     ApiBet,
     ApiCelebrity,
+    ApiCelebrityDetail,
     ApiCircle,
     ApiMembership,
     ApiUser,
@@ -222,6 +223,15 @@ export function useCelebrities() {
     return useQuery({
         queryKey: queryKeys.celebrities.list(),
         queryFn: () => api.get<ApiCelebrity[]>('/celebrities'),
+    });
+}
+
+export function useCelebrity(id: string | undefined) {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: id ? queryKeys.celebrities.detail(id) : ['celebrities', 'detail', 'none'],
+        queryFn: () => api.get<ApiCelebrityDetail>(`/celebrities/${id}`),
+        enabled: !!id,
     });
 }
 

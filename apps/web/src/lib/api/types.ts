@@ -45,6 +45,26 @@ export interface ApiCelebritiesOnBet {
     celebrity: ApiCelebrity;
 }
 
+/** One bet listing a celebrity, with its author + circle (celebrity detail). */
+export interface ApiBettorEntry {
+    betId: string;
+    celebrityId: string;
+    points: number;
+    bet: {
+        id: string;
+        userId: string;
+        circleId: string | null;
+        year: number;
+        user: ApiUser;
+        Circle: ApiCircle | null;
+    };
+}
+
+/** Celebrity detail (GET /celebrities/:id) — bets enriched with user + circle. */
+export interface ApiCelebrityDetail extends ApiCelebrity {
+    CelebritiesOnBet: ApiBettorEntry[];
+}
+
 export interface ApiBet {
     id: string;
     userId: string;
