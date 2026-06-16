@@ -8,20 +8,25 @@ import type {
     ApiBet,
     ApiCelebrity,
     ApiCelebrityDetail,
+    ApiCelebrityListItem,
     ApiCircle,
     ApiMembership,
     ApiUser,
     CircleSummaryDto,
     CreateBetPayload,
+    CreateCelebrityPayload,
     CreateCirclePayload,
     CreateMembershipPayload,
     DeathFeedEntryDto,
+    EnrichCelebrityPayload,
     RankedBet,
     ReplaceCelebritiesPayload,
     SortByRank,
+    UpdateCelebrityPayload,
     UpdateCirclePayload,
     UpdateMemberRolePayload,
     UpdateUserPayload,
+    WikidataSummaryDto,
 } from './types';
 
 export type { SortByRank };
@@ -222,7 +227,7 @@ export function useCelebrities() {
     const api = useApiClient();
     return useQuery({
         queryKey: queryKeys.celebrities.list(),
-        queryFn: () => api.get<ApiCelebrity[]>('/celebrities'),
+        queryFn: () => api.get<ApiCelebrityListItem[]>('/celebrities'),
     });
 }
 
@@ -241,5 +246,69 @@ export function useDeathFeed(year = CURRENT_YEAR, limit = 10) {
         queryKey: queryKeys.celebrities.deathFeed(year, limit),
         queryFn: () =>
             api.get<DeathFeedEntryDto[]>(`/celebrities/deaths/feed?year=${year}&limit=${limit}`),
+    });
+}
+
+// --- Celebrities (admin) ---
+
+export function useCreateCelebrity() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: CreateCelebrityPayload) =>
+            api.post<ApiCelebrity>('/celebrities', payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+        },
+    });
+}
+
+export function useUpdateCelebrity(id: string) {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: UpdateCelebrityPayload) =>
+            api.patch<ApiCelebrity>(`/celebrities/${id}`, payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+        },
+    });
+}
+
+export function useDeleteCelebrity() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => api.delete<ApiCelebrity>(`/celebrities/${id}`),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+        },
+    });
+}
+
+/** Enrich a celebrity from Wikidata (fills birth/death/photo, links the QID). */
+export function useEnrichCelebrity() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, ...payload }: { id: string } & EnrichCelebrityPayload) =>
+            api.post<ApiCelebrity>(`/celebrities/${id}/enrich`, payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+        },
+    });
+}
+
+/** Wikidata candidates for a name (admin disambiguation). Enabled when name is set. */
+export function useWikidataSearch(name: string) {
+    const api = useApiClient();
+    const trimmed = name.trim();
+    return useQuery({
+        queryKey: queryKeys.celebrities.wikidata(trimmed),
+        queryFn: () =>
+            api.get<WikidataSummaryDto[]>(
+                `/celebrities/wikidata/search?name=${encodeURIComponent(trimmed)}`,
+            ),
+        enabled: trimmed.length > 0,
     });
 }

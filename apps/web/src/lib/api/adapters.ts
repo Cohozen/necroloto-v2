@@ -2,6 +2,7 @@
 // transformation in one place so routes only deal with view models.
 
 import { calculPointByCelebrity } from '@necroloto/shared/scoring';
+import type { AdminCelebrity } from '@/types/admin';
 import type { Bettor, CelebrityDetail, CelebrityStatus, CelebritySummary } from '@/types/celebrity';
 import type {
     CircleMember,
@@ -16,6 +17,7 @@ import type { AvatarPerson } from '@/types/user';
 import type {
     ApiCelebrity,
     ApiCelebrityDetail,
+    ApiCelebrityListItem,
     ApiMembership,
     ApiUser,
     CircleSummaryDto,
@@ -175,6 +177,22 @@ export function toLeaderboardEntry(bet: RankedBet, currentUserId?: string): Lead
 }
 
 const celebrityStatus = (death: string | null): CelebrityStatus => (death ? 'deceased' : 'alive');
+
+/**
+ * API celebrity list item → admin catalogue row. `bettors` counts the bet join
+ * rows; `points` uses the shared scoring (awarded if dead, else potential value).
+ */
+export function toAdminCelebrity(c: ApiCelebrityListItem): AdminCelebrity {
+    return {
+        id: c.id,
+        name: c.name,
+        role: c.role ?? '',
+        born: c.birth ? new Date(c.birth).getUTCFullYear() : 0,
+        status: celebrityStatus(c.death),
+        points: celebrityPoints(c),
+        bettors: c.CelebritiesOnBet.length,
+    };
+}
 
 /** API celebrity → catalogue card view model. Age/born derived from `birth`. */
 export function toCelebritySummary(c: ApiCelebrity): CelebritySummary {

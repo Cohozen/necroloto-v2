@@ -65,6 +65,22 @@ export interface ApiCelebrityDetail extends ApiCelebrity {
     CelebritiesOnBet: ApiBettorEntry[];
 }
 
+/** Celebrity list item (GET /celebrities) — bet join rows for counting bettors. */
+export interface ApiCelebrityListItem extends ApiCelebrity {
+    CelebritiesOnBet: { points: number }[];
+}
+
+/** A Wikidata candidate (GET /celebrities/wikidata/search). Dates are ISO strings. */
+export interface WikidataSummaryDto {
+    wikidataId: string;
+    label: string;
+    description?: string;
+    birth?: string;
+    death?: string;
+    photoFilename?: string;
+    isHuman: boolean;
+}
+
 export interface ApiBet {
     id: string;
     userId: string;
@@ -200,4 +216,20 @@ export interface CreateBetPayload {
 export interface ReplaceCelebritiesPayload {
     /** Celebrity ids, existing names, or new names to create on the fly. */
     celebrities: string[];
+}
+
+export interface CreateCelebrityPayload {
+    name: string;
+    /** ISO date strings (full ISO-8601 — only the date part is stored); null clears. */
+    birth?: string | null;
+    death?: string | null;
+    role?: string | null;
+    category?: string;
+}
+
+export type UpdateCelebrityPayload = Partial<CreateCelebrityPayload>;
+
+export interface EnrichCelebrityPayload {
+    /** Explicit Wikidata QID; the API falls back to the existing link or name. */
+    wikidataId?: string;
 }
