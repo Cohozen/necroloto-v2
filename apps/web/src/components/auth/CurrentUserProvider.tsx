@@ -14,8 +14,9 @@ import { isClerkConfigured } from '@/lib/auth/clerk';
  */
 export function CurrentUserProvider({ children }: { children: ReactNode }) {
     if (!isClerkConfigured) {
+        // Previewable dev: no real session, treat as admin so admin UI stays reachable.
         return (
-            <CurrentUserContext.Provider value={{ user: null, isLoading: false }}>
+            <CurrentUserContext.Provider value={{ user: null, isLoading: false, isAdmin: true }}>
                 {children}
             </CurrentUserContext.Provider>
         );
@@ -59,12 +60,16 @@ function ClerkCurrentUserProvider({ children }: { children: ReactNode }) {
         });
     }, [clerkId, userQuery.isSuccess, userQuery.data, provision, clerkUser]);
 
+    const roles = (clerkUser?.publicMetadata as { roles?: unknown } | undefined)?.roles;
+    const isAdmin = Array.isArray(roles) && roles.includes('admin');
+
     const value = useMemo(
         () => ({
             user: userQuery.data ?? provision.data ?? null,
             isLoading: userQuery.isLoading || provision.isPending,
+            isAdmin,
         }),
-        [userQuery.data, userQuery.isLoading, provision.data, provision.isPending],
+        [userQuery.data, userQuery.isLoading, provision.data, provision.isPending, isAdmin],
     );
 
     return <CurrentUserContext.Provider value={value}>{children}</CurrentUserContext.Provider>;

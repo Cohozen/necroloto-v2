@@ -6,11 +6,14 @@ export interface CurrentUserState {
     user: ApiUser | null;
     /** True while resolving (querying / provisioning) the user. */
     isLoading: boolean;
+    /** True when the Clerk session carries the global `admin` role (mirrors the API AdminGuard). */
+    isAdmin: boolean;
 }
 
 export const CurrentUserContext = createContext<CurrentUserState>({
     user: null,
     isLoading: false,
+    isAdmin: false,
 });
 
 /** Current DB user (resolved from Clerk). `user` is null when signed out or not yet provisioned. */
