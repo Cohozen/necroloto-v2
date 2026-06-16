@@ -150,6 +150,12 @@ export interface CreateMembershipPayload {
     role?: MembershipRole;
 }
 
+export interface UpdateUserPayload {
+    username?: string;
+    firstname?: string;
+    lastname?: string;
+}
+
 export interface UpdateCirclePayload {
     name?: string;
     visibility?: CircleVisibility;

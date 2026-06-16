@@ -17,6 +17,7 @@ import type {
     SortByRank,
     UpdateCirclePayload,
     UpdateMemberRolePayload,
+    UpdateUserPayload,
 } from './types';
 
 export type { SortByRank };
@@ -31,6 +32,19 @@ export function useUserByClerkId(clerkId: string | undefined) {
         queryKey: clerkId ? queryKeys.users.byClerk(clerkId) : ['users', 'clerk', 'none'],
         queryFn: () => api.get<ApiUser | null>(`/users/clerk/${clerkId}`),
         enabled: !!clerkId,
+    });
+}
+
+/** Update the current user's profile (PATCH /users/:id), then refresh its cache. */
+export function useUpdateUser() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, ...payload }: { id: string; clerkId: string } & UpdateUserPayload) =>
+            api.patch<ApiUser>(`/users/${id}`, payload),
+        onSuccess: (updated, { clerkId }) => {
+            qc.setQueryData(queryKeys.users.byClerk(clerkId), updated);
+        },
     });
 }
 

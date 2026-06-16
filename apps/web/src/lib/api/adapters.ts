@@ -92,6 +92,13 @@ export function yearsBetween(fromIso: string, toIso: string): number {
     return age;
 }
 
+/** French month-year label for an ISO date, e.g. "déc. 2024". */
+export function monthYearLabel(iso: string): string {
+    return new Intl.DateTimeFormat('fr-FR', { month: 'short', year: 'numeric' }).format(
+        new Date(iso),
+    );
+}
+
 /** Relative French label for a past ISO date, e.g. "il y a 2 j". */
 export function relativeDayLabel(iso: string, now = new Date()): string {
     const then = new Date(iso);
