@@ -1,4 +1,4 @@
-import { Check, Zap } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CelebritySummary } from '@/types/celebrity';
 import { CelebrityPortrait } from './CelebrityPortrait';
@@ -12,7 +12,10 @@ interface CelebrityCardProps {
 
 /** Selectable celebrity card for the draft grid (nl-celeb). */
 export function CelebrityCard({ celebrity, selected, onToggle }: CelebrityCardProps) {
-    const { id, name, age, born, role, status, odds } = celebrity;
+    const { id, name, age, born, role, status } = celebrity;
+    const meta = [age > 0 ? `${age} ans` : null, born > 0 ? `°${born}` : null, role]
+        .filter(Boolean)
+        .join(' · ');
     return (
         <button
             type="button"
@@ -36,15 +39,10 @@ export function CelebrityCard({ celebrity, selected, onToggle }: CelebrityCardPr
             <CelebrityPortrait name={name} status={status} className="aspect-square w-full" />
             <div>
                 <div className="text-sm font-bold leading-tight">{name}</div>
-                <div className="text-xs text-ink-3">
-                    {age} ans · °{born} · {role}
-                </div>
+                <div className="text-xs text-ink-3">{meta || '—'}</div>
             </div>
             <div className="flex items-center justify-between gap-2">
                 <StatusBadge status={status} className="h-6 px-2 text-[11px]" />
-                <span className="inline-flex h-6 items-center gap-1 rounded-md border border-line-2 bg-surface-3 px-2 font-mono text-xs font-bold">
-                    <Zap size={12} /> {odds}
-                </span>
             </div>
         </button>
     );

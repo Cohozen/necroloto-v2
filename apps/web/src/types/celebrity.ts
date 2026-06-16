@@ -3,15 +3,15 @@ export type CelebrityStatus = 'alive' | 'deceased';
 export interface CelebritySummary {
     id: string;
     name: string;
+    /** Age in years (current age if alive, age at death otherwise); 0 if birth unknown. */
     age: number;
-    /** Birth year. */
+    /** Birth year, 0 when unknown. */
     born: number;
-    role: string;
+    /** Occupation, when known. */
+    role?: string;
     status: CelebrityStatus;
-    /** Betting odds (cote). */
-    odds: number;
-    /** Coarse category used for filtering. */
-    category: string;
+    /** Coarse category used for filtering, when known. */
+    category?: string;
 }
 
 export interface Bettor {

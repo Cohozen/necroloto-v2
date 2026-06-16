@@ -1,167 +1,123 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { Check, ChevronDown, Search, Users } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { CelebrityCard } from '@/components/celebrities/CelebrityCard';
 import { DraftTray } from '@/components/celebrities/DraftTray';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { toCelebritySummary } from '@/lib/api/adapters';
+import { useCurrentUser } from '@/lib/api/currentUser';
+import {
+    CURRENT_YEAR,
+    useCelebrities,
+    useCircleSummaries,
+    useCreateBet,
+    useReplaceBetCelebrities,
+    useUserBets,
+} from '@/lib/api/queries';
+import type { ApiBet, ApiCelebrity, CircleSummaryDto } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
-import type { CelebritySummary } from '@/types/celebrity';
 
 export const Route = createFileRoute('/_app/celebrities/')({
     component: Catalogue,
 });
 
-const YEAR = new Date().getFullYear();
+const YEAR = CURRENT_YEAR;
 const TOTAL = 15;
 const CATEGORIES = ['Tous', 'Cinéma', 'Musique', 'Royauté & politique', 'Sport', 'Affaires'];
 
-// TEMP mock data — replaced by the API (search) in the data step.
-const CELEBRITIES: CelebritySummary[] = [
-    {
-        id: 'gloria',
-        name: 'Dame Gloria Ravensworth',
-        age: 96,
-        born: 1929,
-        role: 'Aristocrate',
-        status: 'deceased',
-        odds: 4.2,
-        category: 'Royauté & politique',
-    },
-    {
-        id: 'buck',
-        name: 'Buck Thunderlane',
-        age: 87,
-        born: 1938,
-        role: 'Acteur',
-        status: 'alive',
-        odds: 6.5,
-        category: 'Cinéma',
-    },
-    {
-        id: 'strog',
-        name: 'Ivan Strogov',
-        age: 81,
-        born: 1944,
-        role: 'Politicien',
-        status: 'alive',
-        odds: 5.1,
-        category: 'Royauté & politique',
-    },
-    {
-        id: 'babet',
-        name: 'Babette Trompette',
-        age: 92,
-        born: 1933,
-        role: 'Chanteuse',
-        status: 'deceased',
-        odds: 3.8,
-        category: 'Musique',
-    },
-    {
-        id: 'yola',
-        name: 'Yolanda Vega',
-        age: 78,
-        born: 1947,
-        role: 'Chanteuse',
-        status: 'alive',
-        odds: 7.2,
-        category: 'Musique',
-    },
-    {
-        id: 'glen',
-        name: 'Glen Mort',
-        age: 84,
-        born: 1941,
-        role: 'Réalisateur',
-        status: 'alive',
-        odds: 5.9,
-        category: 'Cinéma',
-    },
-    {
-        id: 'vane',
-        name: 'Vanessa Crowe',
-        age: 90,
-        born: 1935,
-        role: 'Actrice',
-        status: 'alive',
-        odds: 4.6,
-        category: 'Cinéma',
-    },
-    {
-        id: 'sven',
-        name: 'Sven Karlsson',
-        age: 88,
-        born: 1937,
-        role: 'Magnat',
-        status: 'alive',
-        odds: 6.1,
-        category: 'Affaires',
-    },
-    {
-        id: 'cons',
-        name: 'Constance Hale',
-        age: 95,
-        born: 1930,
-        role: 'Écrivaine',
-        status: 'alive',
-        odds: 4.0,
-        category: 'Affaires',
-    },
-    {
-        id: 'reggie',
-        name: 'Reggie Frost',
-        age: 79,
-        born: 1946,
-        role: 'Footballeur',
-        status: 'alive',
-        odds: 8.3,
-        category: 'Sport',
-    },
-    {
-        id: 'marlon',
-        name: 'Marlon Pike',
-        age: 83,
-        born: 1942,
-        role: 'Boxeur',
-        status: 'alive',
-        odds: 6.8,
-        category: 'Sport',
-    },
-    {
-        id: 'dot',
-        name: 'Dot Sterling',
-        age: 91,
-        born: 1934,
-        role: 'Actrice',
-        status: 'alive',
-        odds: 4.9,
-        category: 'Cinéma',
-    },
-];
-
-const INITIAL_SELECTION = ['gloria', 'strog', 'babet', 'yola', 'glen', 'vane', 'cons'];
-
 function Catalogue() {
-    const [selected, setSelected] = useState(() => new Set(INITIAL_SELECTION));
+    const { user } = useCurrentUser();
+    const celebsQuery = useCelebrities();
+    const betsQuery = useUserBets(user?.id);
+    const summariesQuery = useCircleSummaries(user?.id);
+
+    if (!user || celebsQuery.isLoading || betsQuery.isLoading || summariesQuery.isLoading) {
+        return <p className="p-6 text-sm text-ink-3">Chargement du draft…</p>;
+    }
+
+    return (
+        <DraftScreen
+            userId={user.id}
+            celebrities={celebsQuery.data ?? []}
+            bets={betsQuery.data ?? []}
+            circles={summariesQuery.data ?? []}
+        />
+    );
+}
+
+interface DraftScreenProps {
+    userId: string;
+    celebrities: ApiCelebrity[];
+    bets: ApiBet[];
+    circles: CircleSummaryDto[];
+}
+
+function DraftScreen({ userId, celebrities, bets, circles }: DraftScreenProps) {
+    const createBet = useCreateBet();
+    const replaceBet = useReplaceBetCelebrities();
+
+    const yearBets = useMemo(() => bets.filter((b) => b.year === YEAR), [bets]);
+
+    const [circleId, setCircleId] = useState<string | undefined>(
+        () => yearBets[0]?.circleId ?? circles[0]?.id,
+    );
+
+    const bet = useMemo(
+        () => yearBets.find((b) => (b.circleId ?? undefined) === circleId),
+        [yearBets, circleId],
+    );
+
+    const [selected, setSelected] = useState<Set<string>>(
+        () => new Set(bet?.CelebritiesOnBet.map((c) => c.celebrityId)),
+    );
+
+    // Re-seed the selection from the bet of the newly-selected circle.
+    useEffect(() => {
+        const next = yearBets.find((b) => (b.circleId ?? undefined) === circleId);
+        setSelected(new Set(next?.CelebritiesOnBet.map((c) => c.celebrityId)));
+    }, [circleId, yearBets]);
+
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState('Tous');
+
+    const cards = useMemo(() => celebrities.map(toCelebritySummary), [celebrities]);
 
     const toggle = (id: string) =>
         setSelected((prev) => {
             const next = new Set(prev);
             if (next.has(id)) next.delete(id);
-            else next.add(id);
+            else if (next.size < TOTAL) next.add(id);
             return next;
         });
 
     const results = useMemo(() => {
         const q = query.trim().toLowerCase();
-        return CELEBRITIES.filter(
+        return cards.filter(
             (c) =>
                 (category === 'Tous' || c.category === category) &&
                 (q === '' || c.name.toLowerCase().includes(q)),
         );
-    }, [query, category]);
+    }, [cards, query, category]);
+
+    const selectedCircle = circles.find((c) => c.id === circleId);
+    const isSaving = createBet.isPending || replaceBet.isPending;
+    const canSave = !!circleId && selected.size > 0 && !isSaving;
+
+    const handleValidate = () => {
+        if (!canSave || !circleId) return;
+        const ids = [...selected];
+        if (bet) {
+            replaceBet.mutate({ betId: bet.id, celebrities: ids });
+        } else {
+            createBet.mutate({ userId, year: YEAR, circleId, celebrityIds: ids });
+        }
+    };
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 md:p-6">
@@ -176,6 +132,37 @@ function Catalogue() {
                     {selected.size} / {TOTAL} sélectionnées
                 </span>
             </div>
+
+            {/* circle selector — the bet is saved against the chosen circle */}
+            {circles.length === 0 ? (
+                <p className="text-[13px] text-ink-3">
+                    Rejoignez ou créez un cercle pour enregistrer un pari.{' '}
+                    <Link to="/circles" className="font-semibold text-neon">
+                        Mes cercles
+                    </Link>
+                </p>
+            ) : (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button
+                            type="button"
+                            className="inline-flex h-10 w-fit items-center gap-2 rounded-xl border border-line-2 bg-surface px-3.5 text-[14px] font-semibold text-ink-2 hover:text-ink"
+                        >
+                            <Users size={16} className="text-ink-3" />
+                            {selectedCircle?.name ?? 'Choisir un cercle'}
+                            <ChevronDown size={15} className="text-ink-3" />
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-60">
+                        {circles.map((c) => (
+                            <DropdownMenuItem key={c.id} onSelect={() => setCircleId(c.id)}>
+                                <Users size={15} /> {c.name}
+                                {c.id === circleId && <Check size={15} className="ml-auto" />}
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )}
 
             <div className="relative">
                 <Search
@@ -223,7 +210,19 @@ function Catalogue() {
                 <p className="py-10 text-center text-ink-3">Aucune célébrité ne correspond.</p>
             )}
 
-            <DraftTray selected={selected.size} total={TOTAL} />
+            {(createBet.isError || replaceBet.isError) && (
+                <p className="text-[13px] text-coral">
+                    L'enregistrement du pari a échoué. Réessayez.
+                </p>
+            )}
+
+            <DraftTray
+                selected={selected.size}
+                total={TOTAL}
+                onValidate={handleValidate}
+                saving={isSaving}
+                disabled={!canSave}
+            />
         </div>
     );
 }

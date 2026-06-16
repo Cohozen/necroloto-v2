@@ -5,10 +5,14 @@ interface DraftTrayProps {
     selected: number;
     total: number;
     onValidate?: () => void;
+    /** Disables the validate action (e.g. empty selection or no circle). */
+    disabled?: boolean;
+    /** Shows a pending label while the bet is being saved. */
+    saving?: boolean;
 }
 
 /** Sticky draft summary with the selection count and validate action (nl tray). */
-export function DraftTray({ selected, total, onValidate }: DraftTrayProps) {
+export function DraftTray({ selected, total, onValidate, disabled, saving }: DraftTrayProps) {
     const remaining = Math.max(total - selected, 0);
     return (
         <div className="sticky bottom-4 z-10 mt-2 flex items-center gap-4 rounded-2xl border border-neon/40 bg-bg/85 p-3 px-4 shadow-glow-green backdrop-blur-md">
@@ -23,8 +27,9 @@ export function DraftTray({ selected, total, onValidate }: DraftTrayProps) {
                 </div>
             </div>
             <div className="flex-1" />
-            <Button onClick={onValidate} className="shrink-0">
-                <Check size={16} strokeWidth={2.4} /> Valider mon pari
+            <Button onClick={onValidate} disabled={disabled} className="shrink-0">
+                <Check size={16} strokeWidth={2.4} />{' '}
+                {saving ? 'Enregistrement…' : 'Valider mon pari'}
             </Button>
         </div>
     );
