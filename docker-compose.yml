@@ -1,0 +1,59 @@
+# Local dev stack: API + web in containers, hot-reloaded, wired to the Supabase
+# CLI stack already running on the host (`cd apps/api && supabase start`).
+#
+# Prereqs: Docker engine (Colima), Supabase CLI stack up, and a `.env.docker`
+# at the repo root (copy from .env.docker.example, fill secrets from
+# `supabase status`). See CLAUDE.md "Local dev environment".
+#
+# Usage: pnpm docker:up   (== docker compose up --build)
+
+# Shared bits between services. The anonymous volumes are the important part:
+# they keep node_modules and Prisma's generated client container-owned (linux
+# binaries), so the host's macOS bind mount can't shadow them.
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile.dev
+  extra_hosts:
+    # Lets containers reach the host-published Supabase ports via
+    # host.docker.internal (works under Colima).
+    - "host.docker.internal:host-gateway"
+  volumes:
+    - .:/app
+    - /app/node_modules
+    - /app/apps/api/node_modules
+    - /app/apps/web/node_modules
+    - /app/packages/shared/node_modules
+    - /app/apps/api/generated
+    - /app/packages/shared/dist
+
+services:
+  api:
+    <<: *app
+    # Build shared (the API imports its dist/), generate the Prisma client,
+    # apply migrations to the local DB, then start Nest in watch mode.
+    command: >
+      sh -c "pnpm --filter @necroloto/shared build
+      && pnpm --filter necroloto-api exec prisma generate
+      && pnpm --filter necroloto-api exec prisma migrate deploy
+      && pnpm --filter necroloto-api start:dev"
+    env_file:
+      - ./.env.docker
+    ports:
+      - "3000:3000"
+
+  web:
+    <<: *app
+    command: pnpm --filter necroloto-web dev --host 0.0.0.0
+    # env_file supplies VITE_CLERK_PUBLISHABLE_KEY (and harmlessly the API vars —
+    # Vite only bundles VITE_-prefixed ones into the client).
+    env_file:
+      - ./.env.docker
+    environment:
+      # Consumed by the browser (runs on the host), so it targets the API's
+      # host-published port — not host.docker.internal. Overrides any env_file value.
+      VITE_API_URL: http://localhost:3000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api

@@ -12,7 +12,10 @@
         "test": "turbo run test",
         "lint": "biome check .",
         "format": "biome format --write .",
-        "check": "biome check --write ."
+        "check": "biome check --write .",
+        "docker:up": "docker compose up --build",
+        "docker:down": "docker compose down",
+        "docker:logs": "docker compose logs -f"
     },
     "devDependencies": {
         "@biomejs/biome": "^2.4.16",

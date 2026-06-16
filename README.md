@@ -76,6 +76,26 @@ garde sur les fichiers Storage) est détaillée dans la section « Local dev env
 de [CLAUDE.md](CLAUDE.md). Pour le front (au branchement API) : `apps/web/.env.local`
 avec `VITE_API_URL` et `VITE_CLERK_PUBLISHABLE_KEY`.
 
+### Variante Docker (API + web conteneurisés)
+
+Pour lancer l'app (API :3000 + web :5173) en conteneurs **hot-reload** plutôt qu'en
+natif, le tout branché sur la même stack Supabase CLI :
+
+```bash
+colima start
+cd apps/api && supabase start && supabase status   # récupérer SUPABASE_SECRET_KEY
+cd ../..
+cp .env.docker.example .env.docker                 # puis remplir les secrets
+pnpm docker:up                                     # docker compose up --build
+```
+
+Le conteneur API exécute `prisma generate` + `migrate deploy` au démarrage. Rebuild
+de l'image seulement si `package.json`/lockfile changent. `pnpm docker:down` pour
+arrêter. ⚠️ En mode Docker, `SUPABASE_URL` vaut `host.docker.internal:54321`, donc les
+URLs publiques d'images générées contiennent ce hôte (non résolu par le navigateur) —
+sans impact sur les tranches branchées, mais pour bosser sur les photos de célébrités,
+lancer l'API en natif.
+
 ## Commandes (racine)
 
 | Commande | Effet |
