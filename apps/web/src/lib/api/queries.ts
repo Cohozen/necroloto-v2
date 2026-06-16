@@ -15,6 +15,8 @@ import type {
     DeathFeedEntryDto,
     RankedBet,
     SortByRank,
+    UpdateCirclePayload,
+    UpdateMemberRolePayload,
 } from './types';
 
 export type { SortByRank };
@@ -57,6 +59,66 @@ export function useCreateCircle() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: (payload: CreateCirclePayload) => api.post<ApiCircle>('/circle', payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+export function useUpdateCircle(circleId: string) {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: UpdateCirclePayload) =>
+            api.patch<ApiCircle>(`/circle/${circleId}`, payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+export function useDeleteCircle() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (circleId: string) => api.delete<ApiCircle>(`/circle/${circleId}`),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+/** Leave a circle: a member removes their own membership (no admin rights needed). */
+export function useLeaveCircle() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (membershipId: string) =>
+            api.delete<ApiMembership>(`/membership/${membershipId}`),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+export function useRemoveMember(circleId: string) {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (userId: string) =>
+            api.delete<ApiMembership>(`/circle/${circleId}/members/${userId}`),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+export function useUpdateMemberRole(circleId: string) {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ userId, role }: { userId: string } & UpdateMemberRolePayload) =>
+            api.patch<ApiMembership>(`/circle/${circleId}/members/${userId}`, { role }),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['circles'] });
         },

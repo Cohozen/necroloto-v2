@@ -79,6 +79,8 @@ export interface ApiCircle {
     status: CircleStatus;
     code: string | null;
     allowNewBet: boolean;
+    allowEdit: boolean;
+    betsVisible: boolean;
     createdAt: string;
     updatedAt: string;
     memberships?: ApiMembership[];
@@ -146,4 +148,16 @@ export interface CreateMembershipPayload {
     userId: string;
     circleId: string;
     role?: MembershipRole;
+}
+
+export interface UpdateCirclePayload {
+    name?: string;
+    visibility?: CircleVisibility;
+    allowNewBet?: boolean;
+    allowEdit?: boolean;
+    betsVisible?: boolean;
+}
+
+export interface UpdateMemberRolePayload {
+    role: MembershipRole;
 }

@@ -2,11 +2,12 @@
 // transformation in one place so routes only deal with view models.
 
 import type { CelebrityStatus } from '@/types/celebrity';
-import type { CircleSummary, HubCircle, MemberRole, PodiumSlot } from '@/types/circle';
+import type { CircleMember, CircleSummary, HubCircle, MemberRole, PodiumSlot } from '@/types/circle';
 import type { DeathFeedEntry } from '@/types/feed';
 import type { LeaderboardEntry, LeaderPick } from '@/types/leaderboard';
 import type { AvatarPerson } from '@/types/user';
 import type {
+    ApiMembership,
     ApiUser,
     CircleSummaryDto,
     DeathFeedEntryDto,
@@ -37,6 +38,42 @@ export function userDisplayName(
 /** Lowercase in-circle role for the UI. */
 export function toMemberRole(role: MembershipRole): MemberRole {
     return role === 'ADMIN' ? 'admin' : 'member';
+}
+
+/** A `@handle` from a username, falling back to a slug of the display name. */
+function handleOf(user: Pick<ApiUser, 'username'>, name: string): string {
+    const raw = user.username ?? name;
+    const slug = raw
+        .toLowerCase()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_]/g, '');
+    return `@${slug || 'joueur'}`;
+}
+
+/**
+ * Membership + optional ranked bet → member roster row. `ranked` carries
+ * rank/points (0 when the member has no bet this year). `currentUserId` marks
+ * the "you" row; `creatorUserId` flags the circle creator (earliest admin).
+ */
+export function toCircleMember(
+    membership: ApiMembership,
+    ranked: RankedBet | undefined,
+    currentUserId: string | undefined,
+    creatorUserId: string | undefined,
+): CircleMember {
+    const user = membership.user as ApiUser;
+    const name = userDisplayName(user);
+    return {
+        id: user.id,
+        name,
+        handle: handleOf(user, name),
+        initials: initialsOf(name),
+        rank: ranked?.rank ?? 0,
+        points: ranked?.total ?? 0,
+        role: toMemberRole(membership.role),
+        isYou: user.id === currentUserId,
+        isCreator: user.id === creatorUserId,
+    };
 }
 
 /** Full years between two ISO dates. */
