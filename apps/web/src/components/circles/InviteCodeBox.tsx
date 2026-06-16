@@ -1,7 +1,20 @@
-import { Copy, Hash, RefreshCw, X } from 'lucide-react';
+import { Check, Copy, Hash, RefreshCw, X } from 'lucide-react';
+import { useState } from 'react';
 
 /** Invite-code panel (nl-codebox) — code, copy, regenerate / revoke. */
 export function InviteCodeBox({ code }: { code: string }) {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(code);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        } catch {
+            // Clipboard unavailable (e.g. insecure context) — silently ignore.
+        }
+    };
+
     return (
         <div className="flex flex-col gap-2.5">
             <span className="text-[13px] font-semibold text-ink-2">Code d'invitation</span>
@@ -12,10 +25,11 @@ export function InviteCodeBox({ code }: { code: string }) {
                 </span>
                 <button
                     type="button"
+                    onClick={handleCopy}
                     aria-label="Copier le code"
                     className="inline-flex size-10 shrink-0 items-center justify-center rounded-[10px] border border-line-2 bg-surface-2 text-neon"
                 >
-                    <Copy size={18} />
+                    {copied ? <Check size={18} /> : <Copy size={18} />}
                 </button>
             </div>
             <div className="flex flex-wrap items-center gap-2.5">

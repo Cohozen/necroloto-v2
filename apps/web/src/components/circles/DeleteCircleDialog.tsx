@@ -15,12 +15,22 @@ interface DeleteCircleDialogProps {
     name: string;
     members: number;
     children: ReactNode;
+    /** Confirmed deletion handler — called once the confirm word is typed. */
+    onConfirm?: () => void;
+    /** Disables the confirm button while the deletion is in flight. */
+    pending?: boolean;
 }
 
 const CONFIRM = 'SUPPRIMER';
 
 /** Delete a circle — irreversible, gated behind typing the confirm word. */
-export function DeleteCircleDialog({ name, members, children }: DeleteCircleDialogProps) {
+export function DeleteCircleDialog({
+    name,
+    members,
+    children,
+    onConfirm,
+    pending,
+}: DeleteCircleDialogProps) {
     const [value, setValue] = useState('');
     const confirmed = value === CONFIRM;
 
@@ -71,8 +81,14 @@ export function DeleteCircleDialog({ name, members, children }: DeleteCircleDial
                             Annuler
                         </Button>
                     </DialogClose>
-                    <Button variant="destructive" disabled={!confirmed} className="h-12 flex-[1.4]">
-                        <Skull size={16} strokeWidth={2} /> Supprimer définitivement
+                    <Button
+                        variant="destructive"
+                        disabled={!confirmed || pending}
+                        onClick={onConfirm}
+                        className="h-12 flex-[1.4]"
+                    >
+                        <Skull size={16} strokeWidth={2} />{' '}
+                        {pending ? 'Suppression…' : 'Supprimer définitivement'}
                     </Button>
                 </div>
             </DialogContent>

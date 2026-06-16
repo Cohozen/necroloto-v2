@@ -7,10 +7,26 @@ interface DangerZoneProps {
     members: number;
     /** Only the creator may delete the circle. */
     isCreator: boolean;
+    /** Leave the circle (everyone). */
+    onLeave?: () => void;
+    /** Delete the circle (creator only), confirmed in the dialog. */
+    onDelete?: () => void;
+    /** Disables the leave action while in flight. */
+    leaving?: boolean;
+    /** Disables the delete confirm while in flight. */
+    deleting?: boolean;
 }
 
 /** Circle danger zone — leave (everyone) and delete (creator only). */
-export function DangerZone({ name, members, isCreator }: DangerZoneProps) {
+export function DangerZone({
+    name,
+    members,
+    isCreator,
+    onLeave,
+    onDelete,
+    leaving,
+    deleting,
+}: DangerZoneProps) {
     return (
         <div className="relative flex flex-col gap-3.5 overflow-hidden rounded-2xl border border-coral/30 bg-surface p-5 md:p-6">
             <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-coral/80 to-transparent" />
@@ -37,9 +53,11 @@ export function DangerZone({ name, members, isCreator }: DangerZoneProps) {
                 <Button
                     variant="ghost"
                     size="sm"
+                    onClick={onLeave}
+                    disabled={leaving}
                     className="border border-coral/35 text-coral hover:bg-coral/10 hover:text-coral"
                 >
-                    Quitter
+                    {leaving ? 'Sortie…' : 'Quitter'}
                 </Button>
             </div>
 
@@ -54,7 +72,12 @@ export function DangerZone({ name, members, isCreator }: DangerZoneProps) {
                             Réservé au créateur · action irréversible
                         </div>
                     </div>
-                    <DeleteCircleDialog name={name} members={members}>
+                    <DeleteCircleDialog
+                        name={name}
+                        members={members}
+                        onConfirm={onDelete}
+                        pending={deleting}
+                    >
                         <Button variant="destructive" size="sm">
                             <Skull size={15} strokeWidth={2} /> Supprimer
                         </Button>
