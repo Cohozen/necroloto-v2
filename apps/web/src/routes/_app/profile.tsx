@@ -1,5 +1,17 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { Bell, Lock, Medal, Pencil, Shield, Skull, Star, Trophy, Users, Zap } from 'lucide-react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import {
+    Bell,
+    Lock,
+    Medal,
+    Pencil,
+    Shield,
+    ShieldCheck,
+    Skull,
+    Star,
+    Trophy,
+    Users,
+    Zap,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AchievementBadge } from '@/components/profile/AchievementBadge';
 import { EditProfileDialog } from '@/components/profile/EditProfileDialog';
@@ -22,7 +34,8 @@ export const Route = createFileRoute('/_app/profile')({
 const fmt = (n: number) => n.toLocaleString('fr-FR');
 
 function Profile() {
-    const { user } = useCurrentUser();
+    const navigate = useNavigate();
+    const { user, isAdmin } = useCurrentUser();
     const betsQuery = useUserBets(user?.id);
     const summariesQuery = useCircleSummaries(user?.id);
     const [editOpen, setEditOpen] = useState(false);
@@ -162,6 +175,14 @@ function Profile() {
                         Réglages du compte
                     </span>
                     <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
+                        {isAdmin && (
+                            <SettingsRow
+                                icon={ShieldCheck}
+                                title="Administration"
+                                description="Gérer le catalogue des célébrités"
+                                onClick={() => navigate({ to: '/admin/celebrities' })}
+                            />
+                        )}
                         <SettingsRow
                             icon={Pencil}
                             title="Pseudo & avatar"
