@@ -3,4 +3,6 @@ export class UpdateCelebrityDto {
     birth?: Date;
     death?: Date;
     photo?: string;
+    role?: string;
+    category?: string;
 }
