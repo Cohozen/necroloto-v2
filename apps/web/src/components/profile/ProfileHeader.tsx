@@ -6,10 +6,12 @@ import type { PlayerProfile } from '@/types/profile';
 
 interface ProfileHeaderProps {
     profile: PlayerProfile;
+    /** Opens the edit-profile dialog (desktop action). */
+    onEdit?: () => void;
 }
 
 /** Identity card (nl-profhead) — avatar, handle, level row, desktop edit action. */
-export function ProfileHeader({ profile }: ProfileHeaderProps) {
+export function ProfileHeader({ profile, onEdit }: ProfileHeaderProps) {
     return (
         <div className="relative overflow-hidden rounded-2xl border border-line-2 px-5 py-[22px] [background:radial-gradient(120%_160%_at_18%_-40%,rgb(var(--neon-rgb)/0.18),transparent_58%),radial-gradient(120%_160%_at_90%_-30%,rgb(var(--magenta-rgb)/0.12),transparent_55%),linear-gradient(180deg,var(--color-surface-2),var(--color-surface))] md:px-7 md:py-[26px]">
             {/* faint grid, fading downward */}
@@ -49,7 +51,12 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
                     </div>
                 </div>
 
-                <Button variant="outline" size="sm" className="hidden self-start md:inline-flex">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onEdit}
+                    className="hidden self-start md:inline-flex"
+                >
                     <Pencil size={15} /> Modifier le profil
                 </Button>
             </div>

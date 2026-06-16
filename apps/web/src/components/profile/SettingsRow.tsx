@@ -10,12 +10,21 @@ interface SettingsRowProps {
     danger?: boolean;
     /** Trailing control (e.g. a Switch). When set, the row is static, not a button. */
     control?: ReactNode;
+    /** Click handler for actionable rows (ignored when `control` is set). */
+    onClick?: () => void;
 }
 
 const rowBase = 'flex w-full items-center gap-3.5 px-4 py-[15px] text-left transition-colors';
 
 /** Account settings list row (nl-listrow) — chevron by default, or a trailing control. */
-export function SettingsRow({ icon: Icon, title, description, danger, control }: SettingsRowProps) {
+export function SettingsRow({
+    icon: Icon,
+    title,
+    description,
+    danger,
+    control,
+    onClick,
+}: SettingsRowProps) {
     const body = (
         <>
             <div
@@ -42,7 +51,7 @@ export function SettingsRow({ icon: Icon, title, description, danger, control }:
         return <div className={rowBase}>{body}</div>;
     }
     return (
-        <button type="button" className={cn(rowBase, 'hover:bg-surface-2')}>
+        <button type="button" onClick={onClick} className={cn(rowBase, 'hover:bg-surface-2')}>
             {body}
         </button>
     );
