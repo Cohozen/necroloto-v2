@@ -8,9 +8,9 @@ Necroloto V2 — a "celebrity death pool" game. Monorepo (pnpm + Turborepo):
 
 - `apps/api` — **NestJS API, the single backend brain**. All business logic lives here.
 - `apps/web` — **front web** (Vite + React 19 + TS, TanStack Router/Query, Tailwind v4 +
-  shadcn, Clerk). All mockup screens built and **most are wired to the API** via a typed client
-  in `src/lib/api/` (circles, dashboard, profile, celebrities catalogue/draft + detail). Only the
-  **admin** screens remain on mock data marked `// TEMP`. See the "Front web" section below.
+  shadcn, Clerk). All mockup screens built and **wired to the API** via a typed client
+  in `src/lib/api/` (circles, dashboard, profile, celebrities catalogue/draft + detail, and
+  admin). See the "Front web" section below.
 - `packages/shared` — `@necroloto/shared`: scoring (`calculPointByCelebrity`, `deathYear`, UTC-based)
   and enums. Built with `tsc`, consumed by the API **and the web** (the web imports the subpath
   `@necroloto/shared/scoring` — see the Front web gotcha).
@@ -119,12 +119,20 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   POST `/users` on miss); read it via `useCurrentUser()`. Reuse this pattern for new slices.
   ⚠️ Nest serializes a `null` handler return as an **empty body** — `client.ts` returns `null`
   (not `undefined`) on 204/empty, else TanStack Query throws "query data cannot be undefined".
-- **Wired vs mock**: wired = circles (`/circles` hub, `/circles/new`, `/circles/join`, leaderboard
-  `/circles/$id`, `/circles/$id/settings`, `/circles/$id/members`), `/dashboard`, `/profile`, and
-  celebrities (`/celebrities` catalogue + bet draft, `/celebrities/$id` detail). Still mock
-  (`// TEMP`): **admin** only (`/admin/celebrities/*`). UI aggregates the raw CRUD doesn't expose
-  get dedicated endpoints (`GET /circle/user/:id/summary`, `GET /celebrities/deaths/feed`); simpler
-  ones (dashboard score band, profile stats) are composed client-side from existing endpoints.
+- **Wired vs mock**: every screen is wired — circles (`/circles` hub, `/circles/new`,
+  `/circles/join`, leaderboard `/circles/$id`, `/circles/$id/settings`, `/circles/$id/members`),
+  `/dashboard`, `/profile`, celebrities (`/celebrities` catalogue + bet draft, `/celebrities/$id`
+  detail), and admin (`/admin/celebrities/*` — CRUD + Wikidata search/enrich). UI aggregates the
+  raw CRUD doesn't expose get dedicated endpoints (`GET /circle/user/:id/summary`,
+  `GET /celebrities/deaths/feed`); simpler ones (dashboard score band, profile stats) are composed
+  client-side from existing endpoints.
+- **Admin** (`/admin/celebrities/*`): catalogue lists `GET /celebrities` (status filter is
+  client-side; the search box + per-row recalc button are decorative — recalc is automatic on
+  update server-side). The form sends ISO dates; `wikidataId` is set only via `POST
+  /celebrities/:id/enrich` (no field on the create/update DTOs), reached through the
+  `WikidataSearchDialog`. Photo upload (`POST /celebrities/:id/photo`, multipart) is **not wired
+  yet** — the client only does JSON. Needs the Clerk account to have `admin` in
+  `public_metadata.roles`.
 - **Bet model**: a bet is unique per `(userId, circleId, year)` — in practice one bet per user per
   season. The `/celebrities` draft is "Mon pari": it edits the bet of the **selected circle** (a
   circle selector defaults to the bet's circle, or the user's first), seeding the celebrity
