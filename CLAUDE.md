@@ -8,10 +8,12 @@ Necroloto V2 — a "celebrity death pool" game. Monorepo (pnpm + Turborepo):
 
 - `apps/api` — **NestJS API, the single backend brain**. All business logic lives here.
 - `apps/web` — **front web** (Vite + React 19 + TS, TanStack Router/Query, Tailwind v4 +
-  shadcn, Clerk). All mockup screens built; **first API slice wired** (circles + dashboard) via a
-  typed client in `src/lib/api/`. Remaining screens still use mock data marked `// TEMP`.
-  See the "Front web" section below.
-- `packages/shared` — `@necroloto/shared`: scoring (`calculPointByCelebrity`, `deathYear`, UTC-based) and enums. Built with `tsc`, consumed by the API.
+  shadcn, Clerk). All mockup screens built and **most are wired to the API** via a typed client
+  in `src/lib/api/` (circles, dashboard, profile, celebrities catalogue/draft + detail). Only the
+  **admin** screens remain on mock data marked `// TEMP`. See the "Front web" section below.
+- `packages/shared` — `@necroloto/shared`: scoring (`calculPointByCelebrity`, `deathYear`, UTC-based)
+  and enums. Built with `tsc`, consumed by the API **and the web** (the web imports the subpath
+  `@necroloto/shared/scoring` — see the Front web gotcha).
 - Mobile (Expo) is planned, not built yet.
 
 Stack: NestJS 11, Prisma 7 (pg adapter), Supabase Postgres + Storage, Clerk auth.
@@ -117,11 +119,23 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   POST `/users` on miss); read it via `useCurrentUser()`. Reuse this pattern for new slices.
   ⚠️ Nest serializes a `null` handler return as an **empty body** — `client.ts` returns `null`
   (not `undefined`) on 204/empty, else TanStack Query throws "query data cannot be undefined".
-- **Wired vs mock**: wired = hub `/circles`, `/circles/new`, `/circles/join`, leaderboard
-  `/circles/$id`, `/dashboard`. Still mock (`// TEMP`): profile, celebrity catalog, bets, admin.
-  UI aggregates the raw CRUD doesn't expose get dedicated endpoints (`GET /circle/user/:id/summary`,
-  `GET /celebrities/deaths/feed`); simpler ones (e.g. the dashboard score band) are composed
-  client-side from existing endpoints.
+- **Wired vs mock**: wired = circles (`/circles` hub, `/circles/new`, `/circles/join`, leaderboard
+  `/circles/$id`, `/circles/$id/settings`, `/circles/$id/members`), `/dashboard`, `/profile`, and
+  celebrities (`/celebrities` catalogue + bet draft, `/celebrities/$id` detail). Still mock
+  (`// TEMP`): **admin** only (`/admin/celebrities/*`). UI aggregates the raw CRUD doesn't expose
+  get dedicated endpoints (`GET /circle/user/:id/summary`, `GET /celebrities/deaths/feed`); simpler
+  ones (dashboard score band, profile stats) are composed client-side from existing endpoints.
+- **Bet model**: a bet is unique per `(userId, circleId, year)` — in practice one bet per user per
+  season. The `/celebrities` draft is "Mon pari": it edits the bet of the **selected circle** (a
+  circle selector defaults to the bet's circle, or the user's first), seeding the celebrity
+  selection from it and saving via `POST /bets` (create) or `PATCH /bets/:id/celebrities` (replace,
+  ≥1 celebrity required). The fiche's bettors list is filtered client-side to the viewer's circles.
+- ⚠️ **`@necroloto/shared` is CommonJS** (`"type": "commonjs"`). Its barrel `index.js` uses
+  `__exportStar`, which rollup/esbuild can't statically analyze → the web imports the subpath
+  `@necroloto/shared/scoring` (a single-file module with direct named exports). `vite.config.ts`
+  needs `optimizeDeps.include: ['@necroloto/shared/scoring']` (dev) **and**
+  `build.commonjsOptions.include: [/node_modules/, /packages\/shared/]` (build — the workspace dep
+  is linked outside `node_modules`, so rollup's commonjs transform must be told to cover it).
 - **Auth**: `ClerkProvider` is mounted **only if** `VITE_CLERK_PUBLISHABLE_KEY` is set (see
   `src/lib/auth/clerk.ts`), so the UI stays previewable without keys. The auth gate lives in
   `src/routes/_app.tsx` (`SignedIn` / `RedirectToSignIn`). Needs `VITE_API_URL` +
