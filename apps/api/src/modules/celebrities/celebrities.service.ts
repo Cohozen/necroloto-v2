@@ -225,8 +225,8 @@ export class CelebritiesService {
     }
 
     /**
-     * Enriches a celebrity from Wikidata: fills birth/death/photo and stores the
-     * linked `wikidataId`. The entity is taken from `wikidataId` (explicit choice),
+     * Enriches a celebrity from Wikidata: fills birth/death/photo/role and stores
+     * the linked `wikidataId`. The entity is taken from `wikidataId` (explicit choice),
      * else the celebrity's existing link, else the best match for its name.
      * Wikidata values win over existing ones; missing values are left untouched.
      * Re-runnable; recomputes points afterwards (a death may now be known).
@@ -247,6 +247,11 @@ export class CelebritiesService {
             ? await this.importPhoto(id, summary.photoFilename)
             : celebrity.photo;
 
+        // Map the first Wikidata occupation (P106) to the free-text role.
+        const role = summary.occupationIds[0]
+            ? ((await this.wikidata.resolveLabel(summary.occupationIds[0])) ?? celebrity.role)
+            : celebrity.role;
+
         const updated = await this.prisma.celebrity.update({
             where: { id },
             data: {
@@ -254,6 +259,7 @@ export class CelebritiesService {
                 birth: summary.birth ?? celebrity.birth,
                 death: summary.death ?? celebrity.death,
                 photo,
+                role,
             },
         });
         await this.recalculatePoints(id);

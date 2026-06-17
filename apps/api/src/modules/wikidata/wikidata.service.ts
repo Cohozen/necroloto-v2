@@ -10,6 +10,8 @@ export interface WikidataSummary {
     death?: Date;
     /** Wikimedia Commons file name of the main image (P18), if any. */
     photoFilename?: string;
+    /** Q-ids of the entity's occupations (P106), in Wikidata order. */
+    occupationIds: string[];
     /** True if the entity is an instance of human (P31 = Q5). */
     isHuman: boolean;
 }
@@ -91,6 +93,9 @@ export class WikidataService {
             (c) => (c.mainsnak?.datavalue?.value as { id?: string } | undefined)?.id === 'Q5',
         );
         const photoFilename = claims.P18?.[0]?.mainsnak?.datavalue?.value as string | undefined;
+        const occupationIds = (claims.P106 ?? [])
+            .map((c) => (c.mainsnak?.datavalue?.value as { id?: string } | undefined)?.id)
+            .filter((id): id is string => Boolean(id));
 
         return {
             wikidataId: entity.id,
@@ -99,8 +104,23 @@ export class WikidataService {
             birth: this.parseTimeClaim(claims.P569),
             death: this.parseTimeClaim(claims.P570),
             photoFilename,
+            occupationIds,
             isHuman,
         };
+    }
+
+    /**
+     * Resolves a single entity's label (FR, falling back to EN), capitalised.
+     * Used to turn an occupation Q-id (P106) into a human-readable role.
+     */
+    async resolveLabel(qid: string): Promise<string | undefined> {
+        const url =
+            `${this.api}?action=wbgetentities&format=json` +
+            `&ids=${encodeURIComponent(qid)}&props=labels&languages=fr|en`;
+        const json = await this.fetchJson(url);
+        const entity = (json?.entities ?? {})[qid] as RawEntity | undefined;
+        const label = entity?.labels?.fr?.value ?? entity?.labels?.en?.value;
+        return label ? label.charAt(0).toUpperCase() + label.slice(1) : undefined;
     }
 
     private parseTimeClaim(claim?: RawSnak[]): Date | undefined {
