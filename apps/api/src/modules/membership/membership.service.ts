@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { SearchMembershipDto } from './dto/search-membership.dto';
@@ -85,6 +85,22 @@ export class MembershipService {
     }
 
     async remove(id: string) {
+        const membership = await this.prisma.membership.findUnique({
+            where: { id },
+            select: { role: true, circleId: true },
+        });
+        if (!membership) throw new NotFoundException('Membership not found');
+
+        // A circle must never be left without an admin.
+        if (membership.role === 'ADMIN') {
+            const adminCount = await this.prisma.membership.count({
+                where: { circleId: membership.circleId, role: 'ADMIN' },
+            });
+            if (adminCount === 1) {
+                throw new ForbiddenException('Impossible de quitter : vous êtes le seul admin');
+            }
+        }
+
         return this.prisma.membership.delete({
             where: { id },
         });
