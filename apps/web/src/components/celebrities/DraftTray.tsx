@@ -15,7 +15,7 @@ interface DraftTrayProps {
 export function DraftTray({ selected, total, onValidate, disabled, saving }: DraftTrayProps) {
     const remaining = Math.max(total - selected, 0);
     return (
-        <div className="sticky bottom-2 z-10 mt-2 flex items-center gap-4 rounded-2xl border border-neon/40 bg-bg/85 p-3 px-4 shadow-glow-green backdrop-blur-md md:bottom-4">
+        <div className="sticky bottom-2 z-10 mx-3 mt-2 flex items-center gap-4 rounded-2xl border border-neon/40 bg-bg/85 p-3 px-4 shadow-glow-green backdrop-blur-md md:bottom-4 md:mx-8">
             <div className="font-display text-3xl font-extrabold leading-none text-glow-neon">
                 {selected}
                 <span className="text-[0.62em] text-ink-3"> / {total}</span>
