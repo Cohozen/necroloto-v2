@@ -2,13 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { Lock, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const STATS = [
-    { value: '8 420', label: 'Joueurs' },
-    { value: '612', label: 'Cercles actifs' },
-    { value: '2026', label: 'Saison ouverte' },
-];
-
-/** Hero — arcade wordmark, headline, primary CTAs and trust stats. */
+/** Hero — arcade wordmark, headline and primary CTAs. */
 export function LandingHero() {
     return (
         <section
@@ -54,22 +48,6 @@ export function LandingHero() {
                 <p className="mt-4 flex items-center justify-center gap-1.5 text-[12.5px] text-ink-3">
                     <Lock size={14} /> Jeu entre amis · sans argent réel
                 </p>
-
-                <div className="mx-auto mt-9 grid max-w-[520px] grid-cols-3 gap-3 lg:max-w-[640px] lg:gap-4">
-                    {STATS.map((stat) => (
-                        <div
-                            key={stat.label}
-                            className="rounded-[14px] border border-line bg-surface px-1.5 py-3.5 text-center"
-                        >
-                            <b className="block font-display text-[30px] font-extrabold leading-none tabular-nums text-neon lg:text-[38px]">
-                                {stat.value}
-                            </b>
-                            <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
-                                {stat.label}
-                            </span>
-                        </div>
-                    ))}
-                </div>
             </div>
         </section>
     );

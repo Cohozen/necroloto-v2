@@ -41,8 +41,8 @@ const FEATURES: { icon: LucideIcon; text: React.ReactNode }[] = [
         icon: Trophy,
         text: (
             <>
-                <b className="font-semibold text-ink">Podium top 3 mis en avant</b> avec halo néon —
-                la gloire se voit de loin.
+                <b className="font-semibold text-ink">Podium top 3 mis en avant</b> — la gloire se
+                voit de loin.
             </>
         ),
     },
@@ -135,7 +135,7 @@ export function GamePreview() {
                                         Les Faucheurs du Dimanche
                                     </div>
                                     <div className="text-xs text-ink-3">
-                                        8 joueurs · saison 2026
+                                        Cercle privé · classement live
                                     </div>
                                 </div>
                             </div>
@@ -156,9 +156,7 @@ export function GamePreview() {
                                 className="text-coral drop-shadow-[0_0_8px_rgb(var(--coral-rgb)/0.6)]"
                             />
                             <div className="min-w-0 flex-1">
-                                <div className="text-[13.5px] font-bold">
-                                    Dame Gloria, 96
-                                </div>
+                                <div className="text-[13.5px] font-bold">Dame Gloria, 96</div>
                                 <div className="text-xs text-ink-3">
                                     a rapporté des points à 3 joueurs · il y a 2 j
                                 </div>
@@ -181,7 +179,7 @@ export function GamePreview() {
                         en un coup d'œil
                     </h2>
                     <p className="mt-3 max-w-[46ch] text-[15px] text-ink-2">
-                        Podium néon, points qui pulsent, décès qui rapportent en direct. Tout est
+                        Podium soigné, points qui pulsent, décès qui rapportent en direct. Tout est
                         pensé pour le check rapide depuis le téléphone — et la revanche du dimanche
                         soir.
                     </p>
