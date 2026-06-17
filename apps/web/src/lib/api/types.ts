@@ -70,6 +70,15 @@ export interface ApiCelebrityListItem extends ApiCelebrity {
     CelebritiesOnBet: { points: number }[];
 }
 
+/** Admin catalogue status filter (GET /celebrities/admin/list). */
+export type AdminCelebrityStatus = 'all' | 'alive' | 'deceased';
+
+/** One page of the admin catalogue (GET /celebrities/admin/list). */
+export interface AdminCelebrityPage {
+    items: ApiCelebrityListItem[];
+    total: number;
+}
+
 /** A Wikidata candidate (GET /celebrities/wikidata/search). Dates are ISO strings. */
 export interface WikidataSummaryDto {
     wikidataId: string;

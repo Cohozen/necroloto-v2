@@ -1,10 +1,12 @@
 // TanStack Query hooks over the authenticated API client. Query keys live in
 // keys.ts; Api*->UI adapters live in adapters.ts.
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from './context';
 import { queryKeys } from './keys';
 import type {
+    AdminCelebrityPage,
+    AdminCelebrityStatus,
     ApiBet,
     ApiCelebrity,
     ApiCelebrityDetail,
@@ -253,6 +255,36 @@ export function useDeathFeed(year = CURRENT_YEAR, limit = 10) {
 }
 
 // --- Celebrities (admin) ---
+
+/** Page size for the admin catalogue infinite scroll. */
+export const ADMIN_CATALOGUE_PAGE = 24;
+
+/**
+ * Paginated admin catalogue (GET /celebrities/admin/list) with server-side name
+ * search, status filter and alphabetical order. Drives infinite scroll.
+ */
+export function useAdminCelebrities(params: { search: string; status: AdminCelebrityStatus }) {
+    const api = useApiClient();
+    const search = params.search.trim();
+    const { status } = params;
+    return useInfiniteQuery({
+        queryKey: queryKeys.celebrities.adminList(search, status),
+        initialPageParam: 0,
+        queryFn: ({ pageParam }) => {
+            const qs = new URLSearchParams({
+                status,
+                take: String(ADMIN_CATALOGUE_PAGE),
+                skip: String(pageParam),
+            });
+            if (search) qs.set('search', search);
+            return api.get<AdminCelebrityPage>(`/celebrities/admin/list?${qs.toString()}`);
+        },
+        getNextPageParam: (lastPage, allPages) => {
+            const loaded = allPages.reduce((acc, page) => acc + page.items.length, 0);
+            return loaded < lastPage.total ? loaded : undefined;
+        },
+    });
+}
 
 export function useCreateCelebrity() {
     const api = useApiClient();
