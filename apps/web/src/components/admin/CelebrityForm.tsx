@@ -1,6 +1,6 @@
 import { calculPointByCelebrity } from '@necroloto/shared/scoring';
 import { Link } from '@tanstack/react-router';
-import { Calendar, Camera, Check, Globe, Plus, Sparkles, Trash2, Upload, User } from 'lucide-react';
+import { Calendar, Camera, Check, Globe, Plus, Sparkles, Trash2, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CelebrityPortrait } from '@/components/celebrities/CelebrityPortrait';
 import { StatusBadge } from '@/components/celebrities/StatusBadge';
@@ -143,10 +143,6 @@ export function CelebrityForm({
                             className="aspect-square w-full"
                         />
                     )}
-                    {/* Photo upload is deferred to a later pass. */}
-                    <Button variant="outline" size="sm" disabled title="Bientôt disponible">
-                        <Upload size={15} strokeWidth={2} /> Changer la photo
-                    </Button>
                 </div>
 
                 <div className="flex min-w-0 flex-1 flex-col items-start gap-2.5">
@@ -168,10 +164,6 @@ export function CelebrityForm({
                             deathLabel={undefined}
                         />
                     )}
-                    <p className="flex items-center gap-1.5 text-xs text-ink-3">
-                        <Upload size={12} /> Photo stockée sur Supabase Storage · 512×512 recommandé
-                        · JPG/PNG/WebP
-                    </p>
                 </div>
             </div>
 
