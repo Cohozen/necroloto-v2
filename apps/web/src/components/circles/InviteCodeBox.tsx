@@ -1,7 +1,7 @@
-import { Check, Copy, Hash, RefreshCw, X } from 'lucide-react';
+import { Check, Copy, Hash } from 'lucide-react';
 import { useState } from 'react';
 
-/** Invite-code panel (nl-codebox) — code, copy, regenerate / revoke. */
+/** Invite-code panel (nl-codebox) — code + copy. */
 export function InviteCodeBox({ code }: { code: string }) {
     const [copied, setCopied] = useState(false);
 
@@ -32,21 +32,7 @@ export function InviteCodeBox({ code }: { code: string }) {
                     {copied ? <Check size={18} /> : <Copy size={18} />}
                 </button>
             </div>
-            <div className="flex flex-wrap items-center gap-2.5">
-                <button
-                    type="button"
-                    className="inline-flex h-[34px] items-center gap-1.5 rounded-[9px] border border-neon/45 bg-transparent px-3 text-[13px] font-semibold text-neon hover:bg-neon/10"
-                >
-                    <RefreshCw size={15} strokeWidth={2} /> Régénérer
-                </button>
-                <button
-                    type="button"
-                    className="inline-flex h-[34px] items-center gap-1.5 rounded-[9px] px-3 text-[13px] font-semibold text-ink-2 hover:text-ink"
-                >
-                    <X size={15} strokeWidth={2} /> Révoquer
-                </button>
-                <span className="ml-auto text-xs text-ink-3">Valable toute la saison</span>
-            </div>
+            <span className="text-xs text-ink-3">Valable toute la saison</span>
         </div>
     );
 }
