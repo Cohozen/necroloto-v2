@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Check, Eye, Globe, Lock, Ticket, Users, WalletCards } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { ChoiceCard } from '@/components/circles/ChoiceCard';
 import { CircleAdminHeader } from '@/components/circles/CircleAdminHeader';
 import { DangerZone } from '@/components/circles/DangerZone';
@@ -64,6 +65,8 @@ function SettingsForm({ circle }: { circle: ApiCircle }) {
     const members = circle.memberships?.length ?? 0;
     const myMembership = circle.memberships?.find((m) => m.userId === user?.id);
     const isCreator = !!user && creatorUserId(circle) === user.id;
+    const adminCount = circle.memberships?.filter((m) => m.role === 'ADMIN').length ?? 0;
+    const isSoleAdmin = myMembership?.role === 'ADMIN' && adminCount === 1;
 
     const trimmedName = name.trim();
     const canSubmit = trimmedName.length > 0 && !updateCircle.isPending;
@@ -80,9 +83,10 @@ function SettingsForm({ circle }: { circle: ApiCircle }) {
     };
 
     const handleLeave = () => {
-        if (!myMembership) return;
+        if (!myMembership || isSoleAdmin) return;
         leaveCircle.mutate(myMembership.id, {
             onSuccess: () => navigate({ to: '/circles' }),
+            onError: () => toast.error('Impossible de quitter le cercle. Réessayez plus tard.'),
         });
     };
 
@@ -93,7 +97,7 @@ function SettingsForm({ circle }: { circle: ApiCircle }) {
     };
 
     return (
-        <div className="mx-auto flex w-full max-w-[620px] flex-col gap-5 p-4 md:p-6">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 p-4 md:p-6">
             <CircleAdminHeader
                 id={circle.id}
                 name={circle.name}
@@ -198,6 +202,7 @@ function SettingsForm({ circle }: { circle: ApiCircle }) {
                 name={circle.name}
                 members={members}
                 isCreator={isCreator}
+                soleAdmin={isSoleAdmin}
                 onLeave={handleLeave}
                 onDelete={handleDelete}
                 leaving={leaveCircle.isPending}

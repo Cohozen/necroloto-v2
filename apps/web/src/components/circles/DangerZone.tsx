@@ -7,6 +7,8 @@ interface DangerZoneProps {
     members: number;
     /** Only the creator may delete the circle. */
     isCreator: boolean;
+    /** The current user is the circle's only admin — leaving is blocked. */
+    soleAdmin?: boolean;
     /** Leave the circle (everyone). */
     onLeave?: () => void;
     /** Delete the circle (creator only), confirmed in the dialog. */
@@ -22,6 +24,7 @@ export function DangerZone({
     name,
     members,
     isCreator,
+    soleAdmin,
     onLeave,
     onDelete,
     leaving,
@@ -47,14 +50,16 @@ export function DangerZone({
                 <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold">Quitter le cercle</div>
                     <div className="mt-0.5 text-xs text-ink-3">
-                        Vous pourrez le rejoindre à nouveau avec le code
+                        {soleAdmin
+                            ? 'Vous êtes le seul admin : nommez un autre admin avant de quitter'
+                            : 'Vous pourrez le rejoindre à nouveau avec le code'}
                     </div>
                 </div>
                 <Button
                     variant="ghost"
                     size="sm"
                     onClick={onLeave}
-                    disabled={leaving}
+                    disabled={leaving || soleAdmin}
                     className="border border-coral/35 text-coral hover:bg-coral/10 hover:text-coral"
                 >
                     {leaving ? 'Sortie…' : 'Quitter'}
