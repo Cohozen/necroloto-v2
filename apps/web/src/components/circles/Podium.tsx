@@ -11,7 +11,7 @@ interface PodiumProps {
 export function Podium({ top3 }: PodiumProps) {
     const [first, second, third] = top3;
     return (
-        <div className="grid grid-cols-[1fr_1.15fr_1fr] items-end gap-3">
+        <div className="grid grid-cols-[1fr_1.15fr_1fr] items-end gap-2 sm:gap-3">
             {second && <PodiumCell entry={second} place={2} />}
             {first && <PodiumCell entry={first} place={1} />}
             {third && <PodiumCell entry={third} place={3} />}
@@ -30,8 +30,8 @@ function PodiumCell({ entry, place }: { entry: LeaderboardEntry; place: number }
     return (
         <div
             className={cn(
-                'relative flex flex-col items-center gap-2.5 rounded-2xl border border-line bg-gradient-to-b from-surface-2 to-surface px-3 pb-4 pt-5 text-center',
-                first && 'border-neon/50 shadow-glow-green -translate-y-3',
+                'relative flex flex-col items-center gap-2 rounded-2xl border border-line bg-gradient-to-b from-surface-2 to-surface px-2 pb-3 pt-4 text-center sm:gap-2.5 sm:px-3 sm:pb-4 sm:pt-5',
+                first && 'border-neon/50 shadow-glow-green -translate-y-1.5 sm:-translate-y-3',
                 place === 3 && 'border-coral/40',
             )}
         >
@@ -45,7 +45,7 @@ function PodiumCell({ entry, place }: { entry: LeaderboardEntry; place: number }
             </span>
             <Avatar
                 className={cn(
-                    first ? 'size-[60px]' : 'size-[50px]',
+                    first ? 'size-[48px] sm:size-[60px]' : 'size-[40px] sm:size-[50px]',
                     first && 'ring-2 ring-neon/65 ring-offset-2 ring-offset-bg',
                 )}
             >
@@ -59,7 +59,7 @@ function PodiumCell({ entry, place }: { entry: LeaderboardEntry; place: number }
             </div>
             <div
                 className={cn(
-                    'font-display text-3xl font-extrabold leading-none',
+                    'font-display text-2xl font-extrabold leading-none sm:text-3xl',
                     first && 'text-neon',
                     place === 3 && 'text-coral',
                 )}
