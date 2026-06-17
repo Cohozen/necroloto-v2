@@ -87,7 +87,9 @@ export function CelebrityForm({
 
     const wikidataId = celebrity?.wikidataId ?? pickedWikidataId;
     const trimmedName = name.trim();
-    const canSubmit = trimmedName.length > 0 && !isSaving;
+    // A death must carry a date — the death year decides which bets get credited.
+    const missingDeathDate = deceased && !death;
+    const canSubmit = trimmedName.length > 0 && !isSaving && !missingDeathDate;
 
     const handleSelectWikidata = (c: WikidataSummaryDto) => {
         // Edit mode: enrich immediately (the entity exists). The refetch re-seeds
@@ -254,9 +256,15 @@ export function CelebrityForm({
                         onChange={setDeath}
                         placeholder={`JJ / MM / ${YEAR}`}
                         message={
-                            <div className="text-xs text-ink-3">
-                                L'année saisie détermine quelles listes sont créditées.
-                            </div>
+                            missingDeathDate ? (
+                                <div className="text-xs text-coral">
+                                    Renseignez une date de décès pour enregistrer.
+                                </div>
+                            ) : (
+                                <div className="text-xs text-ink-3">
+                                    L'année saisie détermine quelles listes sont créditées.
+                                </div>
+                            )
                         }
                     />
                 )}
@@ -297,7 +305,7 @@ export function CelebrityForm({
                     </DeleteCelebrityDialog>
                 )}
                 <Button asChild variant="ghost">
-                    <Link to="/admin/celebrities">Annuler</Link>
+                    <Link to="/admin/celebrities">Retour</Link>
                 </Button>
                 <Button className="min-w-[150px]" disabled={!canSubmit} onClick={handleSave}>
                     <Check size={16} strokeWidth={2.4} />
