@@ -4,7 +4,6 @@ import {
     Lock,
     Medal,
     Pencil,
-    Shield,
     ShieldCheck,
     Skull,
     Star,
@@ -19,7 +18,6 @@ import { LogoutRow } from '@/components/profile/LogoutRow';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { SettingsRow } from '@/components/profile/SettingsRow';
 import { StatTile } from '@/components/profile/StatTile';
-import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { initialsOf, monthYearLabel, userDisplayName } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
@@ -129,15 +127,7 @@ function Profile() {
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 p-4 md:p-6">
-            <ProfileHeader profile={profile} onEdit={() => setEditOpen(true)} />
-
-            <Button
-                variant="outline"
-                className="w-full md:hidden"
-                onClick={() => setEditOpen(true)}
-            >
-                <Pencil size={15} /> Modifier le profil
-            </Button>
+            <ProfileHeader profile={profile} imageUrl={user.image} />
 
             <div className="grid items-start gap-5 lg:grid-cols-[1.5fr_1fr]">
                 {/* stats + achievements */}
@@ -190,20 +180,10 @@ function Profile() {
                             onClick={() => setEditOpen(true)}
                         />
                         <SettingsRow
-                            icon={Shield}
-                            title="Compte & sécurité"
-                            description="E-mail, mot de passe, connexion"
-                        />
-                        <SettingsRow
                             icon={Bell}
                             title="Notifications"
                             description="Décès, classements, invitations"
                             control={<Switch defaultChecked />}
-                        />
-                        <SettingsRow
-                            icon={Lock}
-                            title="Confidentialité"
-                            description="Profil public, mises visibles"
                         />
                     </div>
                     {isClerkConfigured && (
