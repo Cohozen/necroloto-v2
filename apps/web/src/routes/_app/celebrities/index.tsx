@@ -87,7 +87,11 @@ function DraftScreen({ userId, celebrities, bets, circles }: DraftScreenProps) {
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState('Tous');
 
-    const cards = useMemo(() => celebrities.map(toCelebritySummary), [celebrities]);
+    // Deceased celebrities are no longer draftable — only living ones are shown.
+    const cards = useMemo(
+        () => celebrities.map(toCelebritySummary).filter((c) => c.status !== 'deceased'),
+        [celebrities],
+    );
 
     const toggle = (id: string) =>
         setSelected((prev) => {
