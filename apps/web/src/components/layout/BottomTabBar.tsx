@@ -20,8 +20,8 @@ export function BottomTabBar() {
                 </Link>
             ))}
             <Link
-                to="/circles"
-                aria-label="Nouveau"
+                to="/circles/new"
+                aria-label="Nouveau cercle"
                 className="-mt-[22px] flex size-[54px] shrink-0 items-center justify-center rounded-[18px] bg-primary text-primary-foreground shadow-glow-soft"
             >
                 <Plus size={24} strokeWidth={2.2} />
