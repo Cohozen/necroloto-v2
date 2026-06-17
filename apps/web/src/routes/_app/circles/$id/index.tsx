@@ -1,8 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { CircleBackLink } from '@/components/circles/CircleBackLink';
 import { CircleHeader } from '@/components/circles/CircleHeader';
 import { CircleTabs } from '@/components/circles/CircleTabs';
+import { InviteDialog } from '@/components/circles/InviteDialog';
 import { LeaderboardRow } from '@/components/circles/LeaderboardRow';
 import { LeaderPicksCard } from '@/components/circles/LeaderPicksCard';
 import { Podium } from '@/components/circles/Podium';
@@ -21,6 +23,7 @@ const CURRENT_YEAR = new Date().getFullYear();
 function CircleLeaderboard() {
     const { id } = Route.useParams();
     const [year, setYear] = useState(CURRENT_YEAR);
+    const [inviteOpen, setInviteOpen] = useState(false);
     const { user } = useCurrentUser();
 
     const circle = useCircleDetail(id);
@@ -40,6 +43,7 @@ function CircleLeaderboard() {
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 p-4 md:p-6">
+            <CircleBackLink />
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <CircleHeader
                     name={circle.data?.name ?? 'Cercle'}
@@ -52,11 +56,22 @@ function CircleLeaderboard() {
                         onValueChange={setYear}
                         years={[CURRENT_YEAR - 2, CURRENT_YEAR - 1, CURRENT_YEAR]}
                     />
-                    <Button variant="outline" size="sm" className="hidden md:inline-flex">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="hidden md:inline-flex"
+                        onClick={() => setInviteOpen(true)}
+                    >
                         <UserPlus size={15} /> Inviter
                     </Button>
                 </div>
             </div>
+
+            <InviteDialog
+                open={inviteOpen}
+                onOpenChange={setInviteOpen}
+                code={circle.data?.code ?? null}
+            />
 
             <CircleTabs id={id} active="leaderboard" />
 
