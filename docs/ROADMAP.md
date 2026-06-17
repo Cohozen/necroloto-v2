@@ -11,15 +11,19 @@ membre dans un cercle, ouverture/fermeture de saison, passage de place au classe
 S'appuie sur l'intégration **Resend** (e-mails) encore *pending*. Prévoir un modèle
 `Notification` côté API + un centre de notifications côté web.
 
-### Synchronisation Wikidata en masse
-Bouton admin pour relancer l'enrichissement de **toutes** les célébrités depuis Wikidata
-(au lieu du `POST /celebrities/:id/enrich` unitaire actuel). À orchestrer côté API,
-idéalement via un job/queue pour ne pas bloquer la requête (volume + rate limit Wikidata).
+### Synchronisation Wikidata en masse — _fait (v1)_
+Livré : sélection multiple dans l'admin + `POST /celebrities/bulk/enrich` (boucle
+**séquentielle** côté serveur, échecs isolés par fiche), avec aussi `DELETE /celebrities/bulk`.
+**Reste à faire** : passer la sync en **job/queue** asynchrone — la boucle est synchrone et
+peut tenir la requête longtemps (volume + rate limit Wikidata) sur une grosse sélection.
+Complète la « Détection automatique des décès » ci-dessous.
 
 ### Nombre de paris configurable par cercle
 Aujourd'hui figé à `MAX_BET_CELEBRITIES = 50` (`apps/web/src/lib/api/queries.ts`).
 Ajouter un champ sur le modèle `Circle` (Prisma) + réglage dans `/circles/$id/settings`,
-appliqué à la validation du draft et à l'affichage du compteur.
+appliqué à la validation du draft et à l'affichage du compteur. (Note : les verrous
+`Circle.allowEdit` / `allowNewBet` existants sont désormais **appliqués** côté serveur dans
+`BetsService` — même endroit à étendre pour le cap par cercle.)
 
 ### Refonte du système de points
 Le barème actuel est « trop plat ». Pistes : pondérer le gain par la **cote** de la

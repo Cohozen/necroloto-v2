@@ -96,6 +96,9 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   token must include `public_metadata`) and `CircleAdminGuard` (circle admin via
   `Membership.role`, maps JWT `sub` → `User.clerkId`).
 - Celebrity catalog mutations = global admin only. Circle settings/members = circle admin.
+- **Bet locks**: `BetsService.create` / `replaceCelebrities` enforce the circle's flags —
+  `ForbiddenException` when `allowNewBet=false` (new bet) or `allowEdit=false` (edit a bet's
+  celebrities). This is the real guard behind the draft's read-only mode.
 
 ## Front web (`apps/web`)
 
@@ -110,6 +113,11 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
 - **Conventions**: one component per file / one file per component; types & interfaces in
   separate files (`*.types.ts` co-located, domain models in `src/types/`). shadcn primitives
   in `src/components/ui/` are re-themed in place. Layout chrome in `src/components/layout/`.
+- **App chrome**: avatars render the **neon-gradient initials fallback only** (the Clerk photo is
+  not used); the account avatar lives in the mobile top bar (`UserMenu`, dropdown) and at the bottom
+  of the desktop side rail (no dropdown). The desktop year selector was removed. A sonner `Toaster`
+  is mounted in `routes/__root.tsx` for app-wide toasts. Enabled buttons get `cursor: pointer` via a
+  base rule in `globals.css`.
 - **API client** (`src/lib/api/`): a Clerk-authenticated fetch wrapper (`client.ts` — Bearer
   token, `ApiError`) provided via `ApiClientProvider`/`context.ts` (anonymous variant when Clerk
   is unconfigured, so the UI stays previewable); hand-written DTOs (`types.ts` — the API has **no
@@ -127,14 +135,20 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
 - **Wired vs mock**: every screen is wired — circles (`/circles` hub, `/circles/new`,
   `/circles/join`, leaderboard `/circles/$id`, `/circles/$id/settings`, `/circles/$id/members`),
   `/dashboard`, `/profile`, celebrities (`/celebrities` catalogue + bet draft, `/celebrities/$id`
-  detail), and admin (`/admin/celebrities/*` — CRUD + Wikidata search/enrich). UI aggregates the
-  raw CRUD doesn't expose get dedicated endpoints (`GET /circle/user/:id/summary`,
-  `GET /celebrities/deaths/feed`); simpler ones (dashboard score band, profile stats) are composed
-  client-side from existing endpoints.
-- **Admin** (`/admin/celebrities/*`): catalogue lists `GET /celebrities` (status filter is
-  client-side; the search box + per-row recalc button are decorative — recalc is automatic on
-  update server-side). The form sends ISO dates; `wikidataId` is set only via `POST
-  /celebrities/:id/enrich` (no field on the create/update DTOs), reached through the
+  detail), and admin (`/admin/celebrities/*` — CRUD + Wikidata search/enrich + bulk actions). UI
+  aggregates the raw CRUD doesn't expose get dedicated endpoints (`GET /circle/user/:id/summary` —
+  now also returns `allowEdit`/`allowNewBet`; `GET /celebrities/deaths/feed`; `GET
+  /celebrities/admin/list` for the paginated admin catalogue; `DELETE /celebrities/bulk` and `POST
+  /celebrities/bulk/enrich` for bulk admin actions); simpler ones (dashboard score band, profile
+  stats) are composed client-side from existing endpoints.
+- **Admin** (`/admin/celebrities/*`): the catalogue uses `GET /celebrities/admin/list` —
+  **server-side** name search, status filter and alphabetical order, paginated and driven by
+  `useInfiniteQuery` (infinite scroll). Rows carry checkboxes (+ a select-all header) feeding a
+  floating `BulkActionBar` for **bulk delete** (`DELETE /celebrities/bulk`) and **bulk Wikidata
+  sync** (`POST /celebrities/bulk/enrich`, sequential server-side loop, per-item failures isolated);
+  results surface via sonner toasts. Only the **per-row "Recalculer" button stays decorative**
+  (recalc is automatic on update server-side). The form sends ISO dates; `wikidataId` is set only
+  via `POST /celebrities/:id/enrich` (no field on the create/update DTOs), reached through the
   `WikidataSearchDialog`. Photo upload (`POST /celebrities/:id/photo`, multipart) is **not wired
   yet** — the client only does JSON. All `/admin/*` routes are gated by the `_app/admin.tsx` layout
   route on the Clerk `public_metadata.roles` admin claim (mirrors the API `AdminGuard`); non-admins
@@ -145,7 +159,11 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   selection from it and saving via `POST /bets` (create) or `PATCH /bets/:id/celebrities` (replace,
   ≥1 celebrity required). The draft caps selection at `MAX_BET_CELEBRITIES` (50, a shared constant
   in `queries.ts`; client-side only — the API enforces no cap yet, per-circle config is in
-  `docs/ROADMAP.md`). The fiche's bettors list is filtered client-side to the viewer's circles.
+  `docs/ROADMAP.md`). **Deceased celebrities are hidden** from the draft grid, and the draft is
+  **read-only** (cards + validate disabled, with a banner) when the selected circle is locked —
+  `allowEdit=false` for an existing bet, `allowNewBet=false` for a first bet (both surfaced in the
+  circle summary and enforced server-side, see "Bet locks"). The fiche's bettors list is filtered
+  client-side to the viewer's circles.
 - ⚠️ **`@necroloto/shared` is CommonJS** (`"type": "commonjs"`). Its barrel `index.js` uses
   `__exportStar`, which rollup/esbuild can't statically analyze → the web imports the subpath
   `@necroloto/shared/scoring` (a single-file module with direct named exports). `vite.config.ts`
@@ -157,7 +175,8 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   `src/routes/_app.tsx` (`SignedIn` / `RedirectToSignIn`). Needs `VITE_API_URL` +
   `VITE_CLERK_PUBLISHABLE_KEY` (in `apps/web/.env.local`) and `http://localhost:5173` added
   to the API's `FRONTEND_ORIGIN` to talk to a real backend. A dedicated **e2e test account**
-  (password login on the Clerk dev instance) lives in `apps/web/.env.test.local` (gitignored).
+  (password login on the Clerk dev instance) lives in `apps/web/.env.test.local` (gitignored), as
+  `LOGIN_TEST` / `PASSWORD_TEST` — use it to sign in when driving the authenticated browser preview.
 - **Biome**: `css.parser.tailwindDirectives: true` lets Biome parse Tailwind v4 at-rules
   (`@theme`, `@utility`). `routeTree.gen.ts` and `docs/mockups/**` are ignored; `apps/web/
   src/components/ui/**` has a11y rule overrides for vendored shadcn patterns.
