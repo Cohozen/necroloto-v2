@@ -36,7 +36,7 @@ export function EditProfileDialog({ user, open, onOpenChange }: EditProfileDialo
             {
                 id: user.id,
                 clerkId: user.clerkId,
-                username: username.trim() || undefined,
+                username: username.trim() || null,
                 firstname: firstname.trim() || undefined,
                 lastname: lastname.trim() || undefined,
             },

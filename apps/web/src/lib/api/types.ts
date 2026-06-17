@@ -212,7 +212,7 @@ export interface CreateMembershipPayload {
 }
 
 export interface UpdateUserPayload {
-    username?: string;
+    username?: string | null;
     firstname?: string;
     lastname?: string;
 }
