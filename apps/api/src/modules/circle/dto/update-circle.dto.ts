@@ -6,4 +6,6 @@ export class UpdateCircleDto {
     status?: CircleStatus;
     code?: string;
     allowNewBet?: boolean;
+    allowEdit?: boolean;
+    betsVisible?: boolean;
 }

@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Necroloto — Défiez le destin, anticipez l'avenir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Saira+Condensed:wght@500;600;700;800&family=Pixelify+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/necroloto.css">
+<link rel="stylesheet" href="styles/landing.css">
+</head>
+<body>
+
+<!-- ambient background -->
+<div class="lp-bg" aria-hidden="true">
+  <div class="lp-bg__grid"></div>
+  <div class="lp-bg__orb lp-bg__orb--1"></div>
+  <div class="lp-bg__orb lp-bg__orb--2"></div>
+  <div class="lp-bg__orb lp-bg__orb--3"></div>
+  <div class="lp-bg__grain"></div>
+</div>
+
+<div class="lp">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="lp-header">
+    <div class="lp-wrap lp-header__in">
+      <a class="lp-logo" href="#top">
+        <span class="lp-logo__mark" data-px="invader" data-s="3"></span>
+        <span class="lp-logo__word">NECRO<b>LOTO</b></span>
+      </a>
+      <nav class="lp-header__nav">
+        <a href="#how">Comment ça marche</a>
+        <a href="#preview">Le jeu</a>
+        <a href="#join">Cercles</a>
+      </nav>
+      <div class="lp-header__cta">
+        <a class="nl-btn nl-btn-sm lp-link-login" href="#login">Connexion</a>
+        <a class="nl-btn nl-btn-primary nl-btn-sm" href="#signup"><span data-ic="bolt" data-s="15"></span> S'inscrire</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== HERO ===================== -->
+  <section class="lp-hero" id="top">
+    <span class="lp-deco lp-deco--ghost lp-float" data-px="ghost" data-s="7"></span>
+    <span class="lp-deco lp-deco--coin lp-float lp-float--slow" data-px="coin" data-s="7"></span>
+    <span class="lp-deco lp-deco--inv lp-float" data-px="invader" data-s="6"></span>
+
+    <div class="lp-wrap">
+      <span class="lp-eyebrow"><span class="nl-dot nl-dot--alive"></span> Saison 2026 · inscriptions ouvertes</span>
+
+
+      <h1 class="lp-arcadeword">NECRO<b>LOTO</b></h1>
+
+      <p class="lp-headline">Défiez le destin,<br><span class="g">anticipez</span> <span class="m">l'avenir</span>.</p>
+
+      <p class="lp-sub">Le jeu de pronostics le plus culotté entre potes. Composez votre liste de célébrités pour l'année, rejoignez un cercle, et grimpez au classement quand le destin vous donne raison.</p>
+
+      <div class="lp-hero__cta">
+        <a class="nl-btn nl-btn-primary" href="#signup"><span data-ic="bolt" data-s="17"></span> S'inscrire — c'est gratuit</a>
+        <a class="nl-btn nl-btn-ghost" href="#login">Connexion</a>
+      </div>
+      <p class="lp-hero__note"><span data-ic="lock" data-s="14"></span> Jeu entre amis · sans argent réel · 18+</p>
+
+      <div class="lp-stats">
+        <div class="lp-stat"><b>8 420</b><span>Joueurs</span></div>
+        <div class="lp-stat"><b>612</b><span>Cercles actifs</span></div>
+        <div class="lp-stat"><b>2026</b><span>Saison ouverte</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== COMMENT ÇA MARCHE ===================== -->
+  <section class="lp-section" id="how">
+    <div class="lp-wrap">
+      <div class="lp-sec-head">
+        <span class="nl-eyebrow">Comment ça marche</span>
+        <h2 class="lp-sec-title">Trois étapes, zéro pitié</h2>
+        <p class="lp-sec-sub">Pas besoin de boule de cristal — juste d'un peu de flair et d'un bon cercle de potes.</p>
+      </div>
+
+      <div class="lp-steps">
+        <article class="lp-step lp-step--1">
+          <span class="lp-step__n">01</span>
+          <span class="lp-step__icon" data-ic="user" data-s="22"></span>
+          <h3 class="lp-step__title">Rejoignez un cercle</h3>
+          <p class="lp-step__body">Créez un cercle privé avec vos amis ou plongez dans un cercle public. Chaque cercle a son classement et sa rivalité.</p>
+          <div class="lp-step__tag"><span class="nl-pill"><span data-ic="globe" data-s="13"></span> Privé ou public</span></div>
+        </article>
+
+        <article class="lp-step lp-step--2">
+          <span class="lp-step__n">02</span>
+          <span class="lp-step__icon" data-ic="cards" data-s="22"></span>
+          <h3 class="lp-step__title">Composez votre pari</h3>
+          <p class="lp-step__body">Draftez jusqu'à 15 célébrités pour l'année via la recherche. Plus la cote est haute, plus le pari rapporte gros.</p>
+          <div class="lp-step__tag"><span class="nl-pill"><span data-ic="search" data-s="13"></span> 15 célébrités max</span></div>
+        </article>
+
+        <article class="lp-step lp-step--3">
+          <span class="lp-step__n">03</span>
+          <span class="lp-step__icon" data-ic="bolt" data-s="22"></span>
+          <h3 class="lp-step__title">Marquez des points</h3>
+          <p class="lp-step__body">Quand le destin frappe, vos pronostics se réalisent et vous engrangez les points. Séries, badges, et la première place vous attendent.</p>
+          <div class="lp-step__tag"><span class="nl-streak"><span data-ic="flame" data-s="13"></span> Séries &amp; badges</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== APERÇU DU JEU ===================== -->
+  <section class="lp-section" id="preview">
+    <div class="lp-wrap">
+      <div class="lp-preview-grid">
+
+        <!-- mock -->
+        <div class="lp-preview-frame">
+          <div class="lp-preview-frame__bar"><i></i><i></i><i></i><span>necroloto.app/cercle/faucheurs</span></div>
+          <div class="lp-preview-screen">
+            <div class="lp-preview__head">
+              <div style="display:flex;align-items:center;gap:11px">
+                <div class="nl-circle__crest" data-px="invader" data-s="3"></div>
+                <div>
+                  <div class="lp-ph-title">Les Faucheurs du Dimanche</div>
+                  <div class="nl-dim lp-ph-sub">8 joueurs · saison 2026</div>
+                </div>
+              </div>
+              <span class="nl-score">615 pts</span>
+            </div>
+
+            <!-- podium -->
+            <div class="nl-podium">
+              <div class="nl-pod nl-pod--2">
+                <div class="nl-pod__medal">2</div>
+                <div class="nl-av" style="width:48px;height:48px;font-size:20px;background:linear-gradient(150deg,#22E6FF,#3C6BFF)"><span>V</span></div>
+                <div class="nl-pod__name">Vous</div>
+                <div class="nl-pod__pts">420</div>
+              </div>
+              <div class="nl-pod nl-pod--1">
+                <div class="nl-pod__medal">1</div>
+                <div class="nl-av nl-av--ring" style="width:58px;height:58px;font-size:24px;background:linear-gradient(150deg,#22E6FF,#3C6BFF)"><span>S</span></div>
+                <div class="nl-pod__name">Sasha&nbsp;V.</div>
+                <div class="nl-pod__pts">615</div>
+              </div>
+              <div class="nl-pod nl-pod--3">
+                <div class="nl-pod__medal">3</div>
+                <div class="nl-av" style="width:48px;height:48px;font-size:20px;background:linear-gradient(150deg,#FF2E97,#7A3CFF)"><span>L</span></div>
+                <div class="nl-pod__name">Léa&nbsp;K.</div>
+                <div class="nl-pod__pts">405</div>
+              </div>
+            </div>
+
+            <!-- recent death feed -->
+            <div class="lp-preview-feed">
+              <span style="display:flex;color:var(--nl-coral);filter:drop-shadow(0 0 calc(var(--nl-glow)*8px) rgba(var(--nl-coral-rgb)/.6))" data-px="ghost" data-s="4"></span>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:13.5px">Dame Gloria Ravensworth, 96</div>
+                <div class="nl-dim" style="font-size:12px">a rapporté des points à 3 joueurs · il y a 2 j</div>
+              </div>
+              <span class="nl-score nl-score--gain">+140</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- copy -->
+        <div class="lp-preview-copy">
+          <div class="lp-sec-head">
+            <span class="nl-eyebrow">Un aperçu</span>
+            <h2 class="lp-sec-title">Le classement,<br>en un coup d'œil</h2>
+          </div>
+          <p class="lp-sec-sub">Podium néon, points qui pulsent, décès qui rapportent en direct. Tout est pensé pour le check rapide depuis le téléphone — et la revanche du dimanche soir.</p>
+          <ul class="lp-feature-list">
+            <li><span class="lp-fi" data-ic="trophy" data-s="17"></span><span><b>Podium top 3 mis en avant</b> avec halo néon — la gloire se voit de loin.</span></li>
+            <li><span class="lp-fi" data-ic="eye" data-s="17"></span><span><b>Voyez les mises de chacun</b> et découvrez qui a parié sur qui dans votre cercle.</span></li>
+            <li><span class="lp-fi" data-ic="bolt" data-s="17"></span><span><b>Points en temps réel</b> : un bandeau « décès récents » signale chaque pronostic gagnant.</span></li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FINAL CTA ===================== -->
+  <section class="lp-section" id="join" style="padding-top:24px">
+    <div class="lp-wrap">
+      <div class="lp-final">
+        <span class="lp-final__ghost lp-final__ghost--l lp-float" data-px="ghost" data-s="8"></span>
+        <span class="lp-final__ghost lp-final__ghost--r lp-float lp-float--slow" data-px="invader" data-s="8"></span>
+        <h2 class="lp-final__title">Prêt à narguer la Faucheuse ?</h2>
+        <p class="lp-final__sub">Rejoignez un cercle en 30 secondes et lancez votre pronostic pour la saison 2026. Gratuit, fun, et terriblement compétitif.</p>
+        <div class="lp-final__cta">
+          <a class="nl-btn nl-btn-primary" href="#signup"><span data-ic="bolt" data-s="17"></span> S'inscrire maintenant</a>
+          <a class="nl-btn nl-btn-ghost" href="#login">J'ai déjà un compte</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="lp-footer">
+    <div class="lp-wrap lp-footer__in">
+      <a class="lp-logo" href="#top">
+        <span class="lp-logo__mark" data-px="invader" data-s="3"></span>
+        <span class="lp-logo__word">NECRO<b>LOTO</b></span>
+      </a>
+      <nav class="lp-footer__links">
+        <a href="#how">Comment ça marche</a>
+        <a href="#preview">Le jeu</a>
+        <a href="#">Cercles</a>
+        <a href="#">Mentions légales</a>
+        <a href="#">Jeu responsable</a>
+      </nav>
+      <div class="lp-footer__legal">© 2026 Necroloto · Un jeu entre amis, <a href="#">sans argent réel</a>.</div>
+    </div>
+  </footer>
+
+</div>
+
+<script src="data.js"></script>
+<script>
+  (function () {
+    var N = window.NECRO;
+    if (!N) return;
+    document.querySelectorAll("[data-px]").forEach(function (el) {
+      el.innerHTML = N.pixel(el.dataset.px, "currentColor", +(el.dataset.s || 3));
+    });
+    document.querySelectorAll("[data-ic]").forEach(function (el) {
+      el.innerHTML = N.icon(el.dataset.ic, +(el.dataset.s || 20), +(el.dataset.sw || 1.7));
+    });
+  })();
+</script>
+</body>
+</html>

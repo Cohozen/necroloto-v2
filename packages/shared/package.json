@@ -9,6 +9,14 @@
         ".": {
             "types": "./dist/index.d.ts",
             "default": "./dist/index.js"
+        },
+        "./scoring": {
+            "types": "./dist/scoring.d.ts",
+            "default": "./dist/scoring.js"
+        },
+        "./enums": {
+            "types": "./dist/enums.d.ts",
+            "default": "./dist/enums.js"
         }
     },
     "scripts": {

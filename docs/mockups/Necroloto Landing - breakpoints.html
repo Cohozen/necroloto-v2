@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Necroloto — Landing · breakpoints, palette & type</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Saira+Condensed:wght@500;600;700;800&family=Pixelify+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/necroloto.css">
+<style>
+  html, body { margin: 0; background: #08080c; color: #F3F4F8; font-family: "Space Grotesk", sans-serif; }
+  a { text-decoration: none; }
+  body {
+    background-image:
+      radial-gradient(900px 480px at 85% -5%, rgba(57,255,106,.07), transparent 60%),
+      radial-gradient(800px 420px at 5% 12%, rgba(255,46,151,.05), transparent 60%);
+    min-height: 100vh;
+  }
+  .sw-wrap { max-width: 1280px; margin: 0 auto; padding: 38px 28px 64px; }
+  .sw-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }
+  .sw-logo { display: flex; align-items: center; gap: 11px; }
+  .sw-logo__w { font-family: "Pixelify Sans"; font-size: 24px; letter-spacing: .04em; }
+  .sw-logo__w b { color: #39FF6A; }
+  .sw-title { font-family: "Saira Condensed"; font-weight: 800; font-size: 34px; line-height: 1; margin: 12px 0 0; letter-spacing: -.01em; }
+  .sw-sub { color: #9B9CAC; font-size: 15px; margin-top: 6px; }
+
+  .sw-frames { display: grid; grid-template-columns: 360px 1fr; gap: 28px; align-items: start; }
+  .sw-frame__label { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+  .sw-frame__label b { font-size: 14px; font-weight: 700; }
+  .sw-frame__label span { font-family: "Space Mono"; font-size: 12px; color: #5E5F6E; }
+  .sw-dot { width: 8px; height: 8px; border-radius: 50%; background: #39FF6A; box-shadow: 0 0 10px rgba(57,255,106,.8); }
+
+  /* phone */
+  .sw-phone {
+    width: 360px; height: 740px; border-radius: 42px; padding: 12px;
+    background: linear-gradient(160deg, #1c1c26, #101016); border: 1px solid rgba(255,255,255,.13);
+    box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 0 50px rgba(57,255,106,.08);
+    position: relative;
+  }
+  .sw-phone__notch { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 120px; height: 26px; border-radius: 0 0 16px 16px; background: #0a0a0e; z-index: 3; }
+  .sw-phone iframe { width: 100%; height: 100%; border: 0; border-radius: 30px; background: #0B0B0F; }
+
+  /* desktop browser */
+  .sw-desk { border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,.13); background: #14141c; box-shadow: 0 30px 70px rgba(0,0,0,.55); }
+  .sw-desk__bar { display: flex; align-items: center; gap: 7px; padding: 12px 14px; background: #101016; border-bottom: 1px solid rgba(255,255,255,.07); }
+  .sw-desk__bar i { width: 11px; height: 11px; border-radius: 50%; background: #2a2a34; }
+  .sw-desk__bar i:nth-child(1) { background: #FF5A3C; } .sw-desk__bar i:nth-child(2) { background: #ffd23c; } .sw-desk__bar i:nth-child(3) { background: #39FF6A; }
+  .sw-desk__url { margin-left: 10px; font-family: "Space Mono"; font-size: 12px; color: #5E5F6E; background: #0b0b0f; border: 1px solid rgba(255,255,255,.07); border-radius: 7px; padding: 4px 12px; }
+  .sw-desk__view { height: 740px; overflow: hidden; }
+  .sw-desk__scale { width: 1280px; height: 1057px; transform: scale(.673); transform-origin: top left; }
+  .sw-desk__scale iframe { width: 1280px; height: 1057px; border: 0; background: #0B0B0F; }
+
+  /* legend: palette + type */
+  .sw-legend { margin-top: 44px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 22px; }
+  .sw-panel { background: #14141c; border: 1px solid rgba(255,255,255,.07); border-radius: 18px; padding: 22px; }
+  .sw-panel h3 { font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: #5E5F6E; margin: 0 0 16px; }
+  .sw-pal { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .sw-chip { border-radius: 12px; padding: 12px; min-height: 92px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; border: 1px solid rgba(255,255,255,.07); }
+  .sw-chip b { font-size: 12px; font-weight: 700; }
+  .sw-chip code { font-family: "Space Mono"; font-size: 11px; opacity: .8; }
+  .sw-ink { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; font-size: 12.5px; color: #9B9CAC; }
+  .sw-ink span { display: flex; align-items: center; gap: 7px; }
+  .sw-ink i { width: 13px; height: 13px; border-radius: 4px; }
+
+  .sw-type { display: flex; flex-direction: column; gap: 14px; }
+  .sw-type__row { display: flex; align-items: baseline; gap: 14px; border-bottom: 1px solid rgba(255,255,255,.06); padding-bottom: 12px; }
+  .sw-type__row:last-child { border: 0; }
+  .sw-type__meta { margin-left: auto; font-family: "Space Mono"; font-size: 11px; color: #5E5F6E; white-space: nowrap; }
+
+  @media (max-width: 860px) {
+    .sw-frames { grid-template-columns: 1fr; }
+    .sw-desk__view { height: 560px; }
+    .sw-legend { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="sw-wrap">
+
+  <div class="sw-head">
+    <div>
+      <div class="sw-logo">
+        <span style="color:#39FF6A;display:flex" id="sw-mark"></span>
+        <span class="sw-logo__w">NECRO<b>LOTO</b></span>
+      </div>
+      <h1 class="sw-title">Landing page — deux breakpoints</h1>
+      <p class="sw-sub">Page d'accueil publique, mobile-first. Cadres live ci-dessous (scrollables) · palette &amp; échelle typo en bas.</p>
+    </div>
+    <a class="nl-btn nl-btn-primary" href="Necroloto Landing.html" target="_blank" rel="noopener">Ouvrir la page ↗</a>
+  </div>
+
+  <div class="sw-frames">
+    <!-- mobile -->
+    <div>
+      <div class="sw-frame__label"><span class="sw-dot"></span><b>Mobile</b><span>· 390 px</span></div>
+      <div class="sw-phone">
+        <div class="sw-phone__notch"></div>
+        <iframe src="Necroloto%20Landing.html" title="Necroloto landing — mobile"></iframe>
+      </div>
+    </div>
+    <!-- desktop -->
+    <div>
+      <div class="sw-frame__label"><span class="sw-dot"></span><b>Desktop</b><span>· 1280 px</span></div>
+      <div class="sw-desk">
+        <div class="sw-desk__bar"><i></i><i></i><i></i><span class="sw-desk__url">necroloto.app</span></div>
+        <div class="sw-desk__view">
+          <div class="sw-desk__scale">
+            <iframe src="Necroloto%20Landing.html" title="Necroloto landing — desktop"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- legend -->
+  <div class="sw-legend">
+    <div class="sw-panel">
+      <h3>Palette — codes hex</h3>
+      <div class="sw-pal">
+        <div class="sw-chip" style="background:#0B0B0F"><b>Charbon</b><code>#0B0B0F</code></div>
+        <div class="sw-chip" style="background:#14141C"><b>Surface</b><code>#14141C</code></div>
+        <div class="sw-chip" style="background:#1A1A24"><b>Surface 2</b><code>#1A1A24</code></div>
+        <div class="sw-chip" style="background:#22222E"><b>Surface 3</b><code>#22222E</code></div>
+        <div class="sw-chip" style="background:#39FF6A;color:#0A1C10;border-color:rgba(0,0,0,.2)"><b>Vert toxique</b><code>#39FF6A</code></div>
+        <div class="sw-chip" style="background:#FF5A3C;color:#1c0a06;border-color:rgba(0,0,0,.2)"><b>Corail</b><code>#FF5A3C</code></div>
+        <div class="sw-chip" style="background:#FF2E97;color:#1c0612;border-color:rgba(0,0,0,.2)"><b>Magenta</b><code>#FF2E97</code></div>
+        <div class="sw-chip" style="background:linear-gradient(135deg,#22E6FF,#3C6BFF);color:#04121c;border-color:rgba(0,0,0,.2)"><b>Cyan (alt)</b><code>#22E6FF</code></div>
+      </div>
+      <div class="sw-ink">
+        <span><i style="background:#F3F4F8"></i> Ink #F3F4F8</span>
+        <span><i style="background:#9B9CAC"></i> Muted #9B9CAC</span>
+        <span><i style="background:#5E5F6E"></i> Dim #5E5F6E</span>
+        <span><i style="background:rgba(255,255,255,.13)"></i> Bordure rgba(255,255,255,.13)</span>
+      </div>
+    </div>
+
+    <div class="sw-panel">
+      <h3>Échelle typographique</h3>
+      <div class="sw-type">
+        <div class="sw-type__row"><span style="font-family:'Pixelify Sans';font-size:30px;color:#39FF6A">NECROLOTO</span><span class="sw-type__meta">Pixelify Sans · wordmark</span></div>
+        <div class="sw-type__row"><span style="font-family:'Saira Condensed';font-weight:800;font-size:38px;line-height:1">Display 64—38</span><span class="sw-type__meta">Saira Condensed 800 · titres</span></div>
+        <div class="sw-type__row"><span style="font-size:19px;font-weight:700">Section 19 / Corps 16</span><span class="sw-type__meta">Space Grotesk 400—700 · UI</span></div>
+        <div class="sw-type__row"><span style="font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#39FF6A">Eyebrow 11—13</span><span class="sw-type__meta">Space Grotesk 600 · labels</span></div>
+        <div class="sw-type__row"><span style="font-family:'Space Mono';font-size:14px;color:#9B9CAC">cote 4.20 · +140 pts</span><span class="sw-type__meta">Space Mono · chiffres tech</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="data.js"></script>
+<script>
+  if (window.NECRO) document.getElementById("sw-mark").innerHTML = window.NECRO.pixel("invader", "currentColor", 3);
+</script>
+</body>
+</html>

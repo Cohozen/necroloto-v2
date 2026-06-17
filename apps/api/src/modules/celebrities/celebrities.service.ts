@@ -1,4 +1,4 @@
-import { calculPointByCelebrity, deathYear } from '@necroloto/shared';
+import { ageInYears, calculPointByCelebrity, deathYear } from '@necroloto/shared';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
@@ -6,6 +6,16 @@ import { WikidataService, type WikidataSummary } from '../wikidata/wikidata.serv
 import { CreateCelebrityDto } from './dto/create-celebrity.dto';
 import { SearchCelebrityDto } from './dto/search-celebrity.dto';
 import { UpdateCelebrityDto } from './dto/update-celebrity.dto';
+
+/** A recent celebrity death with scoring stats, for the dashboard feed. */
+export interface DeathFeedEntry {
+    celebrityId: string;
+    celebrityName: string;
+    age: number;
+    death: string;
+    scorers: number;
+    points: number;
+}
 
 @Injectable()
 export class CelebritiesService {
@@ -31,11 +41,51 @@ export class CelebritiesService {
         });
     }
 
+    /**
+     * Recent celebrity deaths for a given year, with how many bets scored and the
+     * total points awarded. Powers the dashboard "Décès récents" feed.
+     */
+    async deathFeed(year: number, limit: number): Promise<DeathFeedEntry[]> {
+        const start = new Date(Date.UTC(year, 0, 1));
+        const end = new Date(Date.UTC(year + 1, 0, 1));
+
+        const celebrities = await this.prisma.celebrity.findMany({
+            where: { death: { gte: start, lt: end } },
+            orderBy: { death: 'desc' },
+            take: limit,
+            include: { CelebritiesOnBet: true },
+        });
+
+        return celebrities.map((celebrity) => {
+            const scoring = celebrity.CelebritiesOnBet.filter((bet) => bet.points > 0);
+            return {
+                celebrityId: celebrity.id,
+                celebrityName: celebrity.name,
+                age:
+                    celebrity.birth && celebrity.death
+                        ? ageInYears(celebrity.birth, celebrity.death)
+                        : 0,
+                // death is non-null here (filtered above).
+                death: (celebrity.death as Date).toISOString(),
+                scorers: scoring.length,
+                points: scoring.reduce((acc, bet) => acc + bet.points, 0),
+            };
+        });
+    }
+
     async findOne(id: string) {
+        // Includes each bet's user + circle so the front can list "who bet on
+        // this celebrity" (filtered to the viewer's circles client-side).
         return this.prisma.celebrity.findUnique({
             where: { id },
             include: {
-                CelebritiesOnBet: true,
+                CelebritiesOnBet: {
+                    include: {
+                        bet: {
+                            include: { user: true, Circle: true },
+                        },
+                    },
+                },
             },
         });
     }

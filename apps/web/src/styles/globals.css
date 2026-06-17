@@ -1,0 +1,213 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ============================================================
+   NECROLOTO — Neon / arcade design system (Tailwind v4 port)
+   Dark-mode only. Tokens ported from docs/mockups/necroloto.css.
+   Raw RGB channels stay on :root for rgb(var(--x) / a) usage in
+   custom shadows/gradients; solid colors get Tailwind opacity
+   modifiers for free (e.g. bg-neon/10, border-neon/40).
+   ============================================================ */
+
+:root {
+    color-scheme: dark;
+
+    /* raw channels (space-separated) for rgb(var(--x) / a) */
+    --neon-rgb: 57 255 106;
+    --coral-rgb: 255 90 60;
+    --magenta-rgb: 255 46 151;
+
+    /* glow + grain intensity (0..1) — drives every glow effect */
+    --glow: 0.65;
+
+    /* radius base (shadcn scale derives from this) */
+    --radius: 1rem;
+
+    /* ---- shadcn semantic tokens (mapped to the neon palette) ---- */
+    --background: #0b0b0f;
+    --foreground: #f3f4f8;
+    --card: #14141c;
+    --card-foreground: #f3f4f8;
+    --popover: #1a1a24;
+    --popover-foreground: #f3f4f8;
+    --primary: #39ff6a;
+    --primary-foreground: #0a1c10;
+    --secondary: #22222e;
+    --secondary-foreground: #f3f4f8;
+    --muted: #1a1a24;
+    --muted-foreground: #9b9cac;
+    --accent: #22222e;
+    --accent-foreground: #f3f4f8;
+    --destructive: #ff5a3c;
+    --destructive-foreground: #1c0a06;
+    --border: rgb(255 255 255 / 0.13);
+    --input: rgb(255 255 255 / 0.13);
+    --ring: #39ff6a;
+}
+
+@theme inline {
+    /* ---- shadcn semantic → utilities ---- */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    /* ---- Necroloto palette → utilities (bg-neon, text-ink-2, ...) ---- */
+    --color-bg: #0b0b0f;
+    --color-bg-2: #0e0e14;
+    --color-surface: #14141c;
+    --color-surface-2: #1a1a24;
+    --color-surface-3: #22222e;
+    --color-line: rgb(255 255 255 / 0.07);
+    --color-line-2: rgb(255 255 255 / 0.13);
+    --color-ink: #f3f4f8;
+    --color-ink-2: #9b9cac;
+    --color-ink-3: #5e5f6e;
+    --color-neon: #39ff6a;
+    --color-neon-ink: #0a1c10;
+    --color-coral: #ff5a3c;
+    --color-magenta: #ff2e97;
+
+    /* ---- radius scale ---- */
+    --radius-sm: calc(var(--radius) - 6px);
+    --radius-md: calc(var(--radius) - 4px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+
+    /* ---- type ---- */
+    --font-sans: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-display: "Saira Condensed", "Space Grotesk", sans-serif;
+    --font-arcade: "Pixelify Sans", "Saira Condensed", sans-serif;
+    --font-mono: "Space Mono", ui-monospace, monospace;
+
+    /* ---- neon glows (follow --glow) ---- */
+    --shadow-glow-green:
+        0 0 0 1px rgb(var(--neon-rgb) / 0.5),
+        0 0 calc(var(--glow) * 26px) rgb(var(--neon-rgb) / calc(var(--glow) * 0.45));
+    --shadow-glow-coral:
+        0 0 0 1px rgb(var(--coral-rgb) / 0.5),
+        0 0 calc(var(--glow) * 26px) rgb(var(--coral-rgb) / calc(var(--glow) * 0.42));
+    --shadow-glow-mag:
+        0 0 0 1px rgb(var(--magenta-rgb) / 0.5),
+        0 0 calc(var(--glow) * 26px) rgb(var(--magenta-rgb) / calc(var(--glow) * 0.42));
+    --shadow-glow-soft: 0 0 calc(var(--glow) * 22px) rgb(var(--neon-rgb) / calc(var(--glow) * 0.3));
+
+    /* ---- animations ---- */
+    --animate-pulse-dot: nl-pulse 1.8s ease-in-out infinite;
+    --animate-blink: nl-blink 1.1s steps(1) infinite;
+    --animate-float: nl-float 5s ease-in-out infinite;
+}
+
+@keyframes nl-pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.45;
+        transform: scale(0.82);
+    }
+}
+@keyframes nl-blink {
+    50% {
+        opacity: 0;
+    }
+}
+@keyframes nl-float {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@layer base {
+    * {
+        border-color: var(--color-border);
+    }
+    body {
+        margin: 0;
+        background:
+            radial-gradient(1100px 540px at 82% -10%, rgb(var(--neon-rgb) / 0.1), transparent 60%),
+            radial-gradient(900px 500px at 6% 108%, rgb(var(--magenta-rgb) / 0.07), transparent 55%),
+            linear-gradient(180deg, var(--color-bg-2), var(--color-bg) 40%);
+        background-attachment: fixed;
+        color: var(--color-foreground);
+        font-family: var(--font-sans);
+        font-size: 15px;
+        line-height: 1.45;
+        letter-spacing: 0.005em;
+        -webkit-font-smoothing: antialiased;
+    }
+    ::selection {
+        background: rgb(var(--neon-rgb) / 0.3);
+    }
+}
+
+/* ============================================================
+   UTILITIES — neon text glow + arcade surface (grain + scanlines)
+   ============================================================ */
+@utility text-glow-neon {
+    color: var(--color-neon);
+    text-shadow: 0 0 calc(var(--glow) * 14px) rgb(var(--neon-rgb) / calc(var(--glow) * 0.7));
+}
+@utility text-glow-coral {
+    color: var(--color-coral);
+    text-shadow: 0 0 calc(var(--glow) * 14px) rgb(var(--coral-rgb) / calc(var(--glow) * 0.6));
+}
+@utility text-glow-mag {
+    color: var(--color-magenta);
+    text-shadow: 0 0 calc(var(--glow) * 14px) rgb(var(--magenta-rgb) / calc(var(--glow) * 0.6));
+}
+
+/* arcade screen shell: subtle film grain + CRT scanlines */
+.neon-surface {
+    position: relative;
+    isolation: isolate;
+}
+.neon-surface::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 60;
+    opacity: calc(0.3 + var(--glow) * 0.35);
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+}
+.neon-surface::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 59;
+    opacity: calc(var(--glow) * 0.18);
+    background: repeating-linear-gradient(180deg, transparent 0 2px, rgb(0 0 0 / 0.5) 2px 3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        /* biome-ignore lint/complexity/noImportantStyles: reduced-motion reset must win the cascade */
+        animation: none !important;
+    }
+}

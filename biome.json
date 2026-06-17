@@ -7,13 +7,25 @@
     },
     "files": {
         "ignoreUnknown": true,
-        "includes": ["**", "!**/dist", "!**/generated", "!**/*.tsbuildinfo"]
+        "includes": [
+            "**",
+            "!**/dist",
+            "!**/generated",
+            "!**/*.tsbuildinfo",
+            "!**/routeTree.gen.ts",
+            "!docs/mockups/**"
+        ]
     },
     "formatter": {
         "enabled": true,
         "indentStyle": "space",
         "indentWidth": 4,
         "lineWidth": 100
+    },
+    "css": {
+        "parser": {
+            "tailwindDirectives": true
+        }
     },
     "javascript": {
         "parser": {
@@ -43,5 +55,19 @@
                 "organizeImports": "on"
             }
         }
-    }
+    },
+    "overrides": [
+        {
+            "includes": ["apps/web/src/components/ui/**"],
+            "linter": {
+                "rules": {
+                    "a11y": {
+                        "useAriaPropsForRole": "off",
+                        "useSemanticElements": "off",
+                        "useFocusableInteractive": "off"
+                    }
+                }
+            }
+        }
+    ]
 }

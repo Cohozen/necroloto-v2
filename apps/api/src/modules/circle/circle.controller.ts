@@ -1,10 +1,23 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    DefaultValuePipe,
+    Delete,
+    Get,
+    Param,
+    ParseIntPipe,
+    Patch,
+    Post,
+    Query,
+    UseGuards,
+} from '@nestjs/common';
 import { CircleAdminGuard } from '../auth/guards/circle-admin.guard';
 import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
 import { CircleService } from './circle.service';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateCircleDto } from './dto/create-circle.dto';
 import { UpdateCircleDto } from './dto/update-circle.dto';
+import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 
 @UseGuards(ClerkAuthGuard)
 @Controller('circle')
@@ -36,6 +49,15 @@ export class CircleController {
         return this.circleService.findByUser(userId);
     }
 
+    @Get('user/:userId/summary')
+    findUserSummaries(
+        @Param('userId') userId: string,
+        @Query('year', new DefaultValuePipe(new Date().getUTCFullYear()), ParseIntPipe)
+        year: number,
+    ) {
+        return this.circleService.findUserSummaries(userId, year);
+    }
+
     @Patch(':id')
     @UseGuards(CircleAdminGuard)
     update(@Param('id') id: string, @Body() updateCircleDto: UpdateCircleDto) {
@@ -46,6 +68,16 @@ export class CircleController {
     @UseGuards(CircleAdminGuard)
     addMember(@Param('id') id: string, @Body() dto: AddMemberDto) {
         return this.circleService.addMember(id, dto);
+    }
+
+    @Patch(':id/members/:userId')
+    @UseGuards(CircleAdminGuard)
+    updateMemberRole(
+        @Param('id') id: string,
+        @Param('userId') userId: string,
+        @Body() dto: UpdateMemberRoleDto,
+    ) {
+        return this.circleService.updateMemberRole(id, userId, dto);
     }
 
     @Delete(':id/members/:userId')

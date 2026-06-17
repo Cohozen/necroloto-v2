@@ -1,0 +1,317 @@
+// TanStack Query hooks over the authenticated API client. Query keys live in
+// keys.ts; Api*->UI adapters live in adapters.ts.
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useApiClient } from './context';
+import { queryKeys } from './keys';
+import type {
+    ApiBet,
+    ApiCelebrity,
+    ApiCelebrityDetail,
+    ApiCelebrityListItem,
+    ApiCircle,
+    ApiMembership,
+    ApiUser,
+    CircleSummaryDto,
+    CreateBetPayload,
+    CreateCelebrityPayload,
+    CreateCirclePayload,
+    CreateMembershipPayload,
+    DeathFeedEntryDto,
+    EnrichCelebrityPayload,
+    RankedBet,
+    ReplaceCelebritiesPayload,
+    SortByRank,
+    UpdateCelebrityPayload,
+    UpdateCirclePayload,
+    UpdateMemberRolePayload,
+    UpdateUserPayload,
+    WikidataSummaryDto,
+} from './types';
+
+export type { SortByRank };
+
+export const CURRENT_YEAR = new Date().getFullYear();
+
+/** Max celebrities a player can draft in a single bet. */
+export const MAX_BET_CELEBRITIES = 50;
+
+// --- Users ---
+
+export function useUserByClerkId(clerkId: string | undefined) {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: clerkId ? queryKeys.users.byClerk(clerkId) : ['users', 'clerk', 'none'],
+        queryFn: () => api.get<ApiUser | null>(`/users/clerk/${clerkId}`),
+        enabled: !!clerkId,
+    });
+}
+
+/** Update the current user's profile (PATCH /users/:id), then refresh its cache. */
+export function useUpdateUser() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, ...payload }: { id: string; clerkId: string } & UpdateUserPayload) =>
+            api.patch<ApiUser>(`/users/${id}`, payload),
+        onSuccess: (updated, { clerkId }) => {
+            qc.setQueryData(queryKeys.users.byClerk(clerkId), updated);
+        },
+    });
+}
+
+// --- Circles ---
+
+export function useCircleSummaries(userId: string | undefined, year = CURRENT_YEAR) {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: userId ? queryKeys.circles.summary(userId, year) : ['circles', 'summary', 'none'],
+        queryFn: () => api.get<CircleSummaryDto[]>(`/circle/user/${userId}/summary?year=${year}`),
+        enabled: !!userId,
+    });
+}
+
+export function useCircleDetail(circleId: string | undefined) {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: circleId ? queryKeys.circles.detail(circleId) : ['circles', 'detail', 'none'],
+        queryFn: () => api.get<ApiCircle>(`/circle/${circleId}`),
+        enabled: !!circleId,
+    });
+}
+
+export function useCreateCircle() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: CreateCirclePayload) => api.post<ApiCircle>('/circle', payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+export function useUpdateCircle(circleId: string) {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: UpdateCirclePayload) =>
+            api.patch<ApiCircle>(`/circle/${circleId}`, payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+export function useDeleteCircle() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (circleId: string) => api.delete<ApiCircle>(`/circle/${circleId}`),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+/** Leave a circle: a member removes their own membership (no admin rights needed). */
+export function useLeaveCircle() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (membershipId: string) =>
+            api.delete<ApiMembership>(`/membership/${membershipId}`),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+export function useRemoveMember(circleId: string) {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (userId: string) =>
+            api.delete<ApiMembership>(`/circle/${circleId}/members/${userId}`),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+export function useUpdateMemberRole(circleId: string) {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ userId, role }: { userId: string } & UpdateMemberRolePayload) =>
+            api.patch<ApiMembership>(`/circle/${circleId}/members/${userId}`, { role }),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+/** Join a circle by code: resolve the circle, then create the membership. */
+export function useJoinCircleByCode() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ code, userId }: { code: string; userId: string }) => {
+            const circle = await api.get<ApiCircle | null>(`/circle/code/${code}`);
+            if (!circle) throw new Error('Aucun cercle ne correspond à ce code.');
+            const payload: CreateMembershipPayload = { userId, circleId: circle.id };
+            await api.post<ApiMembership>('/membership', payload);
+            return circle;
+        },
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+// --- Bets / leaderboard ---
+
+export function useCircleRank(
+    circleId: string | undefined,
+    year = CURRENT_YEAR,
+    sort: SortByRank = 'points',
+) {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: circleId ? queryKeys.bets.rank(circleId, year, sort) : ['bets', 'rank', 'none'],
+        queryFn: () =>
+            api.get<RankedBet[]>(`/bets/circle/${circleId}/rank?year=${year}&sort=${sort}`),
+        enabled: !!circleId,
+    });
+}
+
+export function useUserBets(userId: string | undefined) {
+    const api = useApiClient();
+    return useQuery({
+        // Note: this endpoint returns plain bets (no rank/total) — totals are
+        // derived client-side from CelebritiesOnBet.
+        queryKey: userId ? queryKeys.bets.byUser(userId) : ['bets', 'user', 'none'],
+        queryFn: () => api.get<ApiBet[]>(`/bets/user/${userId}`),
+        enabled: !!userId,
+    });
+}
+
+// --- Bets (draft) ---
+
+export function useCreateBet() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: CreateBetPayload) => api.post<ApiBet>('/bets', payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['bets'] });
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+/** Replace a bet's full celebrity list (PATCH /bets/:id/celebrities). */
+export function useReplaceBetCelebrities() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ betId, celebrities }: { betId: string } & ReplaceCelebritiesPayload) =>
+            api.patch<ApiBet>(`/bets/${betId}/celebrities`, { celebrities }),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['bets'] });
+            qc.invalidateQueries({ queryKey: ['circles'] });
+        },
+    });
+}
+
+// --- Celebrities ---
+
+export function useCelebrities() {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: queryKeys.celebrities.list(),
+        queryFn: () => api.get<ApiCelebrityListItem[]>('/celebrities'),
+    });
+}
+
+export function useCelebrity(id: string | undefined) {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: id ? queryKeys.celebrities.detail(id) : ['celebrities', 'detail', 'none'],
+        queryFn: () => api.get<ApiCelebrityDetail>(`/celebrities/${id}`),
+        enabled: !!id,
+    });
+}
+
+export function useDeathFeed(year = CURRENT_YEAR, limit = 10) {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: queryKeys.celebrities.deathFeed(year, limit),
+        queryFn: () =>
+            api.get<DeathFeedEntryDto[]>(`/celebrities/deaths/feed?year=${year}&limit=${limit}`),
+    });
+}
+
+// --- Celebrities (admin) ---
+
+export function useCreateCelebrity() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: CreateCelebrityPayload) =>
+            api.post<ApiCelebrity>('/celebrities', payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+        },
+    });
+}
+
+export function useUpdateCelebrity(id: string) {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: UpdateCelebrityPayload) =>
+            api.patch<ApiCelebrity>(`/celebrities/${id}`, payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+        },
+    });
+}
+
+export function useDeleteCelebrity() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => api.delete<ApiCelebrity>(`/celebrities/${id}`),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+        },
+    });
+}
+
+/** Enrich a celebrity from Wikidata (fills birth/death/photo, links the QID). */
+export function useEnrichCelebrity() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, ...payload }: { id: string } & EnrichCelebrityPayload) =>
+            api.post<ApiCelebrity>(`/celebrities/${id}/enrich`, payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+        },
+    });
+}
+
+/** Wikidata candidates for a name (admin disambiguation). Enabled when name is set. */
+export function useWikidataSearch(name: string) {
+    const api = useApiClient();
+    const trimmed = name.trim();
+    return useQuery({
+        queryKey: queryKeys.celebrities.wikidata(trimmed),
+        queryFn: () =>
+            api.get<WikidataSummaryDto[]>(
+                `/celebrities/wikidata/search?name=${encodeURIComponent(trimmed)}`,
+            ),
+        enabled: trimmed.length > 0,
+    });
+}

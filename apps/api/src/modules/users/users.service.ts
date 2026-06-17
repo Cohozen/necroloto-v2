@@ -8,6 +8,35 @@ export class UsersService {
     constructor(private prisma: PrismaService) {}
 
     async create(createUserDto: CreateUserDto) {
+        // Idempotent provisioning. A Clerk user may already have a row (re-login),
+        // or the same verified email may already exist under a *different* clerkId
+        // (e.g. a prod row cloned locally, or a Clerk instance migration). In that
+        // case we relink the existing row instead of hitting the unique(email)
+        // constraint. Clerk verifies emails, so matching on email is safe.
+        const existingByClerk = await this.prisma.user.findFirst({
+            where: { clerkId: createUserDto.clerkId },
+        });
+        if (existingByClerk) return existingByClerk;
+
+        if (createUserDto.email) {
+            const existingByEmail = await this.prisma.user.findUnique({
+                where: { email: createUserDto.email },
+            });
+            if (existingByEmail) {
+                return this.prisma.user.update({
+                    where: { id: existingByEmail.id },
+                    data: {
+                        clerkId: createUserDto.clerkId,
+                        // Backfill profile fields only when the row lacks them.
+                        image: existingByEmail.image ?? createUserDto.image,
+                        username: existingByEmail.username ?? createUserDto.username,
+                        firstname: existingByEmail.firstname ?? createUserDto.firstname,
+                        lastname: existingByEmail.lastname ?? createUserDto.lastname,
+                    },
+                });
+            }
+        }
+
         return this.prisma.user.create({
             data: createUserDto,
         });

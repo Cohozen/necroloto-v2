@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Necroloto — Créer / Rejoindre un cercle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Saira+Condensed:wght@500;600;700;800&family=Pixelify+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/necroloto.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0b0f; }
+  #root { height: 100%; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="data.js"></script>
+<script src="screens/forms.js"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+  const N = window.NECRO;
+  const DARK = { background: "#0B0B0F" };
+  const S = ({ html }) => <div style={{ width: "100%", height: "100%" }} dangerouslySetInnerHTML={{ __html: html }} />;
+
+  function App() {
+    return (
+      <DesignCanvas>
+        <DCSection id="creer" title="Créer un cercle" subtitle="Nom, visibilité privé/public, réglages de saison, puis code d'invitation généré">
+          <DCArtboard id="create-d" label="Desktop · 1280" width={1280} height={920} style={DARK}>
+            <S html={N.createDesktop2()} />
+          </DCArtboard>
+          <DCArtboard id="create-m" label="Mobile · 390" width={390} height={844} style={DARK}>
+            <S html={N.createMobile2()} />
+          </DCArtboard>
+          <DCArtboard id="create-ok" label="Mobile · code généré" width={390} height={844} style={DARK}>
+            <S html={N.createSuccessMobile()} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="rejoindre" title="Rejoindre un cercle" subtitle="Saisie de code à segments (OTP) avec focus néon et état d'erreur">
+          <DCArtboard id="join-d" label="Desktop · 1280" width={1280} height={760} style={DARK}>
+            <S html={N.joinDesktop()} />
+          </DCArtboard>
+          <DCArtboard id="join-m" label="Mobile · 390 · focus" width={390} height={844} style={DARK}>
+            <S html={N.joinMobile()} />
+          </DCArtboard>
+          <DCArtboard id="join-err" label="Mobile · code invalide" width={390} height={844} style={DARK}>
+            <S html={N.joinErrorMobile()} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="etats" title="États des champs" subtitle="Focus néon · erreur corail · validé · switch · cartes de choix · OTP">
+          <DCArtboard id="states" label="Composants de formulaire" width={1280} height={640} style={DARK}>
+            <S html={N.statesBoard()} />
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

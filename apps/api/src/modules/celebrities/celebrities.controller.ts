@@ -1,12 +1,14 @@
 import {
     Body,
     Controller,
+    DefaultValuePipe,
     Delete,
     FileTypeValidator,
     Get,
     MaxFileSizeValidator,
     Param,
     ParseFilePipe,
+    ParseIntPipe,
     Patch,
     Post,
     Query,
@@ -86,6 +88,16 @@ export class CelebritiesController {
     @Get()
     findAll() {
         return this.celebritiesService.findAll();
+    }
+
+    // Recent deaths for the dashboard feed. Declared before ":id" for clarity.
+    @Get('deaths/feed')
+    deathFeed(
+        @Query('year', new DefaultValuePipe(new Date().getUTCFullYear()), ParseIntPipe)
+        year: number,
+        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    ) {
+        return this.celebritiesService.deathFeed(year, limit);
     }
 
     @Get(':id')
