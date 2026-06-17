@@ -117,6 +117,11 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   hooks (`queries.ts`), and `Api*→UI` adapters (`adapters.ts`). The Clerk user is resolved to a DB
   `User` row and **provisioned on first sign-in** by `CurrentUserProvider` (GET `/users/clerk/:id`,
   POST `/users` on miss); read it via `useCurrentUser()`. Reuse this pattern for new slices.
+  ⚠️ `POST /users` (`UsersService.create`) is **idempotent**: it returns the existing row for a
+  known `clerkId`, or **relinks the `clerkId` onto the row matching the email** (email is
+  `@unique`, `clerkId` is not) — so a verified email signing in under a new `clerkId` (prod row
+  cloned locally, Clerk instance migration) reconciles instead of hitting the unique(email)
+  constraint. Adding `@unique` on `User.clerkId` (after dedup) is tracked in `docs/ROADMAP.md`.
   ⚠️ Nest serializes a `null` handler return as an **empty body** — `client.ts` returns `null`
   (not `undefined`) on 204/empty, else TanStack Query throws "query data cannot be undefined".
 - **Wired vs mock**: every screen is wired — circles (`/circles` hub, `/circles/new`,
@@ -138,7 +143,9 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   season. The `/celebrities` draft is "Mon pari": it edits the bet of the **selected circle** (a
   circle selector defaults to the bet's circle, or the user's first), seeding the celebrity
   selection from it and saving via `POST /bets` (create) or `PATCH /bets/:id/celebrities` (replace,
-  ≥1 celebrity required). The fiche's bettors list is filtered client-side to the viewer's circles.
+  ≥1 celebrity required). The draft caps selection at `MAX_BET_CELEBRITIES` (50, a shared constant
+  in `queries.ts`; client-side only — the API enforces no cap yet, per-circle config is in
+  `docs/ROADMAP.md`). The fiche's bettors list is filtered client-side to the viewer's circles.
 - ⚠️ **`@necroloto/shared` is CommonJS** (`"type": "commonjs"`). Its barrel `index.js` uses
   `__exportStar`, which rollup/esbuild can't statically analyze → the web imports the subpath
   `@necroloto/shared/scoring` (a single-file module with direct named exports). `vite.config.ts`
