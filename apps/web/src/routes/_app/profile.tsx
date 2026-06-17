@@ -127,7 +127,7 @@ function Profile() {
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 p-4 md:p-6">
-            <ProfileHeader profile={profile} imageUrl={user.image} />
+            <ProfileHeader profile={profile} />
 
             <div className="grid items-start gap-5 lg:grid-cols-[1.5fr_1fr]">
                 {/* stats + achievements */}
@@ -182,8 +182,9 @@ function Profile() {
                         <SettingsRow
                             icon={Bell}
                             title="Notifications"
-                            description="Décès, classements, invitations"
-                            control={<Switch defaultChecked />}
+                            description="Bientôt disponible"
+                            disabled
+                            control={<Switch disabled defaultChecked />}
                         />
                     </div>
                     {isClerkConfigured && (

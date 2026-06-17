@@ -1,7 +1,7 @@
 import { useClerk } from '@clerk/clerk-react';
 import { useNavigate } from '@tanstack/react-router';
 import { LogOut, ShieldCheck, User } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -29,7 +29,6 @@ export function UserMenu() {
                 aria-label="Menu du compte"
             >
                 <Avatar className="size-[38px] ring-2 ring-neon/60 ring-offset-2 ring-offset-bg md:size-[42px]">
-                    {user?.image && <AvatarImage src={user.image} alt={name} />}
                     <AvatarFallback className="bg-gradient-to-br from-[#2bd4ff] to-neon font-display font-extrabold text-[#07140b]">
                         {initialsOf(name)}
                     </AvatarFallback>

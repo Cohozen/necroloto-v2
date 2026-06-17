@@ -26,7 +26,10 @@ export function TopBar() {
             <button type="button" aria-label="Notifications" className={iconBtn}>
                 <Bell size={18} />
             </button>
-            <UserMenu />
+            {/* Account avatar lives here on mobile; on desktop it sits at the bottom of the side rail. */}
+            <span className="md:hidden">
+                <UserMenu />
+            </span>
         </header>
     );
 }

@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { Shield } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { initialsOf, userDisplayName } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
@@ -14,7 +15,8 @@ const railLink = cn(
 
 /** Desktop vertical nav rail (nl-side). Hidden on mobile. */
 export function SideNav() {
-    const { isAdmin } = useCurrentUser();
+    const { user, isAdmin } = useCurrentUser();
+    const initials = user ? initialsOf(userDisplayName(user)) : '··';
     return (
         <aside className="hidden w-[78px] shrink-0 flex-col items-center gap-2 border-r border-line bg-gradient-to-b from-bg-2 to-bg/40 py-5 md:flex">
             <Link to="/dashboard" className="mb-3" aria-label="Accueil">
@@ -31,11 +33,13 @@ export function SideNav() {
                     <Shield size={22} />
                 </Link>
             )}
-            <Avatar className="size-[42px] ring-2 ring-neon/60 ring-offset-2 ring-offset-bg">
-                <AvatarFallback className="bg-gradient-to-br from-[#2bd4ff] to-neon font-display font-extrabold text-[#07140b]">
-                    ME
-                </AvatarFallback>
-            </Avatar>
+            <Link to="/profile" aria-label="Mon profil">
+                <Avatar className="size-[42px] ring-2 ring-neon/60 ring-offset-2 ring-offset-bg">
+                    <AvatarFallback className="bg-gradient-to-br from-[#2bd4ff] to-neon font-display font-extrabold text-[#07140b]">
+                        {initials}
+                    </AvatarFallback>
+                </Avatar>
+            </Link>
         </aside>
     );
 }

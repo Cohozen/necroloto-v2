@@ -1,16 +1,14 @@
 import { Flame } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { PlayerProfile } from '@/types/profile';
 
 interface ProfileHeaderProps {
     profile: PlayerProfile;
-    /** Avatar image of the signed-in user (falls back to initials). */
-    imageUrl?: string | null;
 }
 
 /** Identity card (nl-profhead) — avatar, handle, level row. */
-export function ProfileHeader({ profile, imageUrl }: ProfileHeaderProps) {
+export function ProfileHeader({ profile }: ProfileHeaderProps) {
     return (
         <div className="relative overflow-hidden rounded-2xl border border-line-2 px-5 py-[22px] [background:radial-gradient(120%_160%_at_18%_-40%,rgb(var(--neon-rgb)/0.18),transparent_58%),radial-gradient(120%_160%_at_90%_-30%,rgb(var(--magenta-rgb)/0.12),transparent_55%),linear-gradient(180deg,var(--color-surface-2),var(--color-surface))] md:px-7 md:py-[26px]">
             {/* faint grid, fading downward */}
@@ -18,7 +16,6 @@ export function ProfileHeader({ profile, imageUrl }: ProfileHeaderProps) {
 
             <div className="relative z-[1] flex items-center gap-4 md:gap-[22px]">
                 <Avatar className="size-[76px] shrink-0 ring-2 ring-neon/60 ring-offset-2 ring-offset-bg md:size-[92px]">
-                    {imageUrl && <AvatarImage src={imageUrl} alt={profile.name} />}
                     <AvatarFallback className="bg-gradient-to-br from-[#2bd4ff] to-neon font-display text-2xl font-extrabold text-[#07140b]">
                         {profile.initials}
                     </AvatarFallback>
