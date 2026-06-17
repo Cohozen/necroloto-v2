@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Lock, Zap } from 'lucide-react';
+import { Lock, Users, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface BetProgressCardProps {
@@ -8,10 +8,18 @@ interface BetProgressCardProps {
     total: number;
     /** e.g. "clôture 31 déc." */
     closesLabel: string;
+    /** Name of the circle this bet belongs to, if any. */
+    circleName?: string;
 }
 
 /** "Pari en cours" card with selection progress (nl-card + nl-bar). */
-export function BetProgressCard({ year, selected, total, closesLabel }: BetProgressCardProps) {
+export function BetProgressCard({
+    year,
+    selected,
+    total,
+    closesLabel,
+    circleName,
+}: BetProgressCardProps) {
     const pct = Math.round((selected / total) * 100);
     return (
         <div className="relative flex flex-col gap-4 rounded-2xl border border-line bg-gradient-to-b from-surface-2 to-surface p-5">
@@ -21,6 +29,11 @@ export function BetProgressCard({ year, selected, total, closesLabel }: BetProgr
                         Pari en cours
                     </div>
                     <div className="mt-1 text-lg font-semibold">Saison {year}</div>
+                    {circleName && (
+                        <div className="mt-1 flex items-center gap-1.5 text-[13px] text-ink-2">
+                            <Users size={13} /> {circleName}
+                        </div>
+                    )}
                 </div>
                 <span className="inline-flex h-[26px] items-center gap-1.5 rounded-full border border-coral/40 bg-coral/10 px-2.5 text-xs font-semibold text-coral">
                     <Lock size={13} /> {closesLabel}

@@ -51,11 +51,14 @@ function Dashboard() {
 
     // "Pari en cours" card: celebrities drafted in this year's bet for the first
     // circle (matches the draft's default circle selection).
-    const selectedCount = useMemo(() => {
+    const currentBet = useMemo(() => {
         const yearBets = (betsQuery.data ?? []).filter((bet) => bet.year === YEAR);
         const firstCircleId = circles[0]?.id;
         const bet = yearBets.find((b) => b.circleId === firstCircleId) ?? yearBets[0];
-        return bet?.CelebritiesOnBet.length ?? 0;
+        return {
+            selectedCount: bet?.CelebritiesOnBet.length ?? 0,
+            circleName: bet?.Circle?.name,
+        };
     }, [betsQuery.data, circles]);
 
     return (
@@ -104,9 +107,10 @@ function Dashboard() {
                 <div className="flex flex-col gap-4 md:gap-[18px]">
                     <BetProgressCard
                         year={YEAR}
-                        selected={selectedCount}
+                        selected={currentBet.selectedCount}
                         total={MAX_BET_CELEBRITIES}
                         closesLabel="clôture 31 déc."
+                        circleName={currentBet.circleName}
                     />
                     <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold">Décès récents</h2>
