@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { Users, Zap } from 'lucide-react';
 import { Logo } from '@/components/layout/Logo';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { HubCircle } from '@/types/circle';
 import { MiniPodium } from './MiniPodium';
@@ -13,9 +12,11 @@ const fmt = (n: number) => n.toLocaleString('fr-FR');
 export function HubCircleCard({ circle }: { circle: HubCircle }) {
     const lead = circle.rankState === 'lead';
     return (
-        <article
+        <Link
+            to="/circles/$id"
+            params={{ id: circle.id }}
             className={cn(
-                'flex flex-col gap-3.5 rounded-2xl border border-line bg-gradient-to-b from-surface-2 to-surface p-[18px]',
+                'flex flex-col gap-3.5 rounded-2xl border border-line bg-gradient-to-b from-surface-2 to-surface p-[18px] transition-colors hover:border-line-2',
                 lead && 'shadow-glow-green',
             )}
         >
@@ -63,24 +64,17 @@ export function HubCircleCard({ circle }: { circle: HubCircle }) {
                         {circle.myRank}
                     </b>
                 </div>
-                <div className="flex items-center gap-2.5">
-                    <span
-                        className={cn(
-                            'inline-flex h-[30px] items-center rounded-full px-2.5 font-display text-base font-bold',
-                            lead
-                                ? 'border border-neon/40 bg-neon/10 text-neon shadow-glow-soft'
-                                : 'bg-surface-3 text-ink-2',
-                        )}
-                    >
-                        {fmt(circle.points)} pts
-                    </span>
-                    <Button asChild size="sm" variant={lead ? 'default' : 'outline'}>
-                        <Link to="/circles/$id" params={{ id: circle.id }}>
-                            Voir
-                        </Link>
-                    </Button>
-                </div>
+                <span
+                    className={cn(
+                        'inline-flex h-[30px] items-center rounded-full px-2.5 font-display text-base font-bold',
+                        lead
+                            ? 'border border-neon/40 bg-neon/10 text-neon shadow-glow-soft'
+                            : 'bg-surface-3 text-ink-2',
+                    )}
+                >
+                    {fmt(circle.points)} pts
+                </span>
             </div>
-        </article>
+        </Link>
     );
 }
