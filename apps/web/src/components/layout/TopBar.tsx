@@ -1,18 +1,12 @@
 import { Bell, Search } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Logo } from './Logo';
-import { YearSelector } from './YearSelector';
-
-interface TopBarProps {
-    year: number;
-    onYearChange: (year: number) => void;
-}
+import { UserMenu } from './UserMenu';
 
 const iconBtn =
     'inline-flex size-[38px] items-center justify-center rounded-[11px] border border-line-2 bg-surface-2 text-ink-2 md:size-[42px]';
 
-/** App header — desktop (search + year + bell) and mobile (logo + bell + avatar). */
-export function TopBar({ year, onYearChange }: TopBarProps) {
+/** App header — desktop (search + bell + account) and mobile (logo + bell + account). */
+export function TopBar() {
     return (
         <header className="flex items-center gap-3 border-b border-line bg-bg/55 px-4 py-3.5 backdrop-blur-md md:gap-3.5 md:px-5.5">
             {/* mobile: brand */}
@@ -29,18 +23,10 @@ export function TopBar({ year, onYearChange }: TopBarProps) {
 
             <div className="flex-1 md:flex-none" />
 
-            {/* Year selector is desktop-only here; on mobile it lives in-page. */}
-            <span className="hidden md:inline-flex">
-                <YearSelector value={year} onValueChange={onYearChange} />
-            </span>
             <button type="button" aria-label="Notifications" className={iconBtn}>
                 <Bell size={18} />
             </button>
-            <Avatar className="size-[38px] ring-2 ring-neon/60 ring-offset-2 ring-offset-bg md:hidden">
-                <AvatarFallback className="bg-gradient-to-br from-[#2bd4ff] to-neon font-display font-extrabold text-[#07140b]">
-                    ME
-                </AvatarFallback>
-            </Avatar>
+            <UserMenu />
         </header>
     );
 }
