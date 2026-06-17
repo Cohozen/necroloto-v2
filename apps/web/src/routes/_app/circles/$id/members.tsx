@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { Plus } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { CircleAdminHeader } from '@/components/circles/CircleAdminHeader';
+import { InviteDialog } from '@/components/circles/InviteDialog';
 import { MemberRow } from '@/components/circles/MemberRow';
 import { toCircleMember } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
@@ -37,6 +38,7 @@ function byRank(a: CircleMember, b: CircleMember): number {
 function CircleMembers() {
     const { id } = Route.useParams();
     const { user } = useCurrentUser();
+    const [inviteOpen, setInviteOpen] = useState(false);
     const circleQuery = useCircleDetail(id);
     const rankQuery = useCircleRank(id);
     const removeMember = useRemoveMember(id);
@@ -65,7 +67,7 @@ function CircleMembers() {
     const pending = removeMember.isPending || updateRole.isPending;
 
     return (
-        <div className="mx-auto flex w-full max-w-[680px] flex-col gap-5 p-4 md:p-6">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 p-4 md:p-6">
             <CircleAdminHeader
                 id={id}
                 name={circle.name}
@@ -81,16 +83,17 @@ function CircleMembers() {
                         {admins} admins · {total - admins} membres
                     </p>
                 </div>
-                {/* Invitations go through the shared code on the settings tab —
-                    there is no add-by-search endpoint. */}
-                <Link
-                    to="/circles/$id/settings"
-                    params={{ id }}
+                {/* Invitations are sharing the circle code — no add-by-search endpoint. */}
+                <button
+                    type="button"
+                    onClick={() => setInviteOpen(true)}
                     className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-neon/50 bg-neon/[0.08] px-3 text-[13px] font-semibold text-neon"
                 >
                     <Plus size={14} strokeWidth={2.2} /> Inviter
-                </Link>
+                </button>
             </div>
+
+            <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} code={circle.code} />
 
             <div className="flex flex-col gap-2.5">
                 {members.map((member) => (
