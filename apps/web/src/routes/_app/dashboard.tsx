@@ -7,7 +7,13 @@ import { DeathFeedItem } from '@/components/dashboard/DeathFeedItem';
 import { ScoreBand } from '@/components/dashboard/ScoreBand';
 import { toCircleSummary, toDeathFeedEntry } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
-import { CURRENT_YEAR, useCircleSummaries, useDeathFeed, useUserBets } from '@/lib/api/queries';
+import {
+    CURRENT_YEAR,
+    MAX_BET_CELEBRITIES,
+    useCircleSummaries,
+    useDeathFeed,
+    useUserBets,
+} from '@/lib/api/queries';
 
 export const Route = createFileRoute('/_app/dashboard')({
     component: Dashboard,
@@ -41,6 +47,16 @@ function Dashboard() {
         const ranks = circles.map((c) => c.rank).filter((r) => r > 0);
         const bestRank = ranks.length ? `#${Math.min(...ranks)}` : '—';
         return { score, deaths, bestRank };
+    }, [betsQuery.data, circles]);
+
+    // "Pari en cours" card: celebrities drafted in this year's bet for the first
+    // circle (matches the draft's default circle selection).
+    const selectedCount = useMemo(() => {
+        const yearBets = (betsQuery.data ?? []).filter((bet) => bet.year === YEAR);
+        const firstCircleId = circles[0]?.id;
+        const bet =
+            yearBets.find((b) => b.circleId === firstCircleId) ?? yearBets[0];
+        return bet?.CelebritiesOnBet.length ?? 0;
     }, [betsQuery.data, circles]);
 
     return (
@@ -89,8 +105,8 @@ function Dashboard() {
                 <div className="flex flex-col gap-4 md:gap-[18px]">
                     <BetProgressCard
                         year={YEAR}
-                        selected={0}
-                        total={15}
+                        selected={selectedCount}
+                        total={MAX_BET_CELEBRITIES}
                         closesLabel="clôture 31 déc."
                     />
                     <div className="flex items-center justify-between">
