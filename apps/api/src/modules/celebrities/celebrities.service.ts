@@ -1,5 +1,6 @@
 import { ageInYears, calculPointByCelebrity, deathYear } from '@necroloto/shared';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { WikidataService, type WikidataSummary } from '../wikidata/wikidata.service';
@@ -39,6 +40,40 @@ export class CelebritiesService {
                 CelebritiesOnBet: true,
             },
         });
+    }
+
+    /**
+     * Paginated catalogue for the admin UI: name search (insensitive), status
+     * filter (alive/deceased) and alphabetical order. Returns the page items plus
+     * the total count matching the filter, so the front can drive infinite scroll.
+     */
+    async findPage(params: {
+        search?: string;
+        status?: 'all' | 'alive' | 'deceased';
+        take: number;
+        skip: number;
+    }): Promise<{ items: Awaited<ReturnType<CelebritiesService['findAll']>>; total: number }> {
+        const { search, status = 'all', take, skip } = params;
+        const where: Prisma.CelebrityWhereInput = {
+            ...(search && {
+                name: { contains: search, mode: 'insensitive' },
+            }),
+            ...(status === 'alive' && { death: null }),
+            ...(status === 'deceased' && { death: { not: null } }),
+        };
+
+        const [items, total] = await this.prisma.$transaction([
+            this.prisma.celebrity.findMany({
+                where,
+                orderBy: { name: 'asc' },
+                take,
+                skip,
+                include: { CelebritiesOnBet: true },
+            }),
+            this.prisma.celebrity.count({ where }),
+        ]);
+
+        return { items, total };
     }
 
     /**

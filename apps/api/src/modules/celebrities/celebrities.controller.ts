@@ -90,6 +90,19 @@ export class CelebritiesController {
         return this.celebritiesService.findAll();
     }
 
+    // Admin-only: paginated catalogue (name search, status filter, alphabetical).
+    // Declared before ":id" so "admin" is not parsed as an id.
+    @Get('admin/list')
+    @UseGuards(AdminGuard)
+    findPage(
+        @Query('search') search?: string,
+        @Query('status') status?: 'all' | 'alive' | 'deceased',
+        @Query('take', new DefaultValuePipe(24), ParseIntPipe) take = 24,
+        @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip = 0,
+    ) {
+        return this.celebritiesService.findPage({ search, status, take, skip });
+    }
+
     // Recent deaths for the dashboard feed. Declared before ":id" for clarity.
     @Get('deaths/feed')
     deathFeed(
