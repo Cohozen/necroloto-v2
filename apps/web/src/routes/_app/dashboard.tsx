@@ -54,8 +54,7 @@ function Dashboard() {
     const selectedCount = useMemo(() => {
         const yearBets = (betsQuery.data ?? []).filter((bet) => bet.year === YEAR);
         const firstCircleId = circles[0]?.id;
-        const bet =
-            yearBets.find((b) => b.circleId === firstCircleId) ?? yearBets[0];
+        const bet = yearBets.find((b) => b.circleId === firstCircleId) ?? yearBets[0];
         return bet?.CelebritiesOnBet.length ?? 0;
     }, [betsQuery.data, circles]);
 

@@ -89,7 +89,8 @@ function DraftScreen({ userId, celebrities, bets, circles }: DraftScreenProps) {
 
     const selectedCircle = circles.find((c) => c.id === circleId);
     // Circle lock: an existing bet needs allowEdit, a first bet needs allowNewBet.
-    const locked = !!selectedCircle && (bet ? !selectedCircle.allowEdit : !selectedCircle.allowNewBet);
+    const locked =
+        !!selectedCircle && (bet ? !selectedCircle.allowEdit : !selectedCircle.allowNewBet);
 
     // Deceased celebrities are no longer draftable — only living ones are shown.
     const cards = useMemo(
