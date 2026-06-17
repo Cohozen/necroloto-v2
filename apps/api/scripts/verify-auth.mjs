@@ -9,6 +9,9 @@ const { AppModule } = require('../dist/src/app.module.js');
 const { PrismaService } = require('../dist/src/prisma/prisma.service.js');
 const { CircleAdminGuard } = require('../dist/src/modules/auth/guards/circle-admin.guard.js');
 const { AdminGuard } = require('../dist/src/modules/auth/guards/admin.guard.js');
+const {
+    MembershipOwnerGuard,
+} = require('../dist/src/modules/auth/guards/membership-owner.guard.js');
 
 const ctx = (req) => ({ switchToHttp: () => ({ getRequest: () => req }) });
 const app = await NestFactory.createApplicationContext(AppModule, {
@@ -88,6 +91,59 @@ try {
             ),
         true,
     );
+
+    console.log('\n[MembershipOwnerGuard]');
+    const ownerGuard = new MembershipOwnerGuard(prisma);
+    await expect(
+        'owner may delete their own membership',
+        () =>
+            ownerGuard.canActivate(
+                ctx({
+                    user: { sub: memberM.user.clerkId },
+                    params: { id: memberM.id },
+                }),
+            ),
+        true,
+    );
+    await expect(
+        "non-owner non-admin is forbidden on someone else's membership",
+        () =>
+            ownerGuard.canActivate(
+                ctx({
+                    user: { sub: 'no-such-clerk-id' },
+                    params: { id: memberM.id },
+                }),
+            ),
+        false,
+    );
+    await expect(
+        'global admin claim bypasses ownership check',
+        () =>
+            ownerGuard.canActivate(
+                ctx({
+                    user: { sub: 'x', public_metadata: { roles: ['admin'] } },
+                    params: { id: memberM.id },
+                }),
+            ),
+        true,
+    );
+    // A circle ADMIN may remove another member of the same circle.
+    const otherInAdminCircle = await prisma.membership.findFirst({
+        where: { circleId: adminM.circleId, id: { not: adminM.id } },
+    });
+    if (otherInAdminCircle) {
+        await expect(
+            "circle ADMIN may delete another member's membership",
+            () =>
+                ownerGuard.canActivate(
+                    ctx({
+                        user: { sub: adminM.user.clerkId },
+                        params: { id: otherInAdminCircle.id },
+                    }),
+                ),
+            true,
+        );
+    }
 
     console.log('\n[AdminGuard]');
     await expect(

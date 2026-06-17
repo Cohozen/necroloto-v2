@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
+import { MembershipOwnerGuard } from '../auth/guards/membership-owner.guard';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { SearchMembershipDto } from './dto/search-membership.dto';
 import { UpdateMembershipDto } from './dto/update-membership.dto';
@@ -46,6 +47,7 @@ export class MembershipController {
     }
 
     @Delete(':id')
+    @UseGuards(MembershipOwnerGuard)
     remove(@Param('id') id: string) {
         return this.membershipService.remove(id);
     }
