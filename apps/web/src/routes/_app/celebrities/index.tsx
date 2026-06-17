@@ -87,19 +87,25 @@ function DraftScreen({ userId, celebrities, bets, circles }: DraftScreenProps) {
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState('Tous');
 
+    const selectedCircle = circles.find((c) => c.id === circleId);
+    // Circle lock: an existing bet needs allowEdit, a first bet needs allowNewBet.
+    const locked = !!selectedCircle && (bet ? !selectedCircle.allowEdit : !selectedCircle.allowNewBet);
+
     // Deceased celebrities are no longer draftable — only living ones are shown.
     const cards = useMemo(
         () => celebrities.map(toCelebritySummary).filter((c) => c.status !== 'deceased'),
         [celebrities],
     );
 
-    const toggle = (id: string) =>
+    const toggle = (id: string) => {
+        if (locked) return;
         setSelected((prev) => {
             const next = new Set(prev);
             if (next.has(id)) next.delete(id);
             else if (next.size < TOTAL) next.add(id);
             return next;
         });
+    };
 
     const results = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -110,9 +116,8 @@ function DraftScreen({ userId, celebrities, bets, circles }: DraftScreenProps) {
         );
     }, [cards, query, category]);
 
-    const selectedCircle = circles.find((c) => c.id === circleId);
     const isSaving = createBet.isPending || replaceBet.isPending;
-    const canSave = !!circleId && selected.size > 0 && !isSaving;
+    const canSave = !!circleId && selected.size > 0 && !isSaving && !locked;
 
     const handleValidate = () => {
         if (!canSave || !circleId) return;
@@ -200,6 +205,12 @@ function DraftScreen({ userId, celebrities, bets, circles }: DraftScreenProps) {
                 ))}
             </div>
 
+            {locked && (
+                <p className="rounded-xl border border-line-2 bg-surface px-3.5 py-2.5 text-[13px] text-ink-2">
+                    🔒 La liste n'est pas modifiable pour ce cercle.
+                </p>
+            )}
+
             <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {results.map((celebrity) => (
                     <CelebrityCard
@@ -207,6 +218,7 @@ function DraftScreen({ userId, celebrities, bets, circles }: DraftScreenProps) {
                         celebrity={celebrity}
                         selected={selected.has(celebrity.id)}
                         onToggle={toggle}
+                        disabled={locked}
                     />
                 ))}
             </div>

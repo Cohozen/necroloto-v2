@@ -8,10 +8,12 @@ interface CelebrityCardProps {
     celebrity: CelebritySummary;
     selected: boolean;
     onToggle: (id: string) => void;
+    /** Read-only mode (circle list locked): no toggling, dimmed. */
+    disabled?: boolean;
 }
 
 /** Selectable celebrity card for the draft grid (nl-celeb). */
-export function CelebrityCard({ celebrity, selected, onToggle }: CelebrityCardProps) {
+export function CelebrityCard({ celebrity, selected, onToggle, disabled }: CelebrityCardProps) {
     const { id, name, age, born, role, status } = celebrity;
     const meta = [age > 0 ? `${age} ans` : null, born > 0 ? `°${born}` : null, role]
         .filter(Boolean)
@@ -20,10 +22,12 @@ export function CelebrityCard({ celebrity, selected, onToggle }: CelebrityCardPr
         <button
             type="button"
             onClick={() => onToggle(id)}
+            disabled={disabled}
             aria-pressed={selected}
             className={cn(
                 'relative flex flex-col gap-2.5 rounded-2xl border border-line bg-surface p-[11px] text-left transition-all hover:-translate-y-0.5 hover:border-line-2',
                 selected && 'border-neon/70 shadow-glow-green',
+                disabled && 'opacity-60 hover:translate-y-0 hover:border-line',
             )}
         >
             <span

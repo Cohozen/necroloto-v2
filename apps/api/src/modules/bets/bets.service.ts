@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CelebritiesService } from '../celebrities/celebrities.service';
 import { AddCelebrityToBetDto } from './dto/add-celebrity-to-bet.dto';
@@ -52,6 +52,17 @@ export class BetsService {
 
     async create(createBetDto: CreateBetDto) {
         const { celebrityIds = [], ...betData } = createBetDto;
+
+        // Respect the circle's "new bets" lock (allowNewBet).
+        if (betData.circleId) {
+            const circle = await this.prisma.circle.findUnique({
+                where: { id: betData.circleId },
+            });
+            if (circle && !circle.allowNewBet) {
+                throw new ForbiddenException('Les nouveaux paris sont fermés pour ce cercle.');
+            }
+        }
+
         const ids = await this.resolveCelebrityIds(celebrityIds);
 
         const bet = await this.prisma.bet.create({
@@ -75,6 +86,15 @@ export class BetsService {
      * instead of an interactive one.
      */
     async replaceCelebrities(betId: string, keys: string[]) {
+        // Respect the circle's "editable list" lock (allowEdit).
+        const bet = await this.prisma.bet.findUnique({
+            where: { id: betId },
+            include: { Circle: true },
+        });
+        if (bet?.Circle && !bet.Circle.allowEdit) {
+            throw new ForbiddenException("La liste n'est pas modifiable pour ce cercle.");
+        }
+
         const ids = await this.resolveCelebrityIds(keys);
 
         await this.prisma.$transaction([

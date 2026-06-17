@@ -25,6 +25,10 @@ export interface CircleSummary {
     myRank: number;
     myPoints: number;
     isLeader: boolean;
+    /** Whether members may still edit their bet list (gates the draft). */
+    allowEdit: boolean;
+    /** Whether new bets may still be created in this circle. */
+    allowNewBet: boolean;
     podium: PodiumSlot[];
 }
 
@@ -119,6 +123,8 @@ export class CircleService {
                     myRank: mine?.rank ?? 0,
                     myPoints: mine?.total ?? 0,
                     isLeader: mine?.rank === 1,
+                    allowEdit: circle.allowEdit,
+                    allowNewBet: circle.allowNewBet,
                     podium,
                 };
             }),

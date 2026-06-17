@@ -156,6 +156,10 @@ export interface CircleSummaryDto {
     myRank: number;
     myPoints: number;
     isLeader: boolean;
+    /** Whether members may still edit their bet list (gates the draft). */
+    allowEdit: boolean;
+    /** Whether new bets may still be created in this circle. */
+    allowNewBet: boolean;
     podium: PodiumSlotDto[];
 }
 
