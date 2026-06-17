@@ -143,6 +143,12 @@
     * {
         border-color: var(--color-border);
     }
+    /* Tailwind's preflight resets buttons to cursor:default; restore the pointer
+       for enabled buttons and role=button elements app-wide. */
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']) {
+        cursor: pointer;
+    }
     body {
         margin: 0;
         background:
