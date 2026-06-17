@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ChevronRight, Users, Zap } from 'lucide-react';
+import { Users, Zap } from 'lucide-react';
 import { Logo } from '@/components/layout/Logo';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -41,10 +41,9 @@ export function HubCircleCard({ circle }: { circle: HubCircle }) {
                         </div>
                     </div>
                 </div>
-                <ChevronRight size={16} className="shrink-0 text-ink-3" />
             </div>
 
-            <MiniPodium podium={circle.podium} />
+            {circle.podium.length > 0 && <MiniPodium podium={circle.podium} />}
 
             <div className="flex items-end justify-between gap-3 border-t border-line pt-[13px]">
                 <div className="flex flex-col gap-0.5">
