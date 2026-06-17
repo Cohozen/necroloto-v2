@@ -139,7 +139,7 @@ export function GamePreview() {
                                     </div>
                                 </div>
                             </div>
-                            <span className="inline-flex items-center rounded-full border border-neon/40 bg-neon/10 px-2.5 py-1 text-sm font-bold text-neon shadow-glow-soft">
+                            <span className="inline-flex shrink-0 items-center rounded-full border border-neon/40 bg-neon/10 px-2.5 py-1 text-sm font-bold text-neon shadow-glow-soft">
                                 615 pts
                             </span>
                         </div>
@@ -157,7 +157,7 @@ export function GamePreview() {
                             />
                             <div className="min-w-0 flex-1">
                                 <div className="text-[13.5px] font-bold">
-                                    Dame Gloria Ravensworth, 96
+                                    Dame Gloria, 96
                                 </div>
                                 <div className="text-xs text-ink-3">
                                     a rapporté des points à 3 joueurs · il y a 2 j

@@ -21,7 +21,7 @@ export function LandingHero() {
                     Saison 2026 · inscriptions ouvertes
                 </span>
 
-                <h1 className="mt-[22px] font-arcade text-[clamp(40px,13vw,96px)] font-bold leading-[0.9] tracking-[0.02em] text-glow-neon [text-shadow:0_0_calc(var(--glow)*30px)_rgb(var(--neon-rgb)/calc(var(--glow)*0.45))]">
+                <h1 className="mt-[22px] font-arcade text-[clamp(40px,13vw,96px)] leading-[0.9] tracking-[0.02em] text-glow-neon [text-shadow:0_0_calc(var(--glow)*30px)_rgb(var(--neon-rgb)/calc(var(--glow)*0.45))]">
                     NECRO<span className="text-neon">LOTO</span>
                 </h1>
 
@@ -52,7 +52,7 @@ export function LandingHero() {
                 </div>
 
                 <p className="mt-4 flex items-center justify-center gap-1.5 text-[12.5px] text-ink-3">
-                    <Lock size={14} /> Jeu entre amis · sans argent réel · 18+
+                    <Lock size={14} /> Jeu entre amis · sans argent réel
                 </p>
 
                 <div className="mx-auto mt-9 grid max-w-[520px] grid-cols-3 gap-3 lg:max-w-[640px] lg:gap-4">
