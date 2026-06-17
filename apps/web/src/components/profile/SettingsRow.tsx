@@ -12,6 +12,8 @@ interface SettingsRowProps {
     control?: ReactNode;
     /** Click handler for actionable rows (ignored when `control` is set). */
     onClick?: () => void;
+    /** Dim and disable the whole row (and its control). */
+    disabled?: boolean;
 }
 
 const rowBase = 'flex w-full items-center gap-3.5 px-4 py-[15px] text-left transition-colors';
@@ -24,6 +26,7 @@ export function SettingsRow({
     danger,
     control,
     onClick,
+    disabled,
 }: SettingsRowProps) {
     const body = (
         <>
@@ -48,10 +51,22 @@ export function SettingsRow({
     );
 
     if (control) {
-        return <div className={rowBase}>{body}</div>;
+        return (
+            <div
+                className={cn(rowBase, disabled && 'pointer-events-none opacity-50')}
+                aria-disabled={disabled || undefined}
+            >
+                {body}
+            </div>
+        );
     }
     return (
-        <button type="button" onClick={onClick} className={cn(rowBase, 'hover:bg-surface-2')}>
+        <button
+            type="button"
+            onClick={onClick}
+            disabled={disabled}
+            className={cn(rowBase, 'hover:bg-surface-2 disabled:opacity-50')}
+        >
             {body}
         </button>
     );
