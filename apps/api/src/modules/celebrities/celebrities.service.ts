@@ -180,6 +180,37 @@ export class CelebritiesService {
         });
     }
 
+    /** Deletes several celebrities at once. Returns how many rows were removed. */
+    async bulkRemove(ids: string[]): Promise<{ deleted: number }> {
+        const { count } = await this.prisma.celebrity.deleteMany({
+            where: { id: { in: ids } },
+        });
+        return { deleted: count };
+    }
+
+    /**
+     * Enriches several celebrities from Wikidata sequentially (each call hits the
+     * network), isolating failures so one bad entity doesn't abort the batch.
+     */
+    async bulkEnrich(
+        ids: string[],
+    ): Promise<{ results: { id: string; success: boolean; error?: string }[] }> {
+        const results: { id: string; success: boolean; error?: string }[] = [];
+        for (const id of ids) {
+            try {
+                await this.enrich(id);
+                results.push({ id, success: true });
+            } catch (e) {
+                results.push({
+                    id,
+                    success: false,
+                    error: e instanceof Error ? e.message : 'Échec de la synchronisation',
+                });
+            }
+        }
+        return { results };
+    }
+
     /** Updates only the photo URL (no scoring recalculation needed). */
     async setPhoto(id: string, photo: string) {
         return this.prisma.celebrity.update({

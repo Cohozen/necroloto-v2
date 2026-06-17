@@ -73,6 +73,16 @@ export interface ApiCelebrityListItem extends ApiCelebrity {
 /** Admin catalogue status filter (GET /celebrities/admin/list). */
 export type AdminCelebrityStatus = 'all' | 'alive' | 'deceased';
 
+/** Result of a bulk delete (DELETE /celebrities/bulk). */
+export interface BulkDeleteResult {
+    deleted: number;
+}
+
+/** Result of a bulk Wikidata enrich (POST /celebrities/bulk/enrich). */
+export interface BulkEnrichResult {
+    results: { id: string; success: boolean; error?: string }[];
+}
+
 /** One page of the admin catalogue (GET /celebrities/admin/list). */
 export interface AdminCelebrityPage {
     items: ApiCelebrityListItem[];

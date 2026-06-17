@@ -21,6 +21,7 @@ import { AdminGuard } from '../auth/guards/admin.guard';
 import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
 import { StorageService } from '../storage/storage.service';
 import { CelebritiesService } from './celebrities.service';
+import { BulkCelebritiesDto } from './dto/bulk-celebrities.dto';
 import { CreateCelebrityDto } from './dto/create-celebrity.dto';
 import { EnrichCelebrityDto } from './dto/enrich-celebrity.dto';
 import { SearchCelebrityDto } from './dto/search-celebrity.dto';
@@ -58,6 +59,20 @@ export class CelebritiesController {
     @UseGuards(AdminGuard)
     create(@Body() createCelebrityDto: CreateCelebrityDto) {
         return this.celebritiesService.create(createCelebrityDto);
+    }
+
+    // Admin-only: delete several celebrities at once.
+    @Delete('bulk')
+    @UseGuards(AdminGuard)
+    bulkRemove(@Body() dto: BulkCelebritiesDto) {
+        return this.celebritiesService.bulkRemove(dto.ids);
+    }
+
+    // Admin-only: enrich several celebrities from Wikidata at once.
+    @Post('bulk/enrich')
+    @UseGuards(AdminGuard)
+    bulkEnrich(@Body() dto: BulkCelebritiesDto) {
+        return this.celebritiesService.bulkEnrich(dto.ids);
     }
 
     @Post('search')

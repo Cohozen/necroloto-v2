@@ -2,21 +2,34 @@ import { Link } from '@tanstack/react-router';
 import { Pencil, RefreshCw, User } from 'lucide-react';
 import { CelebrityPortrait } from '@/components/celebrities/CelebrityPortrait';
 import { StatusBadge } from '@/components/celebrities/StatusBadge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import type { AdminCelebrity } from '@/types/admin';
 
-export const CATALOG_COLS = 'grid-cols-[52px_minmax(0,1fr)_96px_150px_96px_78px_92px] gap-3';
+export const CATALOG_COLS = 'grid-cols-[34px_52px_minmax(0,1fr)_96px_150px_96px_78px_92px] gap-3';
 
-/** One catalogue row — portrait, identity, status, points, bettors, actions. */
-export function CelebrityRow({ celeb }: { celeb: AdminCelebrity }) {
+interface CelebrityRowProps {
+    celeb: AdminCelebrity;
+    selected: boolean;
+    onToggle: (id: string) => void;
+}
+
+/** One catalogue row — checkbox, portrait, identity, status, points, bettors, actions. */
+export function CelebrityRow({ celeb, selected, onToggle }: CelebrityRowProps) {
     const dead = celeb.status === 'deceased';
     return (
         <div
             className={cn(
                 'grid items-center border-t border-line px-3 py-2.5 transition-colors hover:bg-surface-2',
+                selected && 'bg-neon/5',
                 CATALOG_COLS,
             )}
         >
+            <Checkbox
+                checked={selected}
+                onCheckedChange={() => onToggle(celeb.id)}
+                aria-label={`Sélectionner ${celeb.name}`}
+            />
             <CelebrityPortrait
                 name={celeb.name}
                 status={celeb.status}

@@ -14,6 +14,8 @@ import type {
     ApiCircle,
     ApiMembership,
     ApiUser,
+    BulkDeleteResult,
+    BulkEnrichResult,
     CircleSummaryDto,
     CreateBetPayload,
     CreateCelebrityPayload,
@@ -315,6 +317,32 @@ export function useDeleteCelebrity() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: (id: string) => api.delete<ApiCelebrity>(`/celebrities/${id}`),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+        },
+    });
+}
+
+/** Delete several celebrities at once (admin bulk action). */
+export function useBulkDeleteCelebrities() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (ids: string[]) =>
+            api.delete<BulkDeleteResult>('/celebrities/bulk', { body: { ids } }),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+        },
+    });
+}
+
+/** Enrich several celebrities from Wikidata at once (admin bulk action). */
+export function useBulkEnrichCelebrities() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (ids: string[]) =>
+            api.post<BulkEnrichResult>('/celebrities/bulk/enrich', { ids }),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['celebrities'] });
         },
