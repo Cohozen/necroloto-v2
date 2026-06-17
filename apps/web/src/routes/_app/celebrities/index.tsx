@@ -14,6 +14,7 @@ import { toCelebritySummary } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
 import {
     CURRENT_YEAR,
+    MAX_BET_CELEBRITIES,
     useCelebrities,
     useCircleSummaries,
     useCreateBet,
@@ -28,7 +29,7 @@ export const Route = createFileRoute('/_app/celebrities/')({
 });
 
 const YEAR = CURRENT_YEAR;
-const TOTAL = 15;
+const TOTAL = MAX_BET_CELEBRITIES;
 const CATEGORIES = ['Tous', 'Cinéma', 'Musique', 'Royauté & politique', 'Sport', 'Affaires'];
 
 function Catalogue() {

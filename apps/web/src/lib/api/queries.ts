@@ -33,6 +33,9 @@ export type { SortByRank };
 
 export const CURRENT_YEAR = new Date().getFullYear();
 
+/** Max celebrities a player can draft in a single bet. */
+export const MAX_BET_CELEBRITIES = 50;
+
 // --- Users ---
 
 export function useUserByClerkId(clerkId: string | undefined) {

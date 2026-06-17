@@ -37,11 +37,11 @@ export function HowItWorks() {
                         n="02"
                         icon={LayoutGrid}
                         title="Composez votre pari"
-                        body="Draftez jusqu'à 15 célébrités pour l'année via la recherche. Plus la cote est haute, plus le pari rapporte gros."
+                        body="Draftez jusqu'à 50 célébrités pour l'année via la recherche. Plus la cote est haute, plus le pari rapporte gros."
                         tone="mag"
                         tag={
                             <Badge variant="secondary" className="gap-1.5">
-                                <Search size={13} /> 15 célébrités max
+                                <Search size={13} /> 50 célébrités max
                             </Badge>
                         }
                     />
