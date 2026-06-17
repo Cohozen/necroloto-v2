@@ -42,9 +42,6 @@ export function MemberRow({ member, onPromote, onDemote, onRemove, pending }: Me
                     'bg-gradient-to-r from-magenta/[0.06] to-surface outline outline-1 outline-offset-1 outline-magenta/55',
             )}
         >
-            <span className="w-6 shrink-0 text-center font-display text-xl font-extrabold tabular-nums text-ink-3">
-                {String(member.rank).padStart(2, '0')}
-            </span>
             <Avatar className={cn('size-[42px] shrink-0', isYou && 'ring-2 ring-magenta/70')}>
                 <AvatarFallback className="bg-gradient-to-br from-[#2bd4ff] to-neon font-display text-sm font-extrabold text-[#07140b]">
                     {member.initials}
@@ -56,11 +53,6 @@ export function MemberRow({ member, onPromote, onDemote, onRemove, pending }: Me
                     <span className="truncate text-sm font-semibold">
                         {isYou ? 'Vous' : member.name}
                     </span>
-                    {isYou && (
-                        <span className="inline-flex h-5 items-center rounded-full border border-magenta/45 bg-magenta/10 px-2 text-[10.5px] font-semibold text-magenta">
-                            Vous
-                        </span>
-                    )}
                     {member.isCreator && (
                         <span className="flex items-center gap-1 text-[11px] text-ink-3">
                             <Star size={12} strokeWidth={2} /> Créateur
