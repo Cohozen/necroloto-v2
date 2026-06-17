@@ -35,7 +35,14 @@ export function UserMenu() {
                 </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuLabel className="truncate">{name}</DropdownMenuLabel>
+                <DropdownMenuLabel className="truncate">
+                    {name}
+                    {user?.username && (
+                        <span className="block truncate text-xs font-normal text-ink-3">
+                            @{user.username}
+                        </span>
+                    )}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => navigate({ to: '/profile' })}>
                     <User size={16} /> Mon profil
