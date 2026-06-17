@@ -13,7 +13,6 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignUpSplatRouteImport } from './routes/sign-up.$'
 import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
-import { Route as DevDesignSystemRouteImport } from './routes/dev.design-system'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
@@ -47,11 +46,6 @@ const SignUpSplatRoute = SignUpSplatRouteImport.update({
 const SignInSplatRoute = SignInSplatRouteImport.update({
   id: '/sign-in/$',
   path: '/sign-in/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevDesignSystemRoute = DevDesignSystemRouteImport.update({
-  id: '/dev/design-system',
-  path: '/dev/design-system',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
@@ -136,7 +130,6 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/profile': typeof AppProfileRoute
-  '/dev/design-system': typeof DevDesignSystemRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
   '/celebrities/$id': typeof AppCelebritiesIdRoute
@@ -157,7 +150,6 @@ export interface FileRoutesByTo {
   '/admin': typeof AppAdminRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/profile': typeof AppProfileRoute
-  '/dev/design-system': typeof DevDesignSystemRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
   '/celebrities/$id': typeof AppCelebritiesIdRoute
@@ -179,7 +171,6 @@ export interface FileRoutesById {
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/profile': typeof AppProfileRoute
-  '/dev/design-system': typeof DevDesignSystemRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
   '/_app/celebrities/$id': typeof AppCelebritiesIdRoute
@@ -202,7 +193,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/profile'
-    | '/dev/design-system'
     | '/sign-in/$'
     | '/sign-up/$'
     | '/celebrities/$id'
@@ -223,7 +213,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/profile'
-    | '/dev/design-system'
     | '/sign-in/$'
     | '/sign-up/$'
     | '/celebrities/$id'
@@ -244,7 +233,6 @@ export interface FileRouteTypes {
     | '/_app/admin'
     | '/_app/dashboard'
     | '/_app/profile'
-    | '/dev/design-system'
     | '/sign-in/$'
     | '/sign-up/$'
     | '/_app/celebrities/$id'
@@ -264,7 +252,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
-  DevDesignSystemRoute: typeof DevDesignSystemRoute
   SignInSplatRoute: typeof SignInSplatRoute
   SignUpSplatRoute: typeof SignUpSplatRoute
 }
@@ -297,13 +284,6 @@ declare module '@tanstack/react-router' {
       path: '/sign-in/$'
       fullPath: '/sign-in/$'
       preLoaderRoute: typeof SignInSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dev/design-system': {
-      id: '/dev/design-system'
-      path: '/dev/design-system'
-      fullPath: '/dev/design-system'
-      preLoaderRoute: typeof DevDesignSystemRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/profile': {
@@ -475,7 +455,6 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
-  DevDesignSystemRoute: DevDesignSystemRoute,
   SignInSplatRoute: SignInSplatRoute,
   SignUpSplatRoute: SignUpSplatRoute,
 }

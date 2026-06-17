@@ -105,8 +105,8 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
 - **Design system**: ported from the generated mockups in `docs/mockups/` (`necroloto.css`,
   `landing.css`) into `src/styles/globals.css` as a Tailwind v4 `@theme` (neon/arcade tokens:
   `bg-neon`, `text-ink-2`, `border-line`, …). Glow/grain effects live as `--shadow-*`,
-  `text-glow-*` `@utility`, the `.neon-surface` wrapper, and `--glow` intensity var. Visual
-  reference page: route `/dev/design-system`. Screen markup reference: `docs/mockups/screens/*.js`.
+  `text-glow-*` `@utility`, the `.neon-surface` wrapper, and `--glow` intensity var. Screen
+  markup reference: `docs/mockups/screens/*.js`.
 - **Conventions**: one component per file / one file per component; types & interfaces in
   separate files (`*.types.ts` co-located, domain models in `src/types/`). shadcn primitives
   in `src/components/ui/` are re-themed in place. Layout chrome in `src/components/layout/`.
