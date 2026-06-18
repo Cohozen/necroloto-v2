@@ -12,17 +12,18 @@ import { YearTabs } from '@/components/circles/YearTabs';
 import { Button } from '@/components/ui/button';
 import { toLeaderboardEntry, toLeaderPicks } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
-import { useCircleDetail, useCircleRank } from '@/lib/api/queries';
+import { useCircleDetail, useCircleRank, useSeasonYearTabs } from '@/lib/api/queries';
 
 export const Route = createFileRoute('/_app/circles/$id/')({
     component: CircleLeaderboard,
 });
 
-const CURRENT_YEAR = new Date().getFullYear();
-
 function CircleLeaderboard() {
     const { id } = Route.useParams();
-    const [year, setYear] = useState(CURRENT_YEAR);
+    const { years, defaultYear } = useSeasonYearTabs();
+    // null until the user picks a tab → falls back to the active season's year.
+    const [picked, setPicked] = useState<number | null>(null);
+    const year = picked ?? defaultYear;
     const [inviteOpen, setInviteOpen] = useState(false);
     const { user } = useCurrentUser();
 
@@ -51,11 +52,7 @@ function CircleLeaderboard() {
                     members={members}
                 />
                 <div className="flex items-center gap-3">
-                    <YearTabs
-                        value={year}
-                        onValueChange={setYear}
-                        years={[CURRENT_YEAR - 2, CURRENT_YEAR - 1, CURRENT_YEAR]}
-                    />
+                    <YearTabs value={year} onValueChange={setPicked} years={years} />
                     <Button
                         variant="outline"
                         size="sm"

@@ -8,10 +8,10 @@ import { ScoreBand } from '@/components/dashboard/ScoreBand';
 import { toCircleSummary, toDeathFeedEntry } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
 import {
-    CURRENT_YEAR,
     MAX_BET_CELEBRITIES,
     useCircleSummaries,
     useDeathFeed,
+    useSeasonYear,
     useUserBets,
 } from '@/lib/api/queries';
 
@@ -19,11 +19,10 @@ export const Route = createFileRoute('/_app/dashboard')({
     component: Dashboard,
 });
 
-const YEAR = CURRENT_YEAR;
-
 function Dashboard() {
     const { user } = useCurrentUser();
-    const summariesQuery = useCircleSummaries(user?.id);
+    const year = useSeasonYear();
+    const summariesQuery = useCircleSummaries(user?.id, year);
     const betsQuery = useUserBets(user?.id);
     const feedQuery = useDeathFeed();
 
@@ -35,7 +34,7 @@ function Dashboard() {
 
     // Score band is composed client-side from the user's bets for the year.
     const stats = useMemo(() => {
-        const yearBets = (betsQuery.data ?? []).filter((bet) => bet.year === YEAR);
+        const yearBets = (betsQuery.data ?? []).filter((bet) => bet.year === year);
         const score = yearBets.reduce(
             (acc, bet) => acc + bet.CelebritiesOnBet.reduce((s, c) => s + c.points, 0),
             0,
@@ -47,19 +46,19 @@ function Dashboard() {
         const ranks = circles.map((c) => c.rank).filter((r) => r > 0);
         const bestRank = ranks.length ? `#${Math.min(...ranks)}` : '—';
         return { score, deaths, bestRank };
-    }, [betsQuery.data, circles]);
+    }, [betsQuery.data, circles, year]);
 
     // "Pari en cours" card: celebrities drafted in this year's bet for the first
     // circle (matches the draft's default circle selection).
     const currentBet = useMemo(() => {
-        const yearBets = (betsQuery.data ?? []).filter((bet) => bet.year === YEAR);
+        const yearBets = (betsQuery.data ?? []).filter((bet) => bet.year === year);
         const firstCircleId = circles[0]?.id;
         const bet = yearBets.find((b) => b.circleId === firstCircleId) ?? yearBets[0];
         return {
             selectedCount: bet?.CelebritiesOnBet.length ?? 0,
             circleName: bet?.Circle?.name,
         };
-    }, [betsQuery.data, circles]);
+    }, [betsQuery.data, circles, year]);
 
     return (
         <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
@@ -67,7 +66,7 @@ function Dashboard() {
                 {/* left column */}
                 <div className="flex flex-col gap-4 md:gap-[18px]">
                     <ScoreBand
-                        year={YEAR}
+                        year={year}
                         score={stats.score}
                         streak={0}
                         weekDelta={0}
@@ -106,7 +105,7 @@ function Dashboard() {
                 {/* right rail */}
                 <div className="flex flex-col gap-4 md:gap-[18px]">
                     <BetProgressCard
-                        year={YEAR}
+                        year={year}
                         selected={currentBet.selectedCount}
                         total={MAX_BET_CELEBRITIES}
                         closesLabel="clôture 31 déc."

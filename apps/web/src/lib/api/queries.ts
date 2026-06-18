@@ -449,3 +449,18 @@ export function useSeasonYear(): number {
     const { data } = useActiveSeason();
     return data?.year ?? CURRENT_YEAR;
 }
+
+/**
+ * Drives the leaderboard year selector: the list of configured season years
+ * (ascending) and the default year (active season). Falls back to the current
+ * calendar year when no season exists.
+ */
+export function useSeasonYearTabs(): { years: number[]; defaultYear: number } {
+    const { data } = useSeasons();
+    const defaultYear = useSeasonYear();
+    const years = (data ?? []).map((s) => s.year).sort((a, b) => a - b);
+    return {
+        years: years.length ? years : [defaultYear],
+        defaultYear,
+    };
+}

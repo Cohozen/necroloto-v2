@@ -13,12 +13,12 @@ import { Input } from '@/components/ui/input';
 import { toCelebritySummary } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
 import {
-    CURRENT_YEAR,
     MAX_BET_CELEBRITIES,
     useCelebrities,
     useCircleSummaries,
     useCreateBet,
     useReplaceBetCelebrities,
+    useSeasonYear,
     useUserBets,
 } from '@/lib/api/queries';
 import type { ApiBet, ApiCelebrity, CircleSummaryDto } from '@/lib/api/types';
@@ -28,15 +28,15 @@ export const Route = createFileRoute('/_app/celebrities/')({
     component: Catalogue,
 });
 
-const YEAR = CURRENT_YEAR;
 const TOTAL = MAX_BET_CELEBRITIES;
 const CATEGORIES = ['Tous', 'Cinéma', 'Musique', 'Royauté & politique', 'Sport', 'Affaires'];
 
 function Catalogue() {
     const { user } = useCurrentUser();
+    const year = useSeasonYear();
     const celebsQuery = useCelebrities();
     const betsQuery = useUserBets(user?.id);
-    const summariesQuery = useCircleSummaries(user?.id);
+    const summariesQuery = useCircleSummaries(user?.id, year);
 
     if (!user || celebsQuery.isLoading || betsQuery.isLoading || summariesQuery.isLoading) {
         return <p className="p-6 text-sm text-ink-3">Chargement du draft…</p>;
@@ -45,6 +45,7 @@ function Catalogue() {
     return (
         <DraftScreen
             userId={user.id}
+            year={year}
             celebrities={celebsQuery.data ?? []}
             bets={betsQuery.data ?? []}
             circles={summariesQuery.data ?? []}
@@ -54,16 +55,17 @@ function Catalogue() {
 
 interface DraftScreenProps {
     userId: string;
+    year: number;
     celebrities: ApiCelebrity[];
     bets: ApiBet[];
     circles: CircleSummaryDto[];
 }
 
-function DraftScreen({ userId, celebrities, bets, circles }: DraftScreenProps) {
+function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenProps) {
     const createBet = useCreateBet();
     const replaceBet = useReplaceBetCelebrities();
 
-    const yearBets = useMemo(() => bets.filter((b) => b.year === YEAR), [bets]);
+    const yearBets = useMemo(() => bets.filter((b) => b.year === year), [bets, year]);
 
     const [circleId, setCircleId] = useState<string | undefined>(
         () => yearBets[0]?.circleId ?? circles[0]?.id,
@@ -88,9 +90,12 @@ function DraftScreen({ userId, celebrities, bets, circles }: DraftScreenProps) {
     const [category, setCategory] = useState('Tous');
 
     const selectedCircle = circles.find((c) => c.id === circleId);
+    // Season betting window closed (global) — overrides the per-circle flags.
+    const windowClosed = !!selectedCircle && !selectedCircle.bettingOpen;
     // Circle lock: an existing bet needs allowEdit, a first bet needs allowNewBet.
-    const locked =
+    const circleLocked =
         !!selectedCircle && (bet ? !selectedCircle.allowEdit : !selectedCircle.allowNewBet);
+    const locked = windowClosed || circleLocked;
 
     // Deceased celebrities are no longer draftable — only living ones are shown.
     const cards = useMemo(
@@ -126,7 +131,7 @@ function DraftScreen({ userId, celebrities, bets, circles }: DraftScreenProps) {
         if (bet) {
             replaceBet.mutate({ betId: bet.id, celebrities: ids });
         } else {
-            createBet.mutate({ userId, year: YEAR, circleId, celebrityIds: ids });
+            createBet.mutate({ userId, year, circleId, celebrityIds: ids });
         }
     };
 
@@ -135,7 +140,7 @@ function DraftScreen({ userId, celebrities, bets, circles }: DraftScreenProps) {
             <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
                     <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-                        Draft · saison {YEAR}
+                        Draft · saison {year}
                     </span>
                     <h1 className="font-display text-3xl font-extrabold">Composez votre liste</h1>
                 </div>
@@ -208,7 +213,9 @@ function DraftScreen({ userId, celebrities, bets, circles }: DraftScreenProps) {
 
             {locked && (
                 <p className="rounded-xl border border-line-2 bg-surface px-3.5 py-2.5 text-[13px] text-ink-2">
-                    🔒 La liste n'est pas modifiable pour ce cercle.
+                    {windowClosed
+                        ? '🔒 Les paris sont fermés pour cette saison.'
+                        : "🔒 La liste n'est pas modifiable pour ce cercle."}
                 </p>
             )}
 
