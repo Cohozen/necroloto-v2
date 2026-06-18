@@ -170,7 +170,22 @@ export interface CircleSummaryDto {
     allowEdit: boolean;
     /** Whether new bets may still be created in this circle. */
     allowNewBet: boolean;
+    /** Whether the season's betting window is currently open for this year. */
+    bettingOpen: boolean;
     podium: PodiumSlotDto[];
+}
+
+/** A season (GET /seasons). Dates are ISO strings over the wire. */
+export interface ApiSeason {
+    id: string;
+    year: number;
+    name: string | null;
+    openDate: string;
+    betStartDate: string;
+    betEndDate: string;
+    closeDate: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 /** A recent celebrity death, from `GET /celebrities/deaths/feed`. */
@@ -256,3 +271,15 @@ export interface EnrichCelebrityPayload {
     /** Explicit Wikidata QID; the API falls back to the existing link or name. */
     wikidataId?: string;
 }
+
+export interface CreateSeasonPayload {
+    year: number;
+    name?: string | null;
+    /** ISO date-time strings. */
+    openDate: string;
+    betStartDate: string;
+    betEndDate: string;
+    closeDate: string;
+}
+
+export type UpdateSeasonPayload = Partial<CreateSeasonPayload>;

@@ -23,4 +23,9 @@ export const queryKeys = {
         deathFeed: (year: number, limit: number) => ['celebrities', 'deaths', year, limit] as const,
         wikidata: (name: string) => ['celebrities', 'wikidata', name] as const,
     },
+    seasons: {
+        list: () => ['seasons', 'list'] as const,
+        active: () => ['seasons', 'active'] as const,
+        detail: (id: string) => ['seasons', 'detail', id] as const,
+    },
 } as const;

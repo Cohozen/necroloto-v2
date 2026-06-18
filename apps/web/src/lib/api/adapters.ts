@@ -13,12 +13,14 @@ import type {
 } from '@/types/circle';
 import type { DeathFeedEntry } from '@/types/feed';
 import type { LeaderboardEntry, LeaderPick } from '@/types/leaderboard';
+import type { Season, SeasonStatus } from '@/types/season';
 import type { AvatarPerson } from '@/types/user';
 import type {
     ApiCelebrity,
     ApiCelebrityDetail,
     ApiCelebrityListItem,
     ApiMembership,
+    ApiSeason,
     ApiUser,
     CircleSummaryDto,
     DeathFeedEntryDto,
@@ -293,5 +295,31 @@ export function toDeathFeedEntry(dto: DeathFeedEntryDto): DeathFeedEntry {
         scorers: dto.scorers,
         when: relativeDayLabel(dto.death),
         points: dto.points,
+    };
+}
+
+/** Lifecycle status of a season at a given instant (defaults to now). */
+export function seasonStatus(season: ApiSeason, now: number = Date.now()): SeasonStatus {
+    const open = new Date(season.openDate).getTime();
+    const betStart = new Date(season.betStartDate).getTime();
+    const betEnd = new Date(season.betEndDate).getTime();
+    const close = new Date(season.closeDate).getTime();
+    if (now < open) return 'upcoming';
+    if (now > close) return 'closed';
+    if (now >= betStart && now <= betEnd) return 'bets-open';
+    return 'open';
+}
+
+/** Season DTO → UI view model with a derived status. */
+export function toSeason(dto: ApiSeason): Season {
+    return {
+        id: dto.id,
+        year: dto.year,
+        name: dto.name,
+        openDate: dto.openDate,
+        betStartDate: dto.betStartDate,
+        betEndDate: dto.betEndDate,
+        closeDate: dto.closeDate,
+        status: seasonStatus(dto),
     };
 }

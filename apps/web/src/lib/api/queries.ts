@@ -13,6 +13,7 @@ import type {
     ApiCelebrityListItem,
     ApiCircle,
     ApiMembership,
+    ApiSeason,
     ApiUser,
     BulkDeleteResult,
     BulkEnrichResult,
@@ -21,6 +22,7 @@ import type {
     CreateCelebrityPayload,
     CreateCirclePayload,
     CreateMembershipPayload,
+    CreateSeasonPayload,
     DeathFeedEntryDto,
     EnrichCelebrityPayload,
     RankedBet,
@@ -29,6 +31,7 @@ import type {
     UpdateCelebrityPayload,
     UpdateCirclePayload,
     UpdateMemberRolePayload,
+    UpdateSeasonPayload,
     UpdateUserPayload,
     WikidataSummaryDto,
 } from './types';
@@ -374,4 +377,75 @@ export function useWikidataSearch(name: string) {
             ),
         enabled: trimmed.length > 0,
     });
+}
+
+// --- Seasons ---
+
+export function useSeasons() {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: queryKeys.seasons.list(),
+        queryFn: () => api.get<ApiSeason[]>('/seasons'),
+    });
+}
+
+/** The active season (resolved server-side by date window). May be null. */
+export function useActiveSeason() {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: queryKeys.seasons.active(),
+        queryFn: () => api.get<ApiSeason | null>('/seasons/active'),
+    });
+}
+
+export function useSeason(id: string | undefined) {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: id ? queryKeys.seasons.detail(id) : ['seasons', 'detail', 'none'],
+        queryFn: () => api.get<ApiSeason | null>(`/seasons/${id}`),
+        enabled: !!id,
+    });
+}
+
+export function useCreateSeason() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: CreateSeasonPayload) => api.post<ApiSeason>('/seasons', payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['seasons'] });
+        },
+    });
+}
+
+export function useUpdateSeason(id: string) {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: UpdateSeasonPayload) =>
+            api.patch<ApiSeason>(`/seasons/${id}`, payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['seasons'] });
+        },
+    });
+}
+
+export function useDeleteSeason() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => api.delete<ApiSeason>(`/seasons/${id}`),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['seasons'] });
+        },
+    });
+}
+
+/**
+ * The active season's year, with a fallback to the current calendar year while
+ * loading or when no season / backend is configured (keeps the UI previewable).
+ */
+export function useSeasonYear(): number {
+    const { data } = useActiveSeason();
+    return data?.year ?? CURRENT_YEAR;
 }
