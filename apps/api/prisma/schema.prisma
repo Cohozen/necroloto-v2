@@ -100,6 +100,18 @@ model Circle {
   bets        Bet[]
 }
 
+model Season {
+  id           String   @id @default(uuid())
+  year         Int      @unique
+  name         String?
+  openDate     DateTime
+  betStartDate DateTime
+  betEndDate   DateTime
+  closeDate    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model Membership {
   id       String         @id @default(uuid())
   user     User           @relation(fields: [userId], references: [id])

@@ -7,6 +7,7 @@ import { BetsModule } from './modules/bets/bets.module';
 import { CelebritiesModule } from './modules/celebrities/celebrities.module';
 import { CircleModule } from './modules/circle/circle.module';
 import { MembershipModule } from './modules/membership/membership.module';
+import { SeasonsModule } from './modules/seasons/seasons.module';
 import { UsersModule } from './modules/users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -19,6 +20,7 @@ import { PrismaModule } from './prisma/prisma.module';
         BetsModule,
         CircleModule,
         MembershipModule,
+        SeasonsModule,
         AutomationModule,
     ],
     controllers: [AppController],
