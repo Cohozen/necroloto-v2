@@ -25,9 +25,12 @@ import { Route as AppCirclesJoinRouteImport } from './routes/_app/circles/join'
 import { Route as AppCirclesIdRouteImport } from './routes/_app/circles/$id'
 import { Route as AppCelebritiesIdRouteImport } from './routes/_app/celebrities/$id'
 import { Route as AppCirclesIdIndexRouteImport } from './routes/_app/circles/$id/index'
+import { Route as AppAdminSeasonsIndexRouteImport } from './routes/_app/admin/seasons/index'
 import { Route as AppAdminCelebritiesIndexRouteImport } from './routes/_app/admin/celebrities/index'
 import { Route as AppCirclesIdSettingsRouteImport } from './routes/_app/circles/$id/settings'
 import { Route as AppCirclesIdMembersRouteImport } from './routes/_app/circles/$id/members'
+import { Route as AppAdminSeasonsNewRouteImport } from './routes/_app/admin/seasons/new'
+import { Route as AppAdminSeasonsIdRouteImport } from './routes/_app/admin/seasons/$id'
 import { Route as AppAdminCelebritiesNewRouteImport } from './routes/_app/admin/celebrities/new'
 import { Route as AppAdminCelebritiesIdRouteImport } from './routes/_app/admin/celebrities/$id'
 
@@ -110,6 +113,11 @@ const AppCirclesIdIndexRoute = AppCirclesIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppCirclesIdRoute,
 } as any)
+const AppAdminSeasonsIndexRoute = AppAdminSeasonsIndexRouteImport.update({
+  id: '/seasons/',
+  path: '/seasons/',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppAdminCelebritiesIndexRoute =
   AppAdminCelebritiesIndexRouteImport.update({
     id: '/celebrities/',
@@ -125,6 +133,16 @@ const AppCirclesIdMembersRoute = AppCirclesIdMembersRouteImport.update({
   id: '/members',
   path: '/members',
   getParentRoute: () => AppCirclesIdRoute,
+} as any)
+const AppAdminSeasonsNewRoute = AppAdminSeasonsNewRouteImport.update({
+  id: '/seasons/new',
+  path: '/seasons/new',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminSeasonsIdRoute = AppAdminSeasonsIdRouteImport.update({
+  id: '/seasons/$id',
+  path: '/seasons/$id',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminCelebritiesNewRoute = AppAdminCelebritiesNewRouteImport.update({
   id: '/celebrities/new',
@@ -154,9 +172,12 @@ export interface FileRoutesByFullPath {
   '/circles/': typeof AppCirclesIndexRoute
   '/admin/celebrities/$id': typeof AppAdminCelebritiesIdRoute
   '/admin/celebrities/new': typeof AppAdminCelebritiesNewRoute
+  '/admin/seasons/$id': typeof AppAdminSeasonsIdRoute
+  '/admin/seasons/new': typeof AppAdminSeasonsNewRoute
   '/circles/$id/members': typeof AppCirclesIdMembersRoute
   '/circles/$id/settings': typeof AppCirclesIdSettingsRoute
   '/admin/celebrities/': typeof AppAdminCelebritiesIndexRoute
+  '/admin/seasons/': typeof AppAdminSeasonsIndexRoute
   '/circles/$id/': typeof AppCirclesIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -175,9 +196,12 @@ export interface FileRoutesByTo {
   '/circles': typeof AppCirclesIndexRoute
   '/admin/celebrities/$id': typeof AppAdminCelebritiesIdRoute
   '/admin/celebrities/new': typeof AppAdminCelebritiesNewRoute
+  '/admin/seasons/$id': typeof AppAdminSeasonsIdRoute
+  '/admin/seasons/new': typeof AppAdminSeasonsNewRoute
   '/circles/$id/members': typeof AppCirclesIdMembersRoute
   '/circles/$id/settings': typeof AppCirclesIdSettingsRoute
   '/admin/celebrities': typeof AppAdminCelebritiesIndexRoute
+  '/admin/seasons': typeof AppAdminSeasonsIndexRoute
   '/circles/$id': typeof AppCirclesIdIndexRoute
 }
 export interface FileRoutesById {
@@ -199,9 +223,12 @@ export interface FileRoutesById {
   '/_app/circles/': typeof AppCirclesIndexRoute
   '/_app/admin/celebrities/$id': typeof AppAdminCelebritiesIdRoute
   '/_app/admin/celebrities/new': typeof AppAdminCelebritiesNewRoute
+  '/_app/admin/seasons/$id': typeof AppAdminSeasonsIdRoute
+  '/_app/admin/seasons/new': typeof AppAdminSeasonsNewRoute
   '/_app/circles/$id/members': typeof AppCirclesIdMembersRoute
   '/_app/circles/$id/settings': typeof AppCirclesIdSettingsRoute
   '/_app/admin/celebrities/': typeof AppAdminCelebritiesIndexRoute
+  '/_app/admin/seasons/': typeof AppAdminSeasonsIndexRoute
   '/_app/circles/$id/': typeof AppCirclesIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -223,9 +250,12 @@ export interface FileRouteTypes {
     | '/circles/'
     | '/admin/celebrities/$id'
     | '/admin/celebrities/new'
+    | '/admin/seasons/$id'
+    | '/admin/seasons/new'
     | '/circles/$id/members'
     | '/circles/$id/settings'
     | '/admin/celebrities/'
+    | '/admin/seasons/'
     | '/circles/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -244,9 +274,12 @@ export interface FileRouteTypes {
     | '/circles'
     | '/admin/celebrities/$id'
     | '/admin/celebrities/new'
+    | '/admin/seasons/$id'
+    | '/admin/seasons/new'
     | '/circles/$id/members'
     | '/circles/$id/settings'
     | '/admin/celebrities'
+    | '/admin/seasons'
     | '/circles/$id'
   id:
     | '__root__'
@@ -267,9 +300,12 @@ export interface FileRouteTypes {
     | '/_app/circles/'
     | '/_app/admin/celebrities/$id'
     | '/_app/admin/celebrities/new'
+    | '/_app/admin/seasons/$id'
+    | '/_app/admin/seasons/new'
     | '/_app/circles/$id/members'
     | '/_app/circles/$id/settings'
     | '/_app/admin/celebrities/'
+    | '/_app/admin/seasons/'
     | '/_app/circles/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -396,6 +432,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCirclesIdIndexRouteImport
       parentRoute: typeof AppCirclesIdRoute
     }
+    '/_app/admin/seasons/': {
+      id: '/_app/admin/seasons/'
+      path: '/seasons'
+      fullPath: '/admin/seasons/'
+      preLoaderRoute: typeof AppAdminSeasonsIndexRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/_app/admin/celebrities/': {
       id: '/_app/admin/celebrities/'
       path: '/celebrities'
@@ -417,6 +460,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCirclesIdMembersRouteImport
       parentRoute: typeof AppCirclesIdRoute
     }
+    '/_app/admin/seasons/new': {
+      id: '/_app/admin/seasons/new'
+      path: '/seasons/new'
+      fullPath: '/admin/seasons/new'
+      preLoaderRoute: typeof AppAdminSeasonsNewRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/admin/seasons/$id': {
+      id: '/_app/admin/seasons/$id'
+      path: '/seasons/$id'
+      fullPath: '/admin/seasons/$id'
+      preLoaderRoute: typeof AppAdminSeasonsIdRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/_app/admin/celebrities/new': {
       id: '/_app/admin/celebrities/new'
       path: '/celebrities/new'
@@ -437,13 +494,19 @@ declare module '@tanstack/react-router' {
 interface AppAdminRouteChildren {
   AppAdminCelebritiesIdRoute: typeof AppAdminCelebritiesIdRoute
   AppAdminCelebritiesNewRoute: typeof AppAdminCelebritiesNewRoute
+  AppAdminSeasonsIdRoute: typeof AppAdminSeasonsIdRoute
+  AppAdminSeasonsNewRoute: typeof AppAdminSeasonsNewRoute
   AppAdminCelebritiesIndexRoute: typeof AppAdminCelebritiesIndexRoute
+  AppAdminSeasonsIndexRoute: typeof AppAdminSeasonsIndexRoute
 }
 
 const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminCelebritiesIdRoute: AppAdminCelebritiesIdRoute,
   AppAdminCelebritiesNewRoute: AppAdminCelebritiesNewRoute,
+  AppAdminSeasonsIdRoute: AppAdminSeasonsIdRoute,
+  AppAdminSeasonsNewRoute: AppAdminSeasonsNewRoute,
   AppAdminCelebritiesIndexRoute: AppAdminCelebritiesIndexRoute,
+  AppAdminSeasonsIndexRoute: AppAdminSeasonsIndexRoute,
 }
 
 const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(

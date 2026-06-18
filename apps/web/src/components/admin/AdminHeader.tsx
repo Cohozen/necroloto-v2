@@ -4,14 +4,16 @@ import type { ReactNode } from 'react';
 import { AdminBadge } from './AdminBadge';
 
 interface AdminHeaderProps {
-    /** Current page label, shown after the "Catalogue / Admin" crumb. */
+    /** Current page label, shown after the section crumb. */
     crumb: string;
+    /** Leading section label (defaults to "Catalogue"). */
+    section?: string;
     /** Optional trailing actions (e.g. "Nouvelle célébrité"). */
     actions?: ReactNode;
 }
 
 /** In-page admin header — breadcrumb + global-admin role badge. */
-export function AdminHeader({ crumb, actions }: AdminHeaderProps) {
+export function AdminHeader({ crumb, section = 'Catalogue', actions }: AdminHeaderProps) {
     const router = useRouter();
 
     // Real "back": previous history entry (catalogue from a fiche, profile from
@@ -35,7 +37,7 @@ export function AdminHeader({ crumb, actions }: AdminHeaderProps) {
                 <ChevronRight size={18} className="rotate-180" />
             </button>
             <span className="text-[13px] text-ink-3">
-                Catalogue <span className="opacity-50">/</span>{' '}
+                {section} <span className="opacity-50">/</span>{' '}
                 <span className="text-ink">{crumb}</span>
             </span>
             <AdminBadge className="ml-1" />

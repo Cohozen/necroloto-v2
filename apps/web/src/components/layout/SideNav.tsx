@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Shield } from 'lucide-react';
+import { CalendarRange, Shield } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { initialsOf, userDisplayName } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
@@ -29,9 +29,14 @@ export function SideNav() {
             ))}
             <div className="flex-1" />
             {isAdmin && (
-                <Link to="/admin/celebrities" aria-label="Administration" className={railLink}>
-                    <Shield size={22} />
-                </Link>
+                <>
+                    <Link to="/admin/celebrities" aria-label="Administration" className={railLink}>
+                        <Shield size={22} />
+                    </Link>
+                    <Link to="/admin/seasons" aria-label="Saisons" className={railLink}>
+                        <CalendarRange size={22} />
+                    </Link>
+                </>
             )}
             <Link to="/profile" aria-label="Mon profil">
                 <Avatar className="size-[42px] ring-2 ring-neon/60 ring-offset-2 ring-offset-bg">
