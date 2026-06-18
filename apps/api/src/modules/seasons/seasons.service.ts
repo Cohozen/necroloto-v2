@@ -1,14 +1,19 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { Prisma } from '@/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateSeasonDto } from './dto/create-season.dto';
 import { UpdateSeasonDto } from './dto/update-season.dto';
 
-/** Resolved date window of a season, used for validation/overlap checks. */
+/**
+ * Date window of a season, used for validation/overlap checks. The global
+ * ValidationPipe is transform-only (no `@Type(() => Date)`), so DTO dates reach
+ * the service as ISO strings — `assertValid` coerces them with `new Date()`.
+ */
 interface SeasonWindow {
-    openDate: Date;
-    betStartDate: Date;
-    betEndDate: Date;
-    closeDate: Date;
+    openDate: Date | string;
+    betStartDate: Date | string;
+    betEndDate: Date | string;
+    closeDate: Date | string;
 }
 
 @Injectable()
@@ -61,14 +66,40 @@ export class SeasonsService {
 
     async create(dto: CreateSeasonDto) {
         await this.assertValid(dto);
-        return this.prisma.season.create({ data: dto });
+        try {
+            return await this.prisma.season.create({ data: dto });
+        } catch (e) {
+            throw this.mapYearConflict(e, dto.year);
+        }
     }
 
     async update(id: string, dto: UpdateSeasonDto) {
         const existing = await this.prisma.season.findUnique({ where: { id } });
         if (!existing) throw new BadRequestException('Saison introuvable.');
-        await this.assertValid({ ...existing, ...dto }, id);
-        return this.prisma.season.update({ where: { id }, data: dto });
+        // Merge only the dates the caller actually sent — the DTO carries the
+        // untouched fields as `undefined`, which would otherwise blank the window.
+        await this.assertValid(
+            {
+                openDate: dto.openDate ?? existing.openDate,
+                betStartDate: dto.betStartDate ?? existing.betStartDate,
+                betEndDate: dto.betEndDate ?? existing.betEndDate,
+                closeDate: dto.closeDate ?? existing.closeDate,
+            },
+            id,
+        );
+        try {
+            return await this.prisma.season.update({ where: { id }, data: dto });
+        } catch (e) {
+            throw this.mapYearConflict(e, dto.year ?? existing.year);
+        }
+    }
+
+    /** Turns the `year` unique-constraint violation into a clean 409. */
+    private mapYearConflict(error: unknown, year: number): unknown {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+            return new ConflictException(`Une saison existe déjà pour l'année ${year}.`);
+        }
+        return error;
     }
 
     remove(id: string) {
@@ -81,7 +112,10 @@ export class SeasonsService {
      * constraint on `year` already covers duplicate years at the DB level.
      */
     private async assertValid(window: SeasonWindow, excludeId?: string): Promise<void> {
-        const { openDate, betStartDate, betEndDate, closeDate } = window;
+        const openDate = new Date(window.openDate);
+        const betStartDate = new Date(window.betStartDate);
+        const betEndDate = new Date(window.betEndDate);
+        const closeDate = new Date(window.closeDate);
         if (
             !(
                 openDate.getTime() <= betStartDate.getTime() &&
