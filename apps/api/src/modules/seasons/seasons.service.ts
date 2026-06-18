@@ -104,9 +104,7 @@ export class SeasonsService {
             select: { id: true, year: true },
         });
         if (overlap) {
-            throw new ConflictException(
-                `La période chevauche celle de la saison ${overlap.year}.`,
-            );
+            throw new ConflictException(`La période chevauche celle de la saison ${overlap.year}.`);
         }
     }
 }
