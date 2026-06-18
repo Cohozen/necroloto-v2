@@ -24,7 +24,7 @@ export function FinalCta() {
                 </p>
                 <div className="relative flex flex-col items-center justify-center gap-3 sm:flex-row">
                     <Button asChild size="lg" className="w-full max-w-[320px] sm:w-auto">
-                        <Link to="/sign-up/$" params={{ _splat: '' }}>
+                        <Link to="/sign-up">
                             <Zap size={17} /> S'inscrire maintenant
                         </Link>
                     </Button>
@@ -34,9 +34,7 @@ export function FinalCta() {
                         size="lg"
                         className="w-full max-w-[320px] sm:w-auto"
                     >
-                        <Link to="/sign-in/$" params={{ _splat: '' }}>
-                            J'ai déjà un compte
-                        </Link>
+                        <Link to="/sign-in">J'ai déjà un compte</Link>
                     </Button>
                 </div>
             </div>

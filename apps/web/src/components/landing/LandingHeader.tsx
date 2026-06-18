@@ -30,12 +30,10 @@ export function LandingHeader() {
                 </nav>
                 <div className="ml-auto flex items-center gap-2.5">
                     <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex">
-                        <Link to="/sign-in/$" params={{ _splat: '' }}>
-                            Connexion
-                        </Link>
+                        <Link to="/sign-in">Connexion</Link>
                     </Button>
                     <Button asChild size="sm">
-                        <Link to="/sign-up/$" params={{ _splat: '' }}>
+                        <Link to="/sign-up">
                             <Zap size={15} /> S'inscrire
                         </Link>
                     </Button>

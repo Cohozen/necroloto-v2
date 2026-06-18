@@ -9,13 +9,13 @@ const PILLS = [
 ];
 
 interface AuthLayoutProps {
-    /** The Clerk <SignIn> / <SignUp> component (or the dev fallback). */
+    /** A custom auth form (SignInForm / SignUpForm / ForgotPasswordForm). */
     children: ReactNode;
 }
 
 /**
- * Marketing split shell around Clerk auth: a brand panel on the left (desktop)
- * and the themed Clerk card on the right. Mobile shows just the logo + card.
+ * Marketing split shell around the custom auth forms: a brand panel on the left
+ * (desktop) and the themed card on the right. Mobile shows just the logo + card.
  * Ported from docs/mockups/screens/auth.js (authSplitDesktop / authMob).
  */
 export function AuthLayout({ children }: AuthLayoutProps) {

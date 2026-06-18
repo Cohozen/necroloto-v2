@@ -34,14 +34,12 @@ export function LandingHero() {
 
                 <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
                     <Button asChild size="lg">
-                        <Link to="/sign-up/$" params={{ _splat: '' }}>
+                        <Link to="/sign-up">
                             <Zap size={17} /> S'inscrire — c'est gratuit
                         </Link>
                     </Button>
                     <Button asChild variant="outline" size="lg">
-                        <Link to="/sign-in/$" params={{ _splat: '' }}>
-                            Connexion
-                        </Link>
+                        <Link to="/sign-in">Connexion</Link>
                     </Button>
                 </div>
 

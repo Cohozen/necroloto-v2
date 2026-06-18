@@ -42,7 +42,14 @@ const app = (
 createRoot(rootElement).render(
     <StrictMode>
         {isClerkConfigured ? (
-            <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} afterSignOutUrl="/">
+            <ClerkProvider
+                publishableKey={CLERK_PUBLISHABLE_KEY}
+                afterSignOutUrl="/"
+                signInUrl="/sign-in"
+                signUpUrl="/sign-up"
+                signInFallbackRedirectUrl="/dashboard"
+                signUpFallbackRedirectUrl="/dashboard"
+            >
                 {app}
             </ClerkProvider>
         ) : (

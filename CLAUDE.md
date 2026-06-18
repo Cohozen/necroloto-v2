@@ -171,12 +171,25 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   `build.commonjsOptions.include: [/node_modules/, /packages\/shared/]` (build — the workspace dep
   is linked outside `node_modules`, so rollup's commonjs transform must be told to cover it).
 - **Auth**: `ClerkProvider` is mounted **only if** `VITE_CLERK_PUBLISHABLE_KEY` is set (see
-  `src/lib/auth/clerk.ts`), so the UI stays previewable without keys. The auth gate lives in
+  `src/lib/auth/clerk.ts`), so most of the UI stays previewable without keys. The auth gate lives in
   `src/routes/_app.tsx` (`SignedIn` / `RedirectToSignIn`). Needs `VITE_API_URL` +
   `VITE_CLERK_PUBLISHABLE_KEY` (in `apps/web/.env.local`) and `http://localhost:5173` added
   to the API's `FRONTEND_ORIGIN` to talk to a real backend. A dedicated **e2e test account**
   (password login on the Clerk dev instance) lives in `apps/web/.env.test.local` (gitignored), as
   `LOGIN_TEST` / `PASSWORD_TEST` — use it to sign in when driving the authenticated browser preview.
+- **Custom auth forms** (no Clerk widget): `/sign-in`, `/sign-up`, `/forgot-password` render
+  hand-built forms in `src/components/auth/` (`SignInForm`/`SignUpForm`/`ForgotPasswordForm`)
+  driven by the headless `useSignIn`/`useSignUp` hooks; Google SSO uses `authenticateWithRedirect`
+  (helper in `auth/sso.ts`) returning to the `/sso-callback` route (`AuthenticateWithRedirectCallback`).
+  All sit inside the marketing `AuthLayout` shell. Shared bits: `AuthField` (icon input + password
+  reveal), `GoogleButton`, `AuthFeedback` (`getClerkErrorMessage` + coral `AuthErrorBanner` +
+  `AuthFormLoader`). Sign-up is **email + password only, no OTP** (assumes the Clerk instance does not
+  require email verification — non-`complete` status surfaces an error). Forgot-password is a 2-phase
+  `reset_password_email_code` flow (request code → OTP via the restyled `ui/input-otp` + new password).
+  ⚠️ Unlike the rest of the app, these routes **require Clerk keys** — without `ClerkProvider` the
+  `useSignIn`/`useSignUp` hooks throw (there is no dev fallback anymore). `main.tsx` sets
+  `signInUrl`/`signUpUrl` + `signInFallbackRedirectUrl`/`signUpFallbackRedirectUrl="/dashboard"` on
+  `ClerkProvider`. The old prebuilt-widget approach (`clerkAppearance`, `AuthDevNotice`) is gone.
 - **Biome**: `css.parser.tailwindDirectives: true` lets Biome parse Tailwind v4 at-rules
   (`@theme`, `@utility`). `routeTree.gen.ts` and `docs/mockups/**` are ignored; `apps/web/
   src/components/ui/**` has a11y rule overrides for vendored shadcn patterns.
