@@ -36,10 +36,18 @@ Cote par célébrité (dérivée de l'âge / état de santé via Wikidata, ou aj
 en admin). Alimente la refonte du scoring ci-dessus et concrétise le copy déjà présent
 (« plus la cote est haute, plus le pari rapporte gros »).
 
-### Saisons en base
-Remplacer `new Date().getFullYear()` / `CURRENT_YEAR` par un modèle `Season` configurable
-via l'admin (dates d'ouverture/clôture, saison active). Touche le web partout où l'année
-courante est dérivée du client (`dashboard`, `celebrities`, `circles/new`, `CelebrityForm`…).
+### Saisons en base — _fait_
+Livré : modèle `Season` (`year @unique` + dates `openDate`/`betStartDate`/`betEndDate`/`closeDate`),
+admin `/admin/seasons` (CRUD, anti-chevauchement + ordre des dates, doublon d'année → 409).
+`SeasonsService` résout la **saison active par fenêtre de dates** (fallback : plus récente, puis
+année UTC courante) → remplace les `new Date().getUTCFullYear()` / `CURRENT_YEAR` côté API et web
+(`useSeasonYear` / `useSeasonYearTabs`). `Bet.year` inchangé (1 saison = 1 année calendaire).
+La **fenêtre de paris** verrouille `BetsService.create`/`replaceCelebrities` (403 hors
+`[betStartDate, betEndDate]`), exposé via `CircleSummary.bettingOpen` → bannière draft. Rétro-compatible :
+no-op tant qu'aucune saison n'existe. **Reste à faire** : notifications ouverture/clôture (cf.
+Notifications), palmarès all-time / archives (ci-dessous) — débloqués par cette table.
+**Reste possible** : champ `name` libre par saison déjà en place ; pas encore de FK `seasonId` sur
+`Bet` (volontaire — `year` reste la clé du scoring).
 
 ## Propositions à arbitrer
 

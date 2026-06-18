@@ -95,10 +95,26 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   `AdminGuard` (global admin via Clerk `public_metadata.roles` claim — the Clerk session
   token must include `public_metadata`) and `CircleAdminGuard` (circle admin via
   `Membership.role`, maps JWT `sub` → `User.clerkId`).
-- Celebrity catalog mutations = global admin only. Circle settings/members = circle admin.
-- **Bet locks**: `BetsService.create` / `replaceCelebrities` enforce the circle's flags —
-  `ForbiddenException` when `allowNewBet=false` (new bet) or `allowEdit=false` (edit a bet's
-  celebrities). This is the real guard behind the draft's read-only mode.
+- Celebrity catalog mutations + **season** mutations = global admin only. Circle settings/members
+  = circle admin.
+- **Seasons drive "the current year"**: a `Season` (`year @unique` + `openDate`/`betStartDate`/
+  `betEndDate`/`closeDate`) is configured by global admins. `SeasonsService.getActiveYear()`
+  resolves the active season **by date window** (now ∈ `[openDate, closeDate]`; else most recent;
+  else `new Date().getUTCFullYear()`) and is what the bets rank/position, deaths feed and circle
+  summary controllers default their `year` to (the old `new Date().getUTCFullYear()` defaults are
+  gone). **`Bet.year` is unchanged** — one season = one calendar year, so scoring (which matches
+  `deathYear === bet.year`) is untouched and there is **no `seasonId` FK** on `Bet`. Seasons can't
+  overlap (`SeasonsService.assertValid`: ordering + window-overlap checks; duplicate year → 409 via
+  the `year @unique` P2002 mapping). The whole thing is a **no-op until a season row exists**
+  (fallbacks preserve V1 behaviour), so the migration (`add_season`, additive table-only) is a safe
+  prod deploy. ⚠️ DTO dates arrive as **ISO strings** (transform-only `ValidationPipe`) — the service
+  coerces with `new Date()`, and `update` merges only the dates actually sent (the DTO carries
+  untouched fields as `undefined`, which would otherwise blank the window).
+- **Bet locks**: `BetsService.create` / `replaceCelebrities` enforce **both** the circle's flags
+  (`ForbiddenException` when `allowNewBet=false` for a new bet or `allowEdit=false` for an edit)
+  **and** the season's betting window (`assertBettingWindowOpen` → 403 outside `[betStartDate,
+  betEndDate]`, no-op when no season exists for that year). Net rule: allowed = circle flag AND
+  (no season OR within window). These guards back the draft's read-only mode.
 
 ## Front web (`apps/web`)
 
@@ -135,12 +151,18 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
 - **Wired vs mock**: every screen is wired — circles (`/circles` hub, `/circles/new`,
   `/circles/join`, leaderboard `/circles/$id`, `/circles/$id/settings`, `/circles/$id/members`),
   `/dashboard`, `/profile`, celebrities (`/celebrities` catalogue + bet draft, `/celebrities/$id`
-  detail), and admin (`/admin/celebrities/*` — CRUD + Wikidata search/enrich + bulk actions). UI
-  aggregates the raw CRUD doesn't expose get dedicated endpoints (`GET /circle/user/:id/summary` —
-  now also returns `allowEdit`/`allowNewBet`; `GET /celebrities/deaths/feed`; `GET
-  /celebrities/admin/list` for the paginated admin catalogue; `DELETE /celebrities/bulk` and `POST
-  /celebrities/bulk/enrich` for bulk admin actions); simpler ones (dashboard score band, profile
-  stats) are composed client-side from existing endpoints.
+  detail), and admin (`/admin/celebrities/*` — CRUD + Wikidata search/enrich + bulk actions;
+  `/admin/seasons/*` — season CRUD). UI aggregates the raw CRUD doesn't expose get dedicated
+  endpoints (`GET /circle/user/:id/summary` — returns `allowEdit`/`allowNewBet` **and `bettingOpen`**;
+  `GET /celebrities/deaths/feed`; `GET /celebrities/admin/list` for the paginated admin catalogue;
+  `DELETE /celebrities/bulk` and `POST /celebrities/bulk/enrich` for bulk admin actions; `GET
+  /seasons`, `GET /seasons/active`); simpler ones (dashboard score band, profile stats) are composed
+  client-side from existing endpoints.
+- **Season year (web)**: `useSeasonYear()` (active season's `year`, falling back to
+  `new Date().getFullYear()` while loading / without a backend) replaces the scattered `CURRENT_YEAR`
+  in `/dashboard`, the `/celebrities` draft and the leaderboard; `useSeasonYearTabs()` builds the
+  leaderboard's year tabs from the configured seasons (`GET /seasons`) instead of a hardcoded window.
+  `CelebrityForm`'s scoring preview keeps `new Date().getFullYear()` (cosmetic only).
 - **Admin** (`/admin/celebrities/*`): the catalogue uses `GET /celebrities/admin/list` —
   **server-side** name search, status filter and alphabetical order, paginated and driven by
   `useInfiniteQuery` (infinite scroll). Rows carry checkboxes (+ a select-all header) feeding a
@@ -153,6 +175,12 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   yet** — the client only does JSON. All `/admin/*` routes are gated by the `_app/admin.tsx` layout
   route on the Clerk `public_metadata.roles` admin claim (mirrors the API `AdminGuard`); non-admins
   get the `AdminForbidden` screen. The gate is bypassed when Clerk is unconfigured (previewable dev).
+- **Admin — Seasons** (`/admin/seasons/*`): list + create/edit on the `SeasonForm` component
+  (`year`, optional `name`, four `datetime-local` dates with a client-side ordering check; server is
+  the authority — overlap/ordering/duplicate-year errors surface via sonner toasts). The list shows a
+  date-derived status badge (`upcoming` / `open` / `bets-open` / `closed`, via `seasonStatus` in
+  `adapters.ts`). Reached from a dedicated admin rail link in `SideNav`; `AdminHeader` takes a
+  `section` prop for the breadcrumb. Same admin gate as the celebrities screens.
 - **Bet model**: a bet is unique per `(userId, circleId, year)` — in practice one bet per user per
   season. The `/celebrities` draft is "Mon pari": it edits the bet of the **selected circle** (a
   circle selector defaults to the bet's circle, or the user's first), seeding the celebrity
@@ -160,10 +188,11 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   ≥1 celebrity required). The draft caps selection at `MAX_BET_CELEBRITIES` (50, a shared constant
   in `queries.ts`; client-side only — the API enforces no cap yet, per-circle config is in
   `docs/ROADMAP.md`). **Deceased celebrities are hidden** from the draft grid, and the draft is
-  **read-only** (cards + validate disabled, with a banner) when the selected circle is locked —
-  `allowEdit=false` for an existing bet, `allowNewBet=false` for a first bet (both surfaced in the
-  circle summary and enforced server-side, see "Bet locks"). The fiche's bettors list is filtered
-  client-side to the viewer's circles.
+  **read-only** (cards + validate disabled, with a banner) when locked — either the **season's
+  betting window is closed** (`bettingOpen=false`, banner "Les paris sont fermés pour cette saison")
+  or the selected circle is locked (`allowEdit=false` for an existing bet, `allowNewBet=false` for a
+  first bet). All three flags come from the circle summary and are enforced server-side (see "Bet
+  locks"). The fiche's bettors list is filtered client-side to the viewer's circles.
 - ⚠️ **`@necroloto/shared` is CommonJS** (`"type": "commonjs"`). Its barrel `index.js` uses
   `__exportStar`, which rollup/esbuild can't statically analyze → the web imports the subpath
   `@necroloto/shared/scoring` (a single-file module with direct named exports). `vite.config.ts`
