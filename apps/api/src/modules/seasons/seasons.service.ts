@@ -43,6 +43,22 @@ export class SeasonsService {
         return active?.year ?? new Date().getUTCFullYear();
     }
 
+    findByYear(year: number) {
+        return this.prisma.season.findUnique({ where: { year } });
+    }
+
+    /**
+     * Whether betting is currently open for a given year's season window.
+     * Returns true when no season is configured for that year (compat): the
+     * per-circle flags then remain the only gate.
+     */
+    async isBettingOpen(year: number): Promise<boolean> {
+        const season = await this.findByYear(year);
+        if (!season) return true;
+        const now = Date.now();
+        return now >= season.betStartDate.getTime() && now <= season.betEndDate.getTime();
+    }
+
     async create(dto: CreateSeasonDto) {
         await this.assertValid(dto);
         return this.prisma.season.create({ data: dto });

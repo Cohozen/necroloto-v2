@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CelebritiesService } from '../celebrities/celebrities.service';
+import { SeasonsService } from '../seasons/seasons.service';
 import { AddCelebrityToBetDto } from './dto/add-celebrity-to-bet.dto';
 import { CreateBetDto } from './dto/create-bet.dto';
 import { SearchBetDto } from './dto/search-bet.dto';
@@ -20,7 +21,15 @@ export class BetsService {
     constructor(
         private prisma: PrismaService,
         private celebrities: CelebritiesService,
+        private seasons: SeasonsService,
     ) {}
+
+    /** Throws when the season window for `year` is closed for betting. */
+    private async assertBettingWindowOpen(year: number): Promise<void> {
+        if (!(await this.seasons.isBettingOpen(year))) {
+            throw new ForbiddenException('Les paris ne sont pas ouverts pour cette saison.');
+        }
+    }
 
     /**
      * Resolves a list of celebrity "keys" to celebrity ids. Each key is matched
@@ -63,6 +72,9 @@ export class BetsService {
             }
         }
 
+        // Enforce the season betting window (in addition to the circle flag).
+        await this.assertBettingWindowOpen(betData.year);
+
         const ids = await this.resolveCelebrityIds(celebrityIds);
 
         const bet = await this.prisma.bet.create({
@@ -94,6 +106,9 @@ export class BetsService {
         if (bet?.Circle && !bet.Circle.allowEdit) {
             throw new ForbiddenException("La liste n'est pas modifiable pour ce cercle.");
         }
+
+        // Enforce the season betting window (in addition to the circle flag).
+        if (bet) await this.assertBettingWindowOpen(bet.year);
 
         const ids = await this.resolveCelebrityIds(keys);
 

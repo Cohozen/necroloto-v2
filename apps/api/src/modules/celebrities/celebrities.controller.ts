@@ -19,6 +19,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
+import { SeasonsService } from '../seasons/seasons.service';
 import { StorageService } from '../storage/storage.service';
 import { CelebritiesService } from './celebrities.service';
 import { BulkCelebritiesDto } from './dto/bulk-celebrities.dto';
@@ -33,6 +34,7 @@ export class CelebritiesController {
     constructor(
         private readonly celebritiesService: CelebritiesService,
         private readonly storage: StorageService,
+        private readonly seasons: SeasonsService,
     ) {}
 
     // Admin-only: upload/replace a celebrity photo (multipart field "file").
@@ -120,12 +122,12 @@ export class CelebritiesController {
 
     // Recent deaths for the dashboard feed. Declared before ":id" for clarity.
     @Get('deaths/feed')
-    deathFeed(
-        @Query('year', new DefaultValuePipe(new Date().getUTCFullYear()), ParseIntPipe)
-        year: number,
+    async deathFeed(
+        @Query('year', new ParseIntPipe({ optional: true })) year: number | undefined,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     ) {
-        return this.celebritiesService.deathFeed(year, limit);
+        const y = year ?? (await this.seasons.getActiveYear());
+        return this.celebritiesService.deathFeed(y, limit);
     }
 
     @Get(':id')

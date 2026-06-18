@@ -1,7 +1,6 @@
 import {
     Body,
     Controller,
-    DefaultValuePipe,
     Delete,
     Get,
     Param,
@@ -13,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { CircleAdminGuard } from '../auth/guards/circle-admin.guard';
 import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
+import { SeasonsService } from '../seasons/seasons.service';
 import { CircleService } from './circle.service';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateCircleDto } from './dto/create-circle.dto';
@@ -22,7 +22,10 @@ import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 @UseGuards(ClerkAuthGuard)
 @Controller('circle')
 export class CircleController {
-    constructor(private readonly circleService: CircleService) {}
+    constructor(
+        private readonly circleService: CircleService,
+        private readonly seasons: SeasonsService,
+    ) {}
 
     @Post()
     create(@Body() createCircleDto: CreateCircleDto) {
@@ -50,12 +53,12 @@ export class CircleController {
     }
 
     @Get('user/:userId/summary')
-    findUserSummaries(
+    async findUserSummaries(
         @Param('userId') userId: string,
-        @Query('year', new DefaultValuePipe(new Date().getUTCFullYear()), ParseIntPipe)
-        year: number,
+        @Query('year', new ParseIntPipe({ optional: true })) year: number | undefined,
     ) {
-        return this.circleService.findUserSummaries(userId, year);
+        const y = year ?? (await this.seasons.getActiveYear());
+        return this.circleService.findUserSummaries(userId, y);
     }
 
     @Patch(':id')

@@ -12,6 +12,7 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
+import { SeasonsService } from '../seasons/seasons.service';
 import type { SortByRank } from './bets.service';
 import { BetsService } from './bets.service';
 import { AddCelebrityToBetDto } from './dto/add-celebrity-to-bet.dto';
@@ -24,7 +25,10 @@ import { UpdatePointsDto } from './dto/update-points.dto';
 @UseGuards(ClerkAuthGuard)
 @Controller('bets')
 export class BetsController {
-    constructor(private readonly betsService: BetsService) {}
+    constructor(
+        private readonly betsService: BetsService,
+        private readonly seasons: SeasonsService,
+    ) {}
 
     @Post()
     create(@Body() createBetDto: CreateBetDto) {
@@ -57,24 +61,24 @@ export class BetsController {
     }
 
     @Get('circle/:circleId/rank')
-    rank(
+    async rank(
         @Param('circleId') circleId: string,
-        @Query('year', new DefaultValuePipe(new Date().getUTCFullYear()), ParseIntPipe)
-        year: number,
+        @Query('year', new ParseIntPipe({ optional: true })) year: number | undefined,
         @Query('sort', new DefaultValuePipe('points')) sort: SortByRank,
     ) {
-        return this.betsService.rankByYearAndCircle(circleId, year, sort);
+        const y = year ?? (await this.seasons.getActiveYear());
+        return this.betsService.rankByYearAndCircle(circleId, y, sort);
     }
 
     @Get('circle/:circleId/rank/user/:userId')
-    position(
+    async position(
         @Param('circleId') circleId: string,
         @Param('userId') userId: string,
-        @Query('year', new DefaultValuePipe(new Date().getUTCFullYear()), ParseIntPipe)
-        year: number,
+        @Query('year', new ParseIntPipe({ optional: true })) year: number | undefined,
         @Query('sort', new DefaultValuePipe('points')) sort: SortByRank,
     ) {
-        return this.betsService.positionOfUser(userId, circleId, year, sort);
+        const y = year ?? (await this.seasons.getActiveYear());
+        return this.betsService.positionOfUser(userId, circleId, y, sort);
     }
 
     @Patch(':id')
