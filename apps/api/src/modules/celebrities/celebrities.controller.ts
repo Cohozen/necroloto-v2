@@ -17,8 +17,8 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AdminGuard } from '../auth/guards/admin.guard';
 import { CurrentClerkId } from '../auth/current-user.decorator';
+import { AdminGuard } from '../auth/guards/admin.guard';
 import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
 import { SeasonsService } from '../seasons/seasons.service';
 import { StorageService } from '../storage/storage.service';

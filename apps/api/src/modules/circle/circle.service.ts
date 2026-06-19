@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { CircleVisibility } from '@/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BetsService } from '../bets/bets.service';
-import { SeasonsService, type SeasonPhase } from '../seasons/seasons.service';
+import { type SeasonPhase, SeasonsService } from '../seasons/seasons.service';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateCircleDto } from './dto/create-circle.dto';
 import { UpdateCircleDto } from './dto/update-circle.dto';
