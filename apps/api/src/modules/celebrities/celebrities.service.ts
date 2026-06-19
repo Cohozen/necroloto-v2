@@ -2,6 +2,7 @@ import { ageInYears, calculPointByCelebrity, deathYear } from '@necroloto/shared
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { SeasonsService } from '../seasons/seasons.service';
 import { StorageService } from '../storage/storage.service';
 import { WikidataService, type WikidataSummary } from '../wikidata/wikidata.service';
 import { CreateCelebrityDto } from './dto/create-celebrity.dto';
@@ -24,6 +25,7 @@ export class CelebritiesService {
         private prisma: PrismaService,
         private wikidata: WikidataService,
         private storage: StorageService,
+        private seasons: SeasonsService,
     ) {}
 
     async create(createCelebrityDto: CreateCelebrityDto) {
@@ -108,10 +110,15 @@ export class CelebritiesService {
         });
     }
 
-    async findOne(id: string) {
-        // Includes each bet's user + circle so the front can list "who bet on
-        // this celebrity" (filtered to the viewer's circles client-side).
-        return this.prisma.celebrity.findUnique({
+    /**
+     * Celebrity detail with the list of bets that placed it. The bettors are
+     * filtered server-side to what `viewerClerkId` may see: their own bets
+     * always, plus others' bets only once the season is revealed (now ≥
+     * openDate) AND the circle has `betsVisible`, AND the viewer is a member of
+     * that circle. Before reveal the picks stay secret.
+     */
+    async findOne(id: string, viewerClerkId?: string) {
+        const celebrity = await this.prisma.celebrity.findUnique({
             where: { id },
             include: {
                 CelebritiesOnBet: {
@@ -123,6 +130,44 @@ export class CelebritiesService {
                 },
             },
         });
+        if (!celebrity) return celebrity;
+
+        const viewer = viewerClerkId
+            ? await this.prisma.user.findFirst({
+                  where: { clerkId: viewerClerkId },
+                  select: { id: true },
+              })
+            : null;
+        const viewerId = viewer?.id;
+        const myCircleIds = new Set(
+            viewerId
+                ? (
+                      await this.prisma.membership.findMany({
+                          where: { userId: viewerId },
+                          select: { circleId: true },
+                      })
+                  ).map((m) => m.circleId)
+                : [],
+        );
+
+        // Reveal state is per season year — resolve each distinct year once.
+        const years = [...new Set(celebrity.CelebritiesOnBet.map((e) => e.bet.year))];
+        const revealedByYear = new Map(
+            await Promise.all(
+                years.map(async (y) => [y, await this.seasons.isRevealed(y)] as const),
+            ),
+        );
+
+        celebrity.CelebritiesOnBet = celebrity.CelebritiesOnBet.filter((e) => {
+            if (e.bet.userId === viewerId) return true;
+            return (
+                !!e.bet.circleId &&
+                myCircleIds.has(e.bet.circleId) &&
+                !!e.bet.Circle?.betsVisible &&
+                !!revealedByYear.get(e.bet.year)
+            );
+        });
+        return celebrity;
     }
 
     async update(id: string, updateCelebrityDto: UpdateCelebrityDto) {

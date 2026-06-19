@@ -18,6 +18,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AdminGuard } from '../auth/guards/admin.guard';
+import { CurrentClerkId } from '../auth/current-user.decorator';
 import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
 import { SeasonsService } from '../seasons/seasons.service';
 import { StorageService } from '../storage/storage.service';
@@ -124,8 +125,8 @@ export class CelebritiesController {
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.celebritiesService.findOne(id);
+    findOne(@Param('id') id: string, @CurrentClerkId() clerkId?: string) {
+        return this.celebritiesService.findOne(id, clerkId);
     }
 
     @Patch(':id')

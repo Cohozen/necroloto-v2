@@ -10,6 +10,7 @@ import {
     Query,
     UseGuards,
 } from '@nestjs/common';
+import { CurrentClerkId } from '../auth/current-user.decorator';
 import { CircleAdminGuard } from '../auth/guards/circle-admin.guard';
 import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
 import { SeasonsService } from '../seasons/seasons.service';
@@ -59,6 +60,16 @@ export class CircleController {
     ) {
         const y = year ?? (await this.seasons.getActiveYear());
         return this.circleService.findUserSummaries(userId, y);
+    }
+
+    @Get(':id/bets')
+    async listBets(
+        @Param('id') id: string,
+        @Query('year', new ParseIntPipe({ optional: true })) year: number | undefined,
+        @CurrentClerkId() clerkId?: string,
+    ) {
+        const y = year ?? (await this.seasons.getActiveYear());
+        return this.circleService.listBets(id, y, clerkId);
     }
 
     @Patch(':id')

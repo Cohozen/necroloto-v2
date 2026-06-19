@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { CircleVisibility } from '@/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BetsService } from '../bets/bets.service';
-import { SeasonsService } from '../seasons/seasons.service';
+import { SeasonsService, type SeasonPhase } from '../seasons/seasons.service';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateCircleDto } from './dto/create-circle.dto';
 import { UpdateCircleDto } from './dto/update-circle.dto';
@@ -32,6 +32,10 @@ export interface CircleSummary {
     allowNewBet: boolean;
     /** Whether the season's betting window is currently open for this year. */
     bettingOpen: boolean;
+    /** Lifecycle phase of the season for this year (drives the draft UI). */
+    seasonPhase: SeasonPhase;
+    /** Whether other members' bets may be revealed (now ≥ openDate). */
+    revealed: boolean;
     podium: PodiumSlot[];
 }
 
@@ -107,8 +111,10 @@ export class CircleService {
             include: { _count: { select: { memberships: true } } },
         });
 
-        // Season betting window is global per year (same for every circle).
+        // Season state is global per year (same for every circle).
         const bettingOpen = await this.seasons.isBettingOpen(year);
+        const seasonPhase = await this.seasons.getSeasonPhase(year);
+        const revealed = await this.seasons.isRevealed(year);
 
         return Promise.all(
             circles.map(async (circle): Promise<CircleSummary> => {
@@ -133,10 +139,17 @@ export class CircleService {
                     allowEdit: circle.allowEdit,
                     allowNewBet: circle.allowNewBet,
                     bettingOpen,
+                    seasonPhase,
+                    revealed,
                     podium,
                 };
             }),
         );
+    }
+
+    /** Bets of a circle for the "Paris" tab (viewer-aware secrecy, delegated). */
+    listBets(circleId: string, year: number, viewerClerkId?: string) {
+        return this.bets.listVisibleByCircle(circleId, year, viewerClerkId);
     }
 
     async findAll() {
