@@ -64,7 +64,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
                 </div>
 
                 <p className="relative z-[1] text-[12.5px] text-ink-3">
-                    Jeu parodique · personnages fictifs · majeurs uniquement
+                    Jeu parodique · majeurs uniquement
                 </p>
             </aside>
 

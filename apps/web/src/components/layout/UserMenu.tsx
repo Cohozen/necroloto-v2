@@ -1,6 +1,6 @@
 import { useClerk } from '@clerk/clerk-react';
 import { useNavigate } from '@tanstack/react-router';
-import { LogOut, ShieldCheck, User } from 'lucide-react';
+import { Bot, CalendarRange, LogOut, ShieldCheck, User } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
     DropdownMenu,
@@ -48,9 +48,17 @@ export function UserMenu() {
                     <User size={16} /> Mon profil
                 </DropdownMenuItem>
                 {isAdmin && (
-                    <DropdownMenuItem onSelect={() => navigate({ to: '/admin/celebrities' })}>
-                        <ShieldCheck size={16} /> Administration
-                    </DropdownMenuItem>
+                    <>
+                        <DropdownMenuItem onSelect={() => navigate({ to: '/admin/celebrities' })}>
+                            <ShieldCheck size={16} /> Administration
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => navigate({ to: '/admin/seasons' })}>
+                            <CalendarRange size={16} /> Saisons
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => navigate({ to: '/admin/automation' })}>
+                            <Bot size={16} /> Automatisation
+                        </DropdownMenuItem>
+                    </>
                 )}
                 {isClerkConfigured && (
                     <>
