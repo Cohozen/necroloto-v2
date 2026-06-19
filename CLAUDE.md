@@ -99,23 +99,37 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
 - Celebrity catalog mutations + **season** mutations = global admin only. Circle settings/members
   = circle admin.
 - **Seasons drive "the current year"**: a `Season` (`year @unique` + `openDate`/`betStartDate`/
-  `betEndDate`/`closeDate`) is configured by global admins. `SeasonsService.getActiveYear()`
-  resolves the active season **by date window** (now ∈ `[openDate, closeDate]`; else most recent;
-  else `new Date().getUTCFullYear()`) and is what the bets rank/position, deaths feed and circle
-  summary controllers default their `year` to (the old `new Date().getUTCFullYear()` defaults are
-  gone). **`Bet.year` is unchanged** — one season = one calendar year, so scoring (which matches
-  `deathYear === bet.year`) is untouched and there is **no `seasonId` FK** on `Bet`. Seasons can't
-  overlap (`SeasonsService.assertValid`: ordering + window-overlap checks; duplicate year → 409 via
-  the `year @unique` P2002 mapping). The whole thing is a **no-op until a season row exists**
+  `betEndDate`/`closeDate`) is configured by global admins. ⚠️ **Betting precedes the season**: a
+  season's betting window (`[betStartDate, betEndDate]`) is normally the ~month *before* `openDate`
+  (e.g. season 2027: bets Dec 2026, season Jan→Dec 2027). `SeasonsService.getActiveYear()` resolves
+  the active season with a **global switch**: (1) the season whose betting window is open now, else
+  (2) the season whose `[openDate, closeDate]` contains now, else (3) most recent, else
+  `new Date().getUTCFullYear()` — so the whole app (bets rank/position, deaths feed, circle summary,
+  web `useSeasonYear`) targets N+1 as soon as N+1's betting opens. **`Bet.year` is unchanged** — one
+  season = one calendar year, so scoring (which matches `deathYear === bet.year`) is untouched and
+  there is **no `seasonId` FK** on `Bet`. `assertValid` validates the **two windows independently**
+  (`betStart ≤ betEnd` and `open ≤ close`, **no cross-window ordering**) and forbids overlap of the
+  `[openDate, closeDate]` window only (betting windows may fall in the previous year); duplicate year
+  → 409 via the `year @unique` P2002 mapping. The whole thing is a **no-op until a season row exists**
   (fallbacks preserve V1 behaviour), so the migration (`add_season`, additive table-only) is a safe
   prod deploy. ⚠️ DTO dates arrive as **ISO strings** (transform-only `ValidationPipe`) — the service
   coerces with `new Date()`, and `update` merges only the dates actually sent (the DTO carries
   untouched fields as `undefined`, which would otherwise blank the window).
-- **Bet locks**: `BetsService.create` / `replaceCelebrities` enforce **both** the circle's flags
-  (`ForbiddenException` when `allowNewBet=false` for a new bet or `allowEdit=false` for an edit)
-  **and** the season's betting window (`assertBettingWindowOpen` → 403 outside `[betStartDate,
-  betEndDate]`, no-op when no season exists for that year). Net rule: allowed = circle flag AND
-  (no season OR within window). These guards back the draft's read-only mode.
+- **Bet locks (phase-based)**: betting happens **before** the season opens, so `BetsService.create` /
+  `replaceCelebrities` gate on the **season phase** (`SeasonsService.getSeasonPhase`: `none` / `before`
+  / `betting` / `season-open` / `closed`) via `assertCanBet(year, mode, flag)`, not on a single
+  betting-window-AND-flag rule. Rule: during `betting` create/edit are **always** allowed (the window
+  IS betting time); during `season-open` they need the circle "rallonge" flag (`allowNewBet` to join
+  late, `allowEdit` to finish an existing bet); `before`/`closed` → 403; `none` (no season) → V1 compat
+  (the flag is the only gate). The front mirrors this from `CircleSummary.seasonPhase` (+ `allowEdit`/
+  `allowNewBet`) to drive the draft's read-only banners. ⚠️ this changed `allowNewBet`/`allowEdit`
+  semantics: they no longer block during the open betting window.
+- **Bet secrecy (server-side)**: other members' picks stay **secret** until the season is revealed
+  (`SeasonsService.isRevealed` → `now ≥ openDate`) **and** the circle has `betsVisible`; the viewer
+  always sees their own. Enforced in `celebrities.findOne` (fiche bettors), `bets.rankByYearAndCircle`
+  (leader roster blanked, ranks/points kept) and `GET /circle/:id/bets` (the "Paris" tab). The viewer
+  is resolved from the JWT via the `@CurrentClerkId()` param-decorator (`modules/auth/
+  current-user.decorator.ts`) → `User` by `clerkId` (note: `clerkId` not unique → `findFirst`).
 - **Async jobs** (`modules/jobs`): long/networked admin work runs **in-process** (no queue infra —
   no Redis), tracked in the `SyncJob` table (status + progress counters + JSON `payload`/`result`).
   `JobsService.enqueueBulkEnrich` creates the row and **fire-and-forgets** the worker (`void
@@ -167,7 +181,8 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   `/dashboard`, `/profile`, celebrities (`/celebrities` catalogue + bet draft, `/celebrities/$id`
   detail), and admin (`/admin/celebrities/*` — CRUD + Wikidata search/enrich + bulk actions;
   `/admin/seasons/*` — season CRUD). UI aggregates the raw CRUD doesn't expose get dedicated
-  endpoints (`GET /circle/user/:id/summary` — returns `allowEdit`/`allowNewBet` **and `bettingOpen`**;
+  endpoints (`GET /circle/user/:id/summary` — returns `allowEdit`/`allowNewBet`, `bettingOpen`,
+  `seasonPhase` **and `revealed`**; `GET /circle/:id/bets` for the "Paris" tab (viewer-aware secrecy);
   `GET /celebrities/deaths/feed`; `GET /celebrities/admin/list` for the paginated admin catalogue;
   `DELETE /celebrities/bulk` for bulk delete and `POST /jobs/bulk-enrich` for **async** bulk Wikidata
   sync (see "Async jobs"); `GET /seasons`, `GET /seasons/active`); simpler ones (dashboard score band,
@@ -209,11 +224,17 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   ≥1 celebrity required). The draft caps selection at `MAX_BET_CELEBRITIES` (50, a shared constant
   in `queries.ts`; client-side only — the API enforces no cap yet, per-circle config is in
   `docs/ROADMAP.md`). **Deceased celebrities are hidden** from the draft grid, and the draft is
-  **read-only** (cards + validate disabled, with a banner) when locked — either the **season's
-  betting window is closed** (`bettingOpen=false`, banner "Les paris sont fermés pour cette saison")
-  or the selected circle is locked (`allowEdit=false` for an existing bet, `allowNewBet=false` for a
-  first bet). All three flags come from the circle summary and are enforced server-side (see "Bet
-  locks"). The fiche's bettors list is filtered client-side to the viewer's circles.
+  **read-only** (cards + validate disabled, with a phase-specific banner) driven by
+  `CircleSummary.seasonPhase` + `allowEdit`/`allowNewBet` (see "Bet locks": free during `betting`,
+  flag-gated in `season-open`, locked `before`/`closed`). The fiche's bettors list is gated
+  server-side (see "Bet secrecy") and still narrowed client-side to the viewer's circles.
+- **"Paris" tab** (`/circles/$id/bets`, `useCircleBets` → `GET /circle/:id/bets`): lists every
+  member's bet for the selected season; before reveal (or with `betsVisible` off) the server returns
+  only the viewer's own bet and the page shows a "secret" banner. The leaderboard's `LeaderPicksCard`
+  is likewise hidden behind a "Paris secrets" card until `isSeasonRevealed(season) && betsVisible`
+  (`adapters.ts`). New circles default to **`betsVisible` on, `allowEdit` off** (`change_circle_setting_defaults`
+  migration). "Mises visibles" only applies once the season is open; "Liste modifiable" only during
+  the open season (a straggler "rallonge") — both re-copywrited in the circle settings screen.
 - ⚠️ **`@necroloto/shared` is CommonJS** (`"type": "commonjs"`). Its barrel `index.js` uses
   `__exportStar`, which rollup/esbuild can't statically analyze → the web imports the subpath
   `@necroloto/shared/scoring` (a single-file module with direct named exports). `vite.config.ts`
