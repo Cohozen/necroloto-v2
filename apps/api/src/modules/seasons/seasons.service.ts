@@ -16,6 +16,14 @@ interface SeasonWindow {
     closeDate: Date | string;
 }
 
+/**
+ * Lifecycle phase of a season at "now". Betting happens *before* the season
+ * opens (paris ~1 month ahead), so the phases are not the naive date order.
+ * `none` means no season row exists for the year → V1 compat (the per-circle
+ * flags remain the only gate).
+ */
+export type SeasonPhase = 'none' | 'before' | 'betting' | 'season-open' | 'closed';
+
 @Injectable()
 export class SeasonsService {
     constructor(private prisma: PrismaService) {}
@@ -29,11 +37,20 @@ export class SeasonsService {
     }
 
     /**
-     * Active season: the one whose [openDate, closeDate] window contains now,
-     * else the most recent one (by closeDate). May be null when no season exists.
+     * Active season, resolved with a "global switch" to the season currently
+     * open for betting: betting happens before the season starts, so as soon as
+     * season N+1's betting window opens the whole app should target N+1.
+     * Priority: (1) season whose betting window is open now, (2) season whose
+     * [openDate, closeDate] window contains now, (3) most recent by closeDate.
+     * May be null when no season exists.
      */
     async getActive() {
         const now = new Date();
+        const betting = await this.prisma.season.findFirst({
+            where: { betStartDate: { lte: now }, betEndDate: { gte: now } },
+            orderBy: { betStartDate: 'desc' },
+        });
+        if (betting) return betting;
         const current = await this.prisma.season.findFirst({
             where: { openDate: { lte: now }, closeDate: { gte: now } },
             orderBy: { closeDate: 'desc' },
@@ -62,6 +79,32 @@ export class SeasonsService {
         if (!season) return true;
         const now = Date.now();
         return now >= season.betStartDate.getTime() && now <= season.betEndDate.getTime();
+    }
+
+    /**
+     * Lifecycle phase of the season for a given year (see {@link SeasonPhase}).
+     * `season-open` covers everything between the end of betting and the close
+     * date (the small gap before openDate included).
+     */
+    async getSeasonPhase(year: number): Promise<SeasonPhase> {
+        const season = await this.findByYear(year);
+        if (!season) return 'none';
+        const now = Date.now();
+        if (now < season.betStartDate.getTime()) return 'before';
+        if (now <= season.betEndDate.getTime()) return 'betting';
+        if (now <= season.closeDate.getTime()) return 'season-open';
+        return 'closed';
+    }
+
+    /**
+     * Whether other members' bets may be revealed for a year: true once the
+     * season has opened (now ≥ openDate). No season → true (V1 compat). The
+     * per-circle `betsVisible` flag is an additional gate applied by callers.
+     */
+    async isRevealed(year: number): Promise<boolean> {
+        const season = await this.findByYear(year);
+        if (!season) return true;
+        return Date.now() >= season.openDate.getTime();
     }
 
     async create(dto: CreateSeasonDto) {
@@ -107,7 +150,9 @@ export class SeasonsService {
     }
 
     /**
-     * Validates date ordering (open ≤ betStart ≤ betEnd ≤ close) and ensures the
+     * Validates the two windows independently — betting happens *before* the
+     * season opens, so there is no cross-window ordering: only
+     * `betStart ≤ betEnd` and `open ≤ close`. Then ensures the
      * [openDate, closeDate] window does not overlap another season. The unique
      * constraint on `year` already covers duplicate years at the DB level.
      */
@@ -116,16 +161,11 @@ export class SeasonsService {
         const betStartDate = new Date(window.betStartDate);
         const betEndDate = new Date(window.betEndDate);
         const closeDate = new Date(window.closeDate);
-        if (
-            !(
-                openDate.getTime() <= betStartDate.getTime() &&
-                betStartDate.getTime() <= betEndDate.getTime() &&
-                betEndDate.getTime() <= closeDate.getTime()
-            )
-        ) {
-            throw new BadRequestException(
-                'Les dates doivent être ordonnées : ouverture ≤ début des paris ≤ fin des paris ≤ clôture.',
-            );
+        if (betStartDate.getTime() > betEndDate.getTime()) {
+            throw new BadRequestException('Le début des paris doit précéder la fin des paris.');
+        }
+        if (openDate.getTime() > closeDate.getTime()) {
+            throw new BadRequestException("L'ouverture de la saison doit précéder sa clôture.");
         }
 
         const overlap = await this.prisma.season.findFirst({
