@@ -13,14 +13,15 @@ rapport à la v1 (Next.js), pensée **mobile-first** (DA néon / arcade sombre).
 > - Public/Auth : **Landing** `/`, **Connexion/Inscription** `/sign-in` `/sign-up` (Clerk thémé).
 > - **Dashboard** `/dashboard` · **Profil** `/profile`.
 > - Cercles : **hub** `/circles`, **Créer** `/circles/new`, **Rejoindre** `/circles/join` ;
->   écran cercle à onglets `/circles/$id` = **Classement** (index), **Membres**
->   `/circles/$id/members`, **Réglages** `/circles/$id/settings` (admin de cercle).
+>   écran cercle à onglets `/circles/$id` = **Classement** (index), **Paris**
+>   `/circles/$id/bets`, **Membres** `/circles/$id/members`, **Réglages**
+>   `/circles/$id/settings` (admin de cercle).
 > - Catalogue : **Mon pari/catalogue** `/celebrities`, **Fiche** `/celebrities/$id`,
 >   **Admin catalogue** `/admin/celebrities` (+ `/$id` éditer, `/new` créer — admin global).
 >
-> Branchés : hub `/circles`, `/circles/new`, `/circles/join`, `/circles/$id` (classement),
-> `/dashboard`. Restent en `// TEMP` : profil, catalogue célébrités, paris, admin.
-> Onglet « Paris » du cercle pas encore construit (inerte dans la barre d'onglets).
+> _MàJ : tous les écrans sont désormais branchés à l'API (cercles, dashboard, profil,
+> catalogue + draft, fiche, admin). L'onglet « Paris » `/circles/$id/bets` est construit
+> (liste des paris du cercle, secrets jusqu'à l'ouverture de la saison)._
 
 ## Modèle de navigation
 
