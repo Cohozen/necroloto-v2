@@ -103,8 +103,8 @@ model Circle {
   status      CircleStatus     @default(OPEN)
   code        String?
   allowNewBet Boolean
-  allowEdit   Boolean          @default(true)
-  betsVisible Boolean          @default(false)
+  allowEdit   Boolean          @default(false)
+  betsVisible Boolean          @default(true)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
