@@ -78,9 +78,25 @@ export interface BulkDeleteResult {
     deleted: number;
 }
 
-/** Result of a bulk Wikidata enrich (POST /celebrities/bulk/enrich). */
-export interface BulkEnrichResult {
-    results: { id: string; success: boolean; error?: string }[];
+export type SyncJobType = 'WIKIDATA_BULK_ENRICH' | 'DEATH_SCAN';
+export type SyncJobStatus = 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED';
+
+/** A background job (POST /jobs/bulk-enrich, GET /jobs, GET /jobs/:id). */
+export interface SyncJob {
+    id: string;
+    type: SyncJobType;
+    status: SyncJobStatus;
+    total: number;
+    processed: number;
+    succeeded: number;
+    failed: number;
+    /** Per-item errors (bulk enrich) or `{ checked, newDeaths }` (death scan). */
+    result: unknown;
+    error: string | null;
+    startedAt: string | null;
+    finishedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
 }
 
 /** One page of the admin catalogue (GET /celebrities/admin/list). */

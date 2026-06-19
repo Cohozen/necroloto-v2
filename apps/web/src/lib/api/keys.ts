@@ -28,4 +28,8 @@ export const queryKeys = {
         active: () => ['seasons', 'active'] as const,
         detail: (id: string) => ['seasons', 'detail', id] as const,
     },
+    jobs: {
+        list: (type?: string) => ['jobs', 'list', type ?? 'all'] as const,
+        detail: (id: string) => ['jobs', 'detail', id] as const,
+    },
 } as const;

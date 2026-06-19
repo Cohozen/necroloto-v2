@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -10,6 +11,7 @@ import {
     useAdminCelebrities,
     useBulkDeleteCelebrities,
     useBulkEnrichCelebrities,
+    useSyncJob,
 } from '@/lib/api/queries';
 import type { CatalogFilter } from '@/types/admin';
 
@@ -32,8 +34,13 @@ function AdminCatalogue() {
     const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage } =
         useAdminCelebrities({ search: debouncedSearch, status: filter });
 
+    const qc = useQueryClient();
     const bulkDelete = useBulkDeleteCelebrities();
     const bulkEnrich = useBulkEnrichCelebrities();
+
+    // Async enrich: enqueue a job, then poll it for progress until terminal.
+    const [syncJobId, setSyncJobId] = useState<string | null>(null);
+    const syncJob = useSyncJob(syncJobId);
 
     const rows = useMemo(
         () => (data?.pages ?? []).flatMap((page) => page.items).map(toAdminCelebrity),
@@ -75,19 +82,33 @@ function AdminCatalogue() {
     const handleSync = () => {
         const ids = [...selected];
         bulkEnrich.mutate(ids, {
-            onSuccess: (res) => {
-                const ok = res.results.filter((r) => r.success).length;
-                const failed = res.results.length - ok;
-                if (failed === 0)
-                    toast.success(
-                        `${ok} fiche${ok > 1 ? 's' : ''} synchronisée${ok > 1 ? 's' : ''}.`,
-                    );
-                else toast.warning(`${ok} synchronisée(s), ${failed} en échec.`);
-                clearSelection();
-            },
-            onError: () => toast.error('La synchronisation a échoué.'),
+            // Keep the selection (and the bar) until the job finishes, so its
+            // progress stays visible; cleared in the terminal effect below.
+            onSuccess: (job) => setSyncJobId(job.id),
+            onError: () => toast.error("La synchronisation n'a pas pu démarrer."),
         });
     };
+
+    // Surface the result once the polled job finishes, then stop polling.
+    useEffect(() => {
+        const job = syncJob.data;
+        if (!syncJobId || !job) return;
+        if (job.status !== 'SUCCEEDED' && job.status !== 'FAILED') return;
+
+        if (job.status === 'FAILED') {
+            toast.error('La synchronisation a échoué.');
+        } else if (job.failed === 0) {
+            toast.success(
+                `${job.succeeded} fiche${job.succeeded > 1 ? 's' : ''} synchronisée${job.succeeded > 1 ? 's' : ''}.`,
+            );
+        } else {
+            toast.warning(`${job.succeeded} synchronisée(s), ${job.failed} en échec.`);
+        }
+        qc.invalidateQueries({ queryKey: ['celebrities'] });
+        setSyncJobId(null);
+    }, [syncJob.data, syncJobId, qc]);
+
+    const syncing = bulkEnrich.isPending || syncJobId !== null;
 
     // Infinite scroll: load the next page when the sentinel enters the viewport.
     const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -145,7 +166,15 @@ function AdminCatalogue() {
                     onDelete={handleDelete}
                     onSync={handleSync}
                     isDeleting={bulkDelete.isPending}
-                    isSyncing={bulkEnrich.isPending}
+                    isSyncing={syncing}
+                    syncProgress={
+                        syncJob.data
+                            ? {
+                                  processed: syncJob.data.processed,
+                                  total: syncJob.data.total,
+                              }
+                            : undefined
+                    }
                 />
             )}
         </div>

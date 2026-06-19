@@ -24,6 +24,7 @@ import { Route as AppCirclesNewRouteImport } from './routes/_app/circles/new'
 import { Route as AppCirclesJoinRouteImport } from './routes/_app/circles/join'
 import { Route as AppCirclesIdRouteImport } from './routes/_app/circles/$id'
 import { Route as AppCelebritiesIdRouteImport } from './routes/_app/celebrities/$id'
+import { Route as AppAdminAutomationRouteImport } from './routes/_app/admin/automation'
 import { Route as AppCirclesIdIndexRouteImport } from './routes/_app/circles/$id/index'
 import { Route as AppAdminSeasonsIndexRouteImport } from './routes/_app/admin/seasons/index'
 import { Route as AppAdminCelebritiesIndexRouteImport } from './routes/_app/admin/celebrities/index'
@@ -108,6 +109,11 @@ const AppCelebritiesIdRoute = AppCelebritiesIdRouteImport.update({
   path: '/celebrities/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminAutomationRoute = AppAdminAutomationRouteImport.update({
+  id: '/automation',
+  path: '/automation',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppCirclesIdIndexRoute = AppCirclesIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -164,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/profile': typeof AppProfileRoute
+  '/admin/automation': typeof AppAdminAutomationRoute
   '/celebrities/$id': typeof AppCelebritiesIdRoute
   '/circles/$id': typeof AppCirclesIdRouteWithChildren
   '/circles/join': typeof AppCirclesJoinRoute
@@ -189,6 +196,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AppAdminRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/profile': typeof AppProfileRoute
+  '/admin/automation': typeof AppAdminAutomationRoute
   '/celebrities/$id': typeof AppCelebritiesIdRoute
   '/circles/join': typeof AppCirclesJoinRoute
   '/circles/new': typeof AppCirclesNewRoute
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/profile': typeof AppProfileRoute
+  '/_app/admin/automation': typeof AppAdminAutomationRoute
   '/_app/celebrities/$id': typeof AppCelebritiesIdRoute
   '/_app/circles/$id': typeof AppCirclesIdRouteWithChildren
   '/_app/circles/join': typeof AppCirclesJoinRoute
@@ -242,6 +251,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/profile'
+    | '/admin/automation'
     | '/celebrities/$id'
     | '/circles/$id'
     | '/circles/join'
@@ -267,6 +277,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/profile'
+    | '/admin/automation'
     | '/celebrities/$id'
     | '/circles/join'
     | '/circles/new'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/_app/admin'
     | '/_app/dashboard'
     | '/_app/profile'
+    | '/_app/admin/automation'
     | '/_app/celebrities/$id'
     | '/_app/circles/$id'
     | '/_app/circles/join'
@@ -425,6 +437,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCelebritiesIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin/automation': {
+      id: '/_app/admin/automation'
+      path: '/automation'
+      fullPath: '/admin/automation'
+      preLoaderRoute: typeof AppAdminAutomationRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/_app/circles/$id/': {
       id: '/_app/circles/$id/'
       path: '/'
@@ -492,6 +511,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppAdminRouteChildren {
+  AppAdminAutomationRoute: typeof AppAdminAutomationRoute
   AppAdminCelebritiesIdRoute: typeof AppAdminCelebritiesIdRoute
   AppAdminCelebritiesNewRoute: typeof AppAdminCelebritiesNewRoute
   AppAdminSeasonsIdRoute: typeof AppAdminSeasonsIdRoute
@@ -501,6 +521,7 @@ interface AppAdminRouteChildren {
 }
 
 const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminAutomationRoute: AppAdminAutomationRoute,
   AppAdminCelebritiesIdRoute: AppAdminCelebritiesIdRoute,
   AppAdminCelebritiesNewRoute: AppAdminCelebritiesNewRoute,
   AppAdminSeasonsIdRoute: AppAdminSeasonsIdRoute,

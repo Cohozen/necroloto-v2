@@ -15,6 +15,8 @@ interface BulkActionBarProps {
     onSync: () => void;
     isDeleting?: boolean;
     isSyncing?: boolean;
+    /** Live progress of the running enrich job, if any. */
+    syncProgress?: { processed: number; total: number };
 }
 
 /** Floating bar of bulk actions for the selected catalogue rows. */
@@ -25,8 +27,14 @@ export function BulkActionBar({
     onSync,
     isDeleting,
     isSyncing,
+    syncProgress,
 }: BulkActionBarProps) {
     const busy = isDeleting || isSyncing;
+    const syncLabel = isSyncing
+        ? syncProgress
+            ? `Synchronisation… ${syncProgress.processed}/${syncProgress.total}`
+            : 'Synchronisation…'
+        : 'Synchroniser Wikidata';
     return (
         <div className="sticky bottom-4 z-20 mx-auto flex w-full max-w-2xl flex-wrap items-center gap-3 rounded-2xl border border-line-2 bg-surface-2/95 px-4 py-3 shadow-glow-soft backdrop-blur-md">
             <button
@@ -44,7 +52,7 @@ export function BulkActionBar({
             <div className="ml-auto flex items-center gap-2.5">
                 <Button variant="secondary" size="sm" onClick={onSync} disabled={busy}>
                     <Sparkles size={15} strokeWidth={2} />
-                    {isSyncing ? 'Synchronisation…' : 'Synchroniser Wikidata'}
+                    {syncLabel}
                 </Button>
 
                 <Dialog>

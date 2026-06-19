@@ -16,7 +16,6 @@ import type {
     ApiSeason,
     ApiUser,
     BulkDeleteResult,
-    BulkEnrichResult,
     CircleSummaryDto,
     CreateBetPayload,
     CreateCelebrityPayload,
@@ -28,6 +27,7 @@ import type {
     RankedBet,
     ReplaceCelebritiesPayload,
     SortByRank,
+    SyncJob,
     UpdateCelebrityPayload,
     UpdateCirclePayload,
     UpdateMemberRolePayload,
@@ -339,14 +339,56 @@ export function useBulkDeleteCelebrities() {
     });
 }
 
-/** Enrich several celebrities from Wikidata at once (admin bulk action). */
+/**
+ * Enqueue an async bulk Wikidata enrich (admin). Returns the created job
+ * immediately; follow its progress with `useSyncJob(job.id)`. The catalogue is
+ * invalidated once the job reaches a terminal state, not here.
+ */
 export function useBulkEnrichCelebrities() {
+    const api = useApiClient();
+    return useMutation({
+        mutationFn: (ids: string[]) => api.post<SyncJob>('/jobs/bulk-enrich', { ids }),
+    });
+}
+
+/**
+ * Poll a single job for live progress. Refetches every ~1.5s while the job is
+ * still pending/running, then stops once it's terminal. Disabled when `id` is
+ * null (no job in flight).
+ */
+export function useSyncJob(id: string | null) {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: queryKeys.jobs.detail(id ?? ''),
+        queryFn: () => api.get<SyncJob>(`/jobs/${id}`),
+        enabled: id !== null,
+        refetchInterval: (query) => {
+            const status = query.state.data?.status;
+            return status === 'SUCCEEDED' || status === 'FAILED' ? false : 1500;
+        },
+    });
+}
+
+/** Recent jobs for the automation history (admin). Optional type filter. */
+export function useRecentJobs(type?: string) {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: queryKeys.jobs.list(type),
+        queryFn: () =>
+            api.get<SyncJob[]>(`/jobs${type ? `?type=${encodeURIComponent(type)}` : ''}`),
+        refetchInterval: 5000,
+    });
+}
+
+/** Trigger the death-detection scan on demand (admin). Recorded as a job. */
+export function useDetectDeaths() {
     const api = useApiClient();
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: (ids: string[]) =>
-            api.post<BulkEnrichResult>('/celebrities/bulk/enrich', { ids }),
+        mutationFn: () =>
+            api.post<{ checked: number; newDeaths: unknown[] }>('/automation/detect-deaths', {}),
         onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['jobs'] });
             qc.invalidateQueries({ queryKey: ['celebrities'] });
         },
     });

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { CalendarRange, Shield } from 'lucide-react';
+import { Bot, CalendarRange, Shield } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { initialsOf, userDisplayName } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
@@ -35,6 +35,9 @@ export function SideNav() {
                     </Link>
                     <Link to="/admin/seasons" aria-label="Saisons" className={railLink}>
                         <CalendarRange size={22} />
+                    </Link>
+                    <Link to="/admin/automation" aria-label="Automatisation" className={railLink}>
+                        <Bot size={22} />
                     </Link>
                 </>
             )}
