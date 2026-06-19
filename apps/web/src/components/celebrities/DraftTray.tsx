@@ -15,7 +15,7 @@ interface DraftTrayProps {
 export function DraftTray({ selected, total, onValidate, disabled, saving }: DraftTrayProps) {
     const remaining = Math.max(total - selected, 0);
     return (
-        <div className="sticky bottom-2 z-10 mx-3 mt-2 flex items-center gap-4 rounded-2xl border border-neon/40 bg-bg/85 p-3 px-4 shadow-glow-green backdrop-blur-md md:bottom-4 md:mx-8">
+        <div className="sticky bottom-0 z-10 mx-4 mt-2 flex items-center gap-4 rounded-2xl border border-neon/40 bg-bg/85 p-3 px-4 shadow-glow-green backdrop-blur-md md:bottom-6 md:mx-8">
             <div className="font-display text-3xl font-extrabold leading-none text-glow-neon">
                 {selected}
                 <span className="text-[0.62em] text-ink-3"> / {total}</span>
@@ -29,7 +29,8 @@ export function DraftTray({ selected, total, onValidate, disabled, saving }: Dra
             <div className="flex-1" />
             <Button onClick={onValidate} disabled={disabled} className="shrink-0">
                 <Check size={16} strokeWidth={2.4} />{' '}
-                {saving ? 'Enregistrement…' : 'Valider mon pari'}
+                <span className="hidden md:inline">{saving ? 'Enregistrement…' : 'Valider mon pari'}</span>
+                <span className="md:hidden">{saving ? 'Enregistrement' : 'Valider'}</span>
             </Button>
         </div>
     );

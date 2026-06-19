@@ -16,7 +16,7 @@ export const Route = createFileRoute('/_app/circles/join')({
 });
 
 const slotClass =
-    'size-12 rounded-xl border-[1.5px] border-line-2 bg-surface font-display text-[26px] font-extrabold text-ink sm:size-[52px] sm:text-[30px] data-[active=true]:border-neon/80 data-[active=true]:text-neon data-[active=true]:ring-[3px] data-[active=true]:ring-neon/20';
+    'size-10 md:size-12 rounded-xl border-[1.5px] border-line-2 bg-surface font-display text-[26px] font-extrabold text-ink sm:size-[52px] sm:text-[30px] data-[active=true]:border-neon/80 data-[active=true]:text-neon data-[active=true]:ring-[3px] data-[active=true]:ring-neon/20';
 
 function JoinCircle() {
     const navigate = useNavigate();

@@ -44,24 +44,27 @@ function CircleLeaderboard() {
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 p-4 md:p-6">
-            <CircleBackLink />
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <CircleHeader
-                    name={circle.data?.name ?? 'Cercle'}
-                    visibility={circle.data?.visibility ?? 'PRIVATE'}
-                    members={members}
-                />
-                <div className="flex items-center gap-3">
-                    <YearTabs value={year} onValueChange={setPicked} years={years} />
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="hidden md:inline-flex"
-                        onClick={() => setInviteOpen(true)}
-                    >
-                        <UserPlus size={15} /> Inviter
-                    </Button>
+            <div className="flex flex-col gap-4">
+                <CircleBackLink />
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <CircleHeader
+                        name={circle.data?.name ?? 'Cercle'}
+                        visibility={circle.data?.visibility ?? 'PRIVATE'}
+                        members={members}
+                    />
+                    <div className="flex items-center gap-3">
+                        <YearTabs value={year} onValueChange={setPicked} years={years} />
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="hidden md:inline-flex"
+                            onClick={() => setInviteOpen(true)}
+                        >
+                            <UserPlus size={15} /> Inviter
+                        </Button>
+                    </div>
                 </div>
+                <CircleTabs id={id} active="leaderboard" />
             </div>
 
             <InviteDialog
@@ -69,8 +72,6 @@ function CircleLeaderboard() {
                 onOpenChange={setInviteOpen}
                 code={circle.data?.code ?? null}
             />
-
-            <CircleTabs id={id} active="leaderboard" />
 
             {rankQuery.isLoading ? (
                 <p className="text-[13px] text-ink-3">Chargement du classement…</p>

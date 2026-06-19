@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Users, Zap } from 'lucide-react';
+import { ChevronRight, Users, Zap } from 'lucide-react';
 import { Logo } from '@/components/layout/Logo';
 import { cn } from '@/lib/utils';
 import type { HubCircle } from '@/types/circle';
@@ -42,6 +42,7 @@ export function HubCircleCard({ circle }: { circle: HubCircle }) {
                         </div>
                     </div>
                 </div>
+                <ChevronRight size={16} className="shrink-0 text-ink-3" />
             </div>
 
             {circle.podium.length > 0 && <MiniPodium podium={circle.podium} />}
