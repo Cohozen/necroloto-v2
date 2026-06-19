@@ -11,6 +11,7 @@ import {
     Query,
     UseGuards,
 } from '@nestjs/common';
+import { CurrentClerkId } from '../auth/current-user.decorator';
 import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
 import { SeasonsService } from '../seasons/seasons.service';
 import type { SortByRank } from './bets.service';
@@ -65,9 +66,10 @@ export class BetsController {
         @Param('circleId') circleId: string,
         @Query('year', new ParseIntPipe({ optional: true })) year: number | undefined,
         @Query('sort', new DefaultValuePipe('points')) sort: SortByRank,
+        @CurrentClerkId() clerkId?: string,
     ) {
         const y = year ?? (await this.seasons.getActiveYear());
-        return this.betsService.rankByYearAndCircle(circleId, y, sort);
+        return this.betsService.rankByYearAndCircle(circleId, y, sort, clerkId);
     }
 
     @Get('circle/:circleId/rank/user/:userId')

@@ -24,10 +24,38 @@ export class BetsService {
         private seasons: SeasonsService,
     ) {}
 
-    /** Throws when the season window for `year` is closed for betting. */
-    private async assertBettingWindowOpen(year: number): Promise<void> {
-        if (!(await this.seasons.isBettingOpen(year))) {
-            throw new ForbiddenException('Les paris ne sont pas ouverts pour cette saison.');
+    /**
+     * Gates a bet create/edit against the season phase and the circle flags.
+     * Betting happens before the season opens, so:
+     *  - `betting`      → always allowed (the window IS the betting time);
+     *  - `season-open`  → allowed only via the circle "rallonge" flag
+     *                     (`allowNewBet` for a new bet, `allowEdit` for an edit);
+     *  - `before`/`closed` → forbidden;
+     *  - `none` (no season) → V1 compat: the circle flag is the only gate.
+     * A bet without a circle has no flags → the phase alone decides.
+     */
+    private async assertCanBet(
+        year: number,
+        mode: 'create' | 'edit',
+        flag: boolean | undefined,
+    ): Promise<void> {
+        const phase = await this.seasons.getSeasonPhase(year);
+        const allowedByFlag = flag ?? true;
+        const newBetMsg = 'Les nouveaux paris sont fermés pour ce cercle.';
+        const editMsg = "La liste n'est pas modifiable pour ce cercle.";
+        const windowMsg = 'Les paris ne sont pas ouverts pour cette saison.';
+
+        switch (phase) {
+            case 'betting':
+                return;
+            case 'none':
+            case 'season-open':
+                if (!allowedByFlag) {
+                    throw new ForbiddenException(mode === 'create' ? newBetMsg : editMsg);
+                }
+                return;
+            default: // 'before' | 'closed'
+                throw new ForbiddenException(windowMsg);
         }
     }
 
@@ -62,18 +90,11 @@ export class BetsService {
     async create(createBetDto: CreateBetDto) {
         const { celebrityIds = [], ...betData } = createBetDto;
 
-        // Respect the circle's "new bets" lock (allowNewBet).
-        if (betData.circleId) {
-            const circle = await this.prisma.circle.findUnique({
-                where: { id: betData.circleId },
-            });
-            if (circle && !circle.allowNewBet) {
-                throw new ForbiddenException('Les nouveaux paris sont fermés pour ce cercle.');
-            }
-        }
-
-        // Enforce the season betting window (in addition to the circle flag).
-        await this.assertBettingWindowOpen(betData.year);
+        // Gate against the season phase + the circle's "new bets" flag.
+        const circle = betData.circleId
+            ? await this.prisma.circle.findUnique({ where: { id: betData.circleId } })
+            : null;
+        await this.assertCanBet(betData.year, 'create', circle?.allowNewBet);
 
         const ids = await this.resolveCelebrityIds(celebrityIds);
 
@@ -98,17 +119,12 @@ export class BetsService {
      * instead of an interactive one.
      */
     async replaceCelebrities(betId: string, keys: string[]) {
-        // Respect the circle's "editable list" lock (allowEdit).
+        // Gate against the season phase + the circle's "editable list" flag.
         const bet = await this.prisma.bet.findUnique({
             where: { id: betId },
             include: { Circle: true },
         });
-        if (bet?.Circle && !bet.Circle.allowEdit) {
-            throw new ForbiddenException("La liste n'est pas modifiable pour ce cercle.");
-        }
-
-        // Enforce the season betting window (in addition to the circle flag).
-        if (bet) await this.assertBettingWindowOpen(bet.year);
+        if (bet) await this.assertCanBet(bet.year, 'edit', bet.Circle?.allowEdit);
 
         const ids = await this.resolveCelebrityIds(keys);
 
@@ -138,7 +154,12 @@ export class BetsService {
      * Leaderboard for a circle and year. Ported from the prod app
      * (RankBetsByYearWithTotalPoints): dense ranking where tied bets share a rank.
      */
-    async rankByYearAndCircle(circleId: string, year: number, sort: SortByRank = 'points') {
+    async rankByYearAndCircle(
+        circleId: string,
+        year: number,
+        sort: SortByRank = 'points',
+        viewerClerkId?: string,
+    ) {
         const bets = await this.prisma.bet.findMany({
             where: { year, circleId },
             include: betInclude,
@@ -154,10 +175,26 @@ export class BetsService {
 
         const sorted = [...totals].sort((a, b) => value(b) - value(a));
 
+        // Keep rosters secret until the season is revealed (now ≥ openDate) and
+        // the circle has betsVisible — except the viewer's own bet. Totals/ranks
+        // are already computed above, so blanking the picks doesn't affect them.
+        const viewer = viewerClerkId
+            ? await this.prisma.user.findFirst({
+                  where: { clerkId: viewerClerkId },
+                  select: { id: true },
+              })
+            : null;
+        const revealed = (await this.seasons.isRevealed(year)) && sorted[0]?.Circle?.betsVisible;
+
         let currentRank = 1;
         return sorted.map((bet, index) => {
             if (index > 0 && value(bet) !== value(sorted[index - 1])) currentRank += 1;
-            return { ...bet, rank: currentRank };
+            const visible = bet.userId === viewer?.id || revealed;
+            return {
+                ...bet,
+                rank: currentRank,
+                CelebritiesOnBet: visible ? bet.CelebritiesOnBet : [],
+            };
         });
     }
 
@@ -214,6 +251,41 @@ export class BetsService {
                 },
             },
         });
+    }
+
+    /**
+     * Bets of a circle/year for the "Paris" tab, viewer-aware: the viewer must
+     * be a member; they always see their own bet, but others' bets only once the
+     * season is revealed (now ≥ openDate) AND the circle has `betsVisible`.
+     * Before reveal the others' picks stay secret.
+     */
+    async listVisibleByCircle(circleId: string, year: number, viewerClerkId?: string) {
+        const viewer = viewerClerkId
+            ? await this.prisma.user.findFirst({
+                  where: { clerkId: viewerClerkId },
+                  select: { id: true },
+              })
+            : null;
+        const viewerId = viewer?.id;
+        if (!viewerId) return [];
+
+        const membership = await this.prisma.membership.findFirst({
+            where: { circleId, userId: viewerId },
+            select: { id: true },
+        });
+        if (!membership) return [];
+
+        const circle = await this.prisma.circle.findUnique({
+            where: { id: circleId },
+            select: { betsVisible: true },
+        });
+        const revealed = (await this.seasons.isRevealed(year)) && !!circle?.betsVisible;
+
+        const bets = await this.prisma.bet.findMany({
+            where: { year, circleId },
+            include: betInclude,
+        });
+        return revealed ? bets : bets.filter((b) => b.userId === viewerId);
     }
 
     async findByCircle(circleId: string) {
