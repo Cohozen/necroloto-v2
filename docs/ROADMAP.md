@@ -1,80 +1,75 @@
-# Roadmap — Necroloto V2
+# 🗺️ Roadmap — Necroloto V2
 
 Backlog des prochaines features, au-delà du wiring web initial. Non priorisé de façon
 ferme — à arbitrer au fil de l'eau.
 
-## Demandées
+## ✅ Livré
 
-### Notifications
-Page notifications + génération sur événements (décès d'une célébrité pariée, nouveau
-membre dans un cercle, ouverture/fermeture de saison, passage de place au classement…).
-S'appuie sur l'intégration **Resend** (e-mails) encore *pending*. Prévoir un modèle
-`Notification` côté API + un centre de notifications côté web.
+- 🔄 **Synchronisation Wikidata en masse** — sélection multiple dans l'admin, **asynchrone**
+  via un job runner in-process (`POST /jobs/bulk-enrich` crée un `SyncJob` et rend la main ;
+  le front poll `GET /jobs/:id`). **Sémaphore global** partagé entre tous les jobs, échecs
+  isolés par fiche, historique sur `/admin/automation`. Aussi `DELETE /celebrities/bulk`.
+  _Reste possible_ : migrer vers BullMQ/Redis si le volume l'exige (jobs `RUNNING` perdus au
+  redéploy, réconciliés en `FAILED` au boot).
+- 📅 **Saisons en base** — modèle `Season` (`year @unique` + `openDate`/`betStartDate`/
+  `betEndDate`/`closeDate`), admin `/admin/seasons` (CRUD, anti-chevauchement, doublon → 409).
+  `SeasonsService` résout la **saison active** via une bascule globale → remplace les
+  `getUTCFullYear()` / `CURRENT_YEAR` (API + web `useSeasonYear` / `useSeasonYearTabs`).
+- 🎟️ **Modèle « paris avant la saison »** — les paris N+1 s'ouvrent ~1 mois avant le début de
+  la saison ; verrous **par phase** (`getSeasonPhase` → `assertCanBet`) : libre pendant
+  `betting`, flag-gated en `season-open` (`allowEdit`/`allowNewBet`), verrouillé avant/après.
+  Exposé via `CircleSummary.seasonPhase` / `revealed`.
+- 🤫 **Secret des paris + onglet « Paris »** — paris des autres masqués côté serveur tant que
+  `now < openDate` ou `betsVisible = false` (fiche, classement, `GET /circle/:id/bets`).
+  Défauts cercle : `betsVisible` ON, `allowEdit` OFF.
+- 💀 **Détection automatique des décès** — cron Wikidata quotidien (4h, `DeathDetectionService`)
+  qui détecte et score en direct + déclenchement manuel (`POST /automation/detect-deaths`).
+  Chaque run = `SyncJob` (`DEATH_SCAN`), visible sur `/admin/automation`.
+- 🔐 **Écrans auth custom** — `SignInForm` / `SignUpForm` / `ForgotPasswordForm` (hooks
+  headless Clerk, Google SSO, reset par code) remplacent les widgets prebuilt.
 
-### Synchronisation Wikidata en masse — _fait (v2, asynchrone)_
-Livré : sélection multiple dans l'admin, désormais **asynchrone via un job runner in-process**
-(`POST /jobs/bulk-enrich` crée un `SyncJob` et rend la main tout de suite ; le front poll
-`GET /jobs/:id` pour la progression). Un **sémaphore global** plafonne la concurrence des appels
-Wikidata, partagé entre tous les jobs (plusieurs syncs en parallèle sans saturer l'API). Échecs
-isolés par fiche, historique consultable sur `/admin/automation`. Aussi `DELETE /celebrities/bulk`.
-**Reste possible** : migrer vers BullMQ/Redis si le volume l'exige (le worker in-process perd les
-jobs `RUNNING` au redéploy — réconciliés en `FAILED` au boot).
+## 🎯 Backlog priorisable
 
-### Nombre de paris configurable par cercle
-Aujourd'hui figé à `MAX_BET_CELEBRITIES = 50` (`apps/web/src/lib/api/queries.ts`).
-Ajouter un champ sur le modèle `Circle` (Prisma) + réglage dans `/circles/$id/settings`,
-appliqué à la validation du draft et à l'affichage du compteur. (Note : les verrous
-`Circle.allowEdit` / `allowNewBet` sont **appliqués** côté serveur dans `BetsService.assertCanBet`
-selon la phase de saison — même endroit à étendre pour le cap par cercle.)
+- ⏳ **Compte à rebours dashboard** — afficher le temps restant avant l'ouverture des paris
+  de la prochaine saison. S'appuie sur `seasonPhase` / `betStartDate` (déjà dispos via
+  `useCircleSummaries`) ; remplacer le label statique de `BetProgressCard`
+  (`apps/web/src/components/dashboard/BetProgressCard.tsx`).
+- ⌘ **Recherche globale Cmd+K** — câbler l'input « ⌘K » aujourd'hui **décoratif** de la
+  TopBar (`apps/web/src/components/layout/TopBar.tsx`) au `CommandDialog` déjà présent
+  (`apps/web/src/components/ui/command.tsx`, lib `cmdk`) : raccourci clavier global +
+  recherche célébrités / cercles.
+- ➕ **Ajouter une célébrité hors base lors du pari** — pendant la composition du pari
+  (`apps/web/src/routes/_app/celebrities/index.tsx`, sélection-only aujourd'hui), permettre
+  de proposer/créer une célébrité absente du catalogue. Création actuellement **admin-only**
+  (`POST /celebrities`, `@UseGuards(AdminGuard)`). À cadrer : proposition à valider par un
+  admin vs création directe + enrichissement Wikidata automatique.
+- 🔔 **Notifications** — page + génération sur événements (décès d'une célébrité pariée,
+  nouveau membre, ouverture/fermeture de saison, changement de place au classement…).
+  S'appuie sur l'intégration **Resend** (e-mails) encore *pending*. Modèle `Notification`
+  côté API + centre de notifications côté web.
+- 🔢 **Nombre de paris configurable par cercle** — aujourd'hui figé à
+  `MAX_BET_CELEBRITIES = 50` (`apps/web/src/lib/api/queries.ts`). Champ sur le modèle
+  `Circle` (Prisma) + réglage dans `/circles/$id/settings`, appliqué à la validation du
+  draft et au compteur. (Même endroit que les verrous de `BetsService.assertCanBet`.)
+- 🏆 **Refonte du système de points + cote** — le barème actuel est « trop plat ». Pondérer
+  le gain par une **cote** par célébrité (dérivée de l'âge / état de santé via Wikidata, ou
+  ajustée à la main en admin), bonus de précision (mois / cause), malus, séries. Logique
+  centralisée dans `packages/shared/scoring` (`calculPointByCelebrity`) — garder
+  l'idempotence et le recalcul via `CelebritiesService.recalculatePoints`. Concrétise le copy
+  déjà présent (« plus la cote est haute, plus le pari rapporte gros »).
 
-### Refonte du système de points
-Le barème actuel est « trop plat ». Pistes : pondérer le gain par la **cote** de la
-célébrité, bonus de précision (mois / cause de décès), malus, séries. Logique centralisée
-dans `packages/shared/scoring` (`calculPointByCelebrity`) — garder l'idempotence et le
-recalcul via `CelebritiesService.recalculatePoints`.
+## 🧪 Propositions à arbitrer
 
-### Système de cote
-Cote par célébrité (dérivée de l'âge / état de santé via Wikidata, ou ajustée à la main
-en admin). Alimente la refonte du scoring ci-dessus et concrétise le copy déjà présent
-(« plus la cote est haute, plus le pari rapporte gros »).
-
-### Saisons en base — _fait_
-Livré : modèle `Season` (`year @unique` + dates `openDate`/`betStartDate`/`betEndDate`/`closeDate`),
-admin `/admin/seasons` (CRUD, anti-chevauchement des fenêtres de saison, doublon d'année → 409).
-`SeasonsService` résout la **saison active** avec une **bascule globale** : priorité à la saison dont
-la fenêtre de paris est ouverte, sinon celle dont `[openDate, closeDate]` contient « now », sinon la
-plus récente (fallback année UTC) → remplace les `new Date().getUTCFullYear()` / `CURRENT_YEAR` côté
-API et web (`useSeasonYear` / `useSeasonYearTabs`). `Bet.year` inchangé (1 saison = 1 année calendaire).
-**Modèle « paris avant la saison » — _fait_** : les paris N+1 s'ouvrent ~1 mois avant le début de la
-saison ; les fenêtres sont validées **indépendamment** (`betStart≤betEnd`, `open≤close`, sans ordre
-croisé). Les verrous sont **par phase** (`getSeasonPhase` → `assertCanBet`) : libre pendant `betting`,
-flag-gated en `season-open` (`allowEdit`/`allowNewBet` en rallonge), verrouillé avant/après. Exposé via
-`CircleSummary.seasonPhase`/`revealed`.
-**Secret des paris — _fait_** : les paris des autres sont masqués côté serveur tant que `now<openDate`
-ou `betsVisible=false` (fiche, classement, `GET /circle/:id/bets`). Onglet **« Paris »** livré ; défauts
-cercle : `betsVisible` ON, `allowEdit` OFF.
-**Reste à faire** : notifications ouverture/clôture (cf. Notifications), palmarès all-time / archives
-(ci-dessous). **Reste possible** : pas de FK `seasonId` sur `Bet` (volontaire — `year` reste la clé du
-scoring).
-
-## Propositions à arbitrer
-
-- **Détection automatique des décès** — _fait_ : cron Wikidata quotidien (4h)
-  (`DeathDetectionService`) qui détecte les décès des fiches suivies et score en direct,
-  + déclenchement manuel (`POST /automation/detect-deaths`). Chaque exécution est enregistrée
-  comme `SyncJob` (type `DEATH_SCAN`) et visible sur `/admin/automation`.
-- **Soirée live Nouvel An** — vue temps réel des décès et points qui tombent (moment fort
+- 🎆 **Soirée live Nouvel An** — vue temps réel des décès et points qui tombent (moment fort
   du jeu).
-- **Palmarès all-time / historique des saisons** — classement inter-saisons, archives.
-- **Trophées / badges** — gamification (meilleure cote trouvée, saison parfaite, séries…).
-- **Partage social** — image de podium générée pour partage hors-app.
-- **Classement global inter-cercles** — au-delà du leaderboard par cercle.
+- 🥇 **Palmarès all-time / historique des saisons** — classement inter-saisons, archives.
+- 🎖️ **Trophées / badges** — gamification (meilleure cote trouvée, saison parfaite, séries…).
+- 📣 **Partage social** — image de podium générée pour partage hors-app.
+- 🌍 **Classement global inter-cercles** — au-delà du leaderboard par cercle.
 
-## Tech / dette à traiter en parallèle
+## 🛠️ Tech / dette
 
-- **Écrans auth custom** — remplacer les composants prebuilt Clerk par un formulaire
-  headless (`@clerk/elements`) maîtrisé visuellement. Tâche dédiée (surface auth sensible).
-- **Validation DTO** — décorer les DTOs (class-validator) pour activer le `whitelist` du
+- ✔️ **Validation DTO** — décorer les DTOs (class-validator) pour activer le `whitelist` du
   `ValidationPipe` global (cf. « Known debt » dans CLAUDE.md).
-- **Contrainte `@unique` sur `User.clerkId`** — après dédoublonnage, pour verrouiller
+- 🔑 **Contrainte `@unique` sur `User.clerkId`** — après dédoublonnage, pour verrouiller
   l'intégrité du provisioning (cf. fix de réconciliation par email).
