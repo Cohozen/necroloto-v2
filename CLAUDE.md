@@ -28,7 +28,8 @@ Front: Vite 6, React 19, TanStack Router + Query, Tailwind v4, shadcn/ui.
 - `pnpm --filter @necroloto/shared test` — scoring unit tests (node:test).
 - `pnpm lint` / `pnpm format` — Biome (read-only / write).
 - Integration checks (need `apps/api/.env`, run against real Supabase, mostly read-only):
-  `node apps/api/scripts/verify-phase3.mjs`, `verify-auth.mjs`, `verify-storage.mjs`.
+  `node apps/api/scripts/verify-phase3.mjs`, `verify-auth.mjs`, `verify-storage.mjs`,
+  `verify-jobs.mjs` (async job runner — needs `dist/`, i.e. `pnpm --filter necroloto-api build` first).
 
 ## Local dev environment
 
@@ -115,6 +116,19 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   **and** the season's betting window (`assertBettingWindowOpen` → 403 outside `[betStartDate,
   betEndDate]`, no-op when no season exists for that year). Net rule: allowed = circle flag AND
   (no season OR within window). These guards back the draft's read-only mode.
+- **Async jobs** (`modules/jobs`): long/networked admin work runs **in-process** (no queue infra —
+  no Redis), tracked in the `SyncJob` table (status + progress counters + JSON `payload`/`result`).
+  `JobsService.enqueueBulkEnrich` creates the row and **fire-and-forgets** the worker (`void
+  this.runBulkEnrich(...)`), so `POST /jobs/bulk-enrich` returns a `202` immediately; the front polls
+  `GET /jobs/:id`. A **single global `Semaphore`** (hand-rolled — `p-limit` v6 is ESM-only, breaks the
+  CJS build) caps concurrent Wikidata `enrich` calls **across all jobs**, so launching several syncs
+  at once stays polite. Per-item failures are isolated into `result.errors`. ⚠️ The in-process
+  trade-off: a job left `RUNNING`/`PENDING` when the process restarts (Railway redeploy) is
+  **reconciled to `FAILED`** on boot (`onApplicationBootstrap`) — there is no resume. Death detection
+  (`DeathDetectionService`, daily `@Cron` at 4h + manual `POST /automation/detect-deaths`) is wrapped
+  in `JobsService.recordDeathScan` so each run is a `DEATH_SCAN` `SyncJob` — both job types surface on
+  the admin `/admin/automation` screen (`GET /jobs`). The bulk-enrich endpoint lives on `JobsController`
+  (not `CelebritiesController`) to keep module deps one-directional (`JobsModule` → `CelebritiesModule`).
 
 ## Front web (`apps/web`)
 
@@ -155,9 +169,9 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   `/admin/seasons/*` — season CRUD). UI aggregates the raw CRUD doesn't expose get dedicated
   endpoints (`GET /circle/user/:id/summary` — returns `allowEdit`/`allowNewBet` **and `bettingOpen`**;
   `GET /celebrities/deaths/feed`; `GET /celebrities/admin/list` for the paginated admin catalogue;
-  `DELETE /celebrities/bulk` and `POST /celebrities/bulk/enrich` for bulk admin actions; `GET
-  /seasons`, `GET /seasons/active`); simpler ones (dashboard score band, profile stats) are composed
-  client-side from existing endpoints.
+  `DELETE /celebrities/bulk` for bulk delete and `POST /jobs/bulk-enrich` for **async** bulk Wikidata
+  sync (see "Async jobs"); `GET /seasons`, `GET /seasons/active`); simpler ones (dashboard score band,
+  profile stats) are composed client-side from existing endpoints.
 - **Season year (web)**: `useSeasonYear()` (active season's `year`, falling back to
   `new Date().getFullYear()` while loading / without a backend) replaces the scattered `CURRENT_YEAR`
   in `/dashboard`, the `/celebrities` draft and the leaderboard; `useSeasonYearTabs()` builds the
@@ -167,8 +181,9 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   **server-side** name search, status filter and alphabetical order, paginated and driven by
   `useInfiniteQuery` (infinite scroll). Rows carry checkboxes (+ a select-all header) feeding a
   floating `BulkActionBar` for **bulk delete** (`DELETE /celebrities/bulk`) and **bulk Wikidata
-  sync** (`POST /celebrities/bulk/enrich`, sequential server-side loop, per-item failures isolated);
-  results surface via sonner toasts. Only the **per-row "Recalculer" button stays decorative**
+  sync** (`POST /jobs/bulk-enrich` — **async job**, see "Async jobs"; `BulkActionBar` shows live
+  `processed/total` from the polled job, recap toast on completion); results surface via sonner
+  toasts. Only the **per-row "Recalculer" button stays decorative**
   (recalc is automatic on update server-side). The form sends ISO dates; `wikidataId` is set only
   via `POST /celebrities/:id/enrich` (no field on the create/update DTOs), reached through the
   `WikidataSearchDialog`. Photo upload (`POST /celebrities/:id/photo`, multipart) is **not wired
@@ -181,6 +196,12 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   date-derived status badge (`upcoming` / `open` / `bets-open` / `closed`, via `seasonStatus` in
   `adapters.ts`). Reached from a dedicated admin rail link in `SideNav`; `AdminHeader` takes a
   `section` prop for the breadcrumb. Same admin gate as the celebrities screens.
+- **Admin — Automation** (`/admin/automation`): history of recent jobs (`useRecentJobs` → `GET /jobs`,
+  refetched every 5s) — both `WIKIDATA_BULK_ENRICH` and `DEATH_SCAN` rows, with a status badge
+  (`SYNC_JOB_STATUS_*` labels/tones in `types/job.ts`) and a per-type summary. A "Lancer le scan"
+  button triggers `useDetectDeaths` (`POST /automation/detect-deaths`). The catalogue's bulk sync polls
+  via `useSyncJob(jobId)` (refetch ~1.5s until terminal). Dedicated admin rail link (`Bot` icon),
+  same admin gate.
 - **Bet model**: a bet is unique per `(userId, circleId, year)` — in practice one bet per user per
   season. The `/celebrities` draft is "Mon pari": it edits the bet of the **selected circle** (a
   circle selector defaults to the bet's circle, or the user's first), seeding the celebrity

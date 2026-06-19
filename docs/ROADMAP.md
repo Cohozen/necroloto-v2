@@ -11,12 +11,14 @@ membre dans un cercle, ouverture/fermeture de saison, passage de place au classe
 S'appuie sur l'intégration **Resend** (e-mails) encore *pending*. Prévoir un modèle
 `Notification` côté API + un centre de notifications côté web.
 
-### Synchronisation Wikidata en masse — _fait (v1)_
-Livré : sélection multiple dans l'admin + `POST /celebrities/bulk/enrich` (boucle
-**séquentielle** côté serveur, échecs isolés par fiche), avec aussi `DELETE /celebrities/bulk`.
-**Reste à faire** : passer la sync en **job/queue** asynchrone — la boucle est synchrone et
-peut tenir la requête longtemps (volume + rate limit Wikidata) sur une grosse sélection.
-Complète la « Détection automatique des décès » ci-dessous.
+### Synchronisation Wikidata en masse — _fait (v2, asynchrone)_
+Livré : sélection multiple dans l'admin, désormais **asynchrone via un job runner in-process**
+(`POST /jobs/bulk-enrich` crée un `SyncJob` et rend la main tout de suite ; le front poll
+`GET /jobs/:id` pour la progression). Un **sémaphore global** plafonne la concurrence des appels
+Wikidata, partagé entre tous les jobs (plusieurs syncs en parallèle sans saturer l'API). Échecs
+isolés par fiche, historique consultable sur `/admin/automation`. Aussi `DELETE /celebrities/bulk`.
+**Reste possible** : migrer vers BullMQ/Redis si le volume l'exige (le worker in-process perd les
+jobs `RUNNING` au redéploy — réconciliés en `FAILED` au boot).
 
 ### Nombre de paris configurable par cercle
 Aujourd'hui figé à `MAX_BET_CELEBRITIES = 50` (`apps/web/src/lib/api/queries.ts`).
@@ -51,8 +53,10 @@ Notifications), palmarès all-time / archives (ci-dessous) — débloqués par c
 
 ## Propositions à arbitrer
 
-- **Détection automatique des décès** — cron Wikidata pour scorer en direct sans saisie
-  admin manuelle. Complète la sync de masse.
+- **Détection automatique des décès** — _fait_ : cron Wikidata quotidien (4h)
+  (`DeathDetectionService`) qui détecte les décès des fiches suivies et score en direct,
+  + déclenchement manuel (`POST /automation/detect-deaths`). Chaque exécution est enregistrée
+  comme `SyncJob` (type `DEATH_SCAN`) et visible sur `/admin/automation`.
 - **Soirée live Nouvel An** — vue temps réel des décès et points qui tombent (moment fort
   du jeu).
 - **Palmarès all-time / historique des saisons** — classement inter-saisons, archives.
