@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CelebritiesService } from '../celebrities/celebrities.service';
+import { JobsService } from '../jobs/jobs.service';
 import { WikidataService } from '../wikidata/wikidata.service';
 
 export interface DetectedDeath {
@@ -29,12 +30,21 @@ export class DeathDetectionService {
         private prisma: PrismaService,
         private wikidata: WikidataService,
         private celebrities: CelebritiesService,
+        private jobs: JobsService,
     ) {}
 
     @Cron(CronExpression.EVERY_DAY_AT_4AM)
     async scheduled(): Promise<void> {
-        const { checked, newDeaths } = await this.run();
+        const { checked, newDeaths } = await this.scan();
         this.logger.log(`Daily death check: ${checked} tracked, ${newDeaths.length} new death(s).`);
+    }
+
+    /**
+     * Runs the death detection and records it as a `SyncJob` (observable
+     * history). Used by both the daily cron and the manual admin trigger.
+     */
+    scan(): Promise<DeathDetectionResult> {
+        return this.jobs.recordDeathScan(() => this.run());
     }
 
     /**

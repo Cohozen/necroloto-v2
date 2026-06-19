@@ -70,13 +70,6 @@ export class CelebritiesController {
         return this.celebritiesService.bulkRemove(dto.ids);
     }
 
-    // Admin-only: enrich several celebrities from Wikidata at once.
-    @Post('bulk/enrich')
-    @UseGuards(AdminGuard)
-    bulkEnrich(@Body() dto: BulkCelebritiesDto) {
-        return this.celebritiesService.bulkEnrich(dto.ids);
-    }
-
     @Post('search')
     search(@Body() searchCelebrityDto: SearchCelebrityDto) {
         return this.celebritiesService.search(searchCelebrityDto);

@@ -8,10 +8,11 @@ import { DeathDetectionService } from './death-detection.service';
 export class AutomationController {
     constructor(private readonly deathDetection: DeathDetectionService) {}
 
-    // Admin-only: run the death check on demand (same logic as the daily cron).
+    // Admin-only: run the death check on demand (same logic as the daily cron,
+    // recorded as a SyncJob for the automation history).
     @Post('detect-deaths')
     @UseGuards(AdminGuard)
     detectDeaths() {
-        return this.deathDetection.run();
+        return this.deathDetection.scan();
     }
 }
