@@ -16,6 +16,7 @@ import type { LeaderboardEntry, LeaderPick } from '@/types/leaderboard';
 import type { Season, SeasonStatus } from '@/types/season';
 import type { AvatarPerson } from '@/types/user';
 import type {
+    ApiBet,
     ApiCelebrity,
     ApiCelebrityDetail,
     ApiCelebrityListItem,
@@ -275,8 +276,8 @@ export function toCelebrityDetail(
     };
 }
 
-/** The picks of a single bet (used to show the leader's roster). */
-export function toLeaderPicks(bet: RankedBet): LeaderPick[] {
+/** The picks of a single bet (used to show a player's roster). */
+export function toLeaderPicks(bet: ApiBet): LeaderPick[] {
     return bet.CelebritiesOnBet.map((c) => ({
         id: c.celebrityId,
         name: c.celebrity.name,
@@ -304,10 +305,21 @@ export function seasonStatus(season: ApiSeason, now: number = Date.now()): Seaso
     const betStart = new Date(season.betStartDate).getTime();
     const betEnd = new Date(season.betEndDate).getTime();
     const close = new Date(season.closeDate).getTime();
-    if (now < open) return 'upcoming';
-    if (now > close) return 'closed';
+    // Betting happens before the season opens, so test bets-open / closed before
+    // upcoming — otherwise the (pre-open) betting window reads as "upcoming".
     if (now >= betStart && now <= betEnd) return 'bets-open';
-    return 'open';
+    if (now > close) return 'closed';
+    if (now >= open && now <= close) return 'open';
+    return 'upcoming';
+}
+
+/**
+ * Whether other members' bets are revealed for a season: once it has opened
+ * (now ≥ openDate). No season → true (V1 compat). Mirrors the API `isRevealed`.
+ */
+export function isSeasonRevealed(season: ApiSeason | undefined, now: number = Date.now()): boolean {
+    if (!season) return true;
+    return now >= new Date(season.openDate).getTime();
 }
 
 /** Season DTO → UI view model with a derived status. */

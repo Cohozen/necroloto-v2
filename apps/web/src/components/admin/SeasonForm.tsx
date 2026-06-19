@@ -63,12 +63,12 @@ export function SeasonForm({
     const yearNum = Number.parseInt(year, 10);
     const yearValid = Number.isInteger(yearNum) && yearNum >= 2000 && yearNum <= 2100;
 
-    // Client-side ordering check (the API is the authority).
+    // Two independent windows (betting happens before the season opens), so we
+    // only check each window's own ordering — the API is the authority.
     const ordered =
         allDatesSet &&
-        new Date(openDate) <= new Date(betStartDate) &&
         new Date(betStartDate) <= new Date(betEndDate) &&
-        new Date(betEndDate) <= new Date(closeDate);
+        new Date(openDate) <= new Date(closeDate);
 
     const canSubmit = yearValid && allDatesSet && ordered && !isSaving;
 
@@ -149,10 +149,16 @@ export function SeasonForm({
                 />
             </div>
 
+            <p className="mt-4 text-xs text-ink-3">
+                Les paris s'ouvrent généralement avant le début de la saison (ex. paris en déc. N‑1
+                pour la saison de l'année N). Chaque fenêtre est validée séparément : début des
+                paris ≤ fin des paris, et ouverture ≤ clôture.
+            </p>
+
             {allDatesSet && !ordered && (
-                <p className="mt-4 text-[13px] text-coral">
-                    Les dates doivent être ordonnées : ouverture ≤ début des paris ≤ fin des paris ≤
-                    clôture.
+                <p className="mt-2 text-[13px] text-coral">
+                    Dates invalides : le début des paris doit précéder la fin des paris, et
+                    l'ouverture doit précéder la clôture.
                 </p>
             )}
 
