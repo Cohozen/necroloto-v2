@@ -187,6 +187,12 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   `DELETE /celebrities/bulk` for bulk delete and `POST /jobs/bulk-enrich` for **async** bulk Wikidata
   sync (see "Async jobs"); `GET /seasons`, `GET /seasons/active`); simpler ones (dashboard score band,
   profile stats) are composed client-side from existing endpoints.
+- **Dashboard countdown** (`CountdownCard`, right rail after `BetProgressCard`): a neon J/H/M
+  countdown driven **client-side** from `useSeasons()` via `nextCountdownTarget` (`adapters.ts`):
+  it targets the **end of betting** (`betEndDate`, coral) when a season's bet window is open now,
+  else the **opening of betting** (`betStartDate`, neon) of the nearest upcoming season, else
+  renders nothing. The co-located `useCountdown` hook refreshes **every minute** (so seconds are
+  intentionally not shown).
 - **Season year (web)**: `useSeasonYear()` (active season's `year`, falling back to
   `new Date().getFullYear()` while loading / without a backend) replaces the scattered `CURRENT_YEAR`
   in `/dashboard`, the `/celebrities` draft and the leaderboard; `useSeasonYearTabs()` builds the

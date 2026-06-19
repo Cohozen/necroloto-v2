@@ -27,13 +27,14 @@ ferme — à arbitrer au fil de l'eau.
   Chaque run = `SyncJob` (`DEATH_SCAN`), visible sur `/admin/automation`.
 - 🔐 **Écrans auth custom** — `SignInForm` / `SignUpForm` / `ForgotPasswordForm` (hooks
   headless Clerk, Google SSO, reset par code) remplacent les widgets prebuilt.
+- ⏳ **Compte à rebours dashboard** — `CountdownCard` (rail droit, après `BetProgressCard`)
+  décompte néon J/H/M dérivé client-side de `useSeasons()` via `nextCountdownTarget`
+  (`adapters.ts`) : **fin des paris** (`betEndDate`, corail) si une fenêtre est ouverte, sinon
+  **ouverture des paris** (`betStartDate`, néon) de la prochaine saison, sinon masqué. Refresh à
+  la minute (pas de secondes).
 
 ## 🎯 Backlog priorisable
 
-- ⏳ **Compte à rebours dashboard** — afficher le temps restant avant l'ouverture des paris
-  de la prochaine saison. S'appuie sur `seasonPhase` / `betStartDate` (déjà dispos via
-  `useCircleSummaries`) ; remplacer le label statique de `BetProgressCard`
-  (`apps/web/src/components/dashboard/BetProgressCard.tsx`).
 - ⌘ **Recherche globale Cmd+K** — câbler l'input « ⌘K » aujourd'hui **décoratif** de la
   TopBar (`apps/web/src/components/layout/TopBar.tsx`) au `CommandDialog` déjà présent
   (`apps/web/src/components/ui/command.tsx`, lib `cmdk`) : raccourci clavier global +
