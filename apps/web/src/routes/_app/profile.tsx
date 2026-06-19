@@ -169,24 +169,24 @@ function Profile() {
                     <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
                         {isAdmin && (
                             <>
-                            <SettingsRow
-                                icon={ShieldCheck}
-                                title="Administration"
-                                description="Gérer le catalogue des célébrités"
-                                onClick={() => navigate({ to: '/admin/celebrities' })}
-                            />
-                            <SettingsRow
-                                icon={CalendarRange}
-                                title="Saisons"
-                                description="Gérer les saisons des cercles"
-                                onClick={() => navigate({ to: '/admin/seasons' })}
-                            />
-                            <SettingsRow
-                                icon={Bot}
-                                title="Automatisation"
-                                description="Gérer les tâches automatisées"
-                                onClick={() => navigate({ to: '/admin/automation' })}
-                            />
+                                <SettingsRow
+                                    icon={ShieldCheck}
+                                    title="Administration"
+                                    description="Gérer le catalogue des célébrités"
+                                    onClick={() => navigate({ to: '/admin/celebrities' })}
+                                />
+                                <SettingsRow
+                                    icon={CalendarRange}
+                                    title="Saisons"
+                                    description="Gérer les saisons des cercles"
+                                    onClick={() => navigate({ to: '/admin/seasons' })}
+                                />
+                                <SettingsRow
+                                    icon={Bot}
+                                    title="Automatisation"
+                                    description="Gérer les tâches automatisées"
+                                    onClick={() => navigate({ to: '/admin/automation' })}
+                                />
                             </>
                         )}
                         <SettingsRow

@@ -29,7 +29,9 @@ export function DraftTray({ selected, total, onValidate, disabled, saving }: Dra
             <div className="flex-1" />
             <Button onClick={onValidate} disabled={disabled} className="shrink-0">
                 <Check size={16} strokeWidth={2.4} />{' '}
-                <span className="hidden md:inline">{saving ? 'Enregistrement…' : 'Valider mon pari'}</span>
+                <span className="hidden md:inline">
+                    {saving ? 'Enregistrement…' : 'Valider mon pari'}
+                </span>
                 <span className="md:hidden">{saving ? 'Enregistrement' : 'Valider'}</span>
             </Button>
         </div>

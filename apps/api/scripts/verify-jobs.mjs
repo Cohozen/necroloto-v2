@@ -72,7 +72,10 @@ try {
     });
     createdJobs.push(scanJob.id);
     ok(scanJob.status === 'SUCCEEDED', `death-scan job status = ${scanJob.status}`);
-    ok(scanJob.total === 5 && scanJob.succeeded === 1, 'death-scan counters (checked/newDeaths) stored');
+    ok(
+        scanJob.total === 5 && scanJob.succeeded === 1,
+        'death-scan counters (checked/newDeaths) stored',
+    );
 
     console.log('\n[3] findRecent / findOne');
     const recent = await jobs.findRecent(5);
