@@ -9,6 +9,7 @@ export const queryKeys = {
         summary: (userId: string, year: number) => ['circles', 'summary', userId, year] as const,
         detail: (id: string) => ['circles', 'detail', id] as const,
         byCode: (code: string) => ['circles', 'code', code] as const,
+        bets: (id: string, year: number) => ['circles', 'bets', id, year] as const,
     },
     bets: {
         rank: (circleId: string, year: number, sort: SortByRank) =>

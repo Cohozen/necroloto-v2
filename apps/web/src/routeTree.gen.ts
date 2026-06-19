@@ -30,6 +30,7 @@ import { Route as AppAdminSeasonsIndexRouteImport } from './routes/_app/admin/se
 import { Route as AppAdminCelebritiesIndexRouteImport } from './routes/_app/admin/celebrities/index'
 import { Route as AppCirclesIdSettingsRouteImport } from './routes/_app/circles/$id/settings'
 import { Route as AppCirclesIdMembersRouteImport } from './routes/_app/circles/$id/members'
+import { Route as AppCirclesIdBetsRouteImport } from './routes/_app/circles/$id/bets'
 import { Route as AppAdminSeasonsNewRouteImport } from './routes/_app/admin/seasons/new'
 import { Route as AppAdminSeasonsIdRouteImport } from './routes/_app/admin/seasons/$id'
 import { Route as AppAdminCelebritiesNewRouteImport } from './routes/_app/admin/celebrities/new'
@@ -140,6 +141,11 @@ const AppCirclesIdMembersRoute = AppCirclesIdMembersRouteImport.update({
   path: '/members',
   getParentRoute: () => AppCirclesIdRoute,
 } as any)
+const AppCirclesIdBetsRoute = AppCirclesIdBetsRouteImport.update({
+  id: '/bets',
+  path: '/bets',
+  getParentRoute: () => AppCirclesIdRoute,
+} as any)
 const AppAdminSeasonsNewRoute = AppAdminSeasonsNewRouteImport.update({
   id: '/seasons/new',
   path: '/seasons/new',
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/admin/celebrities/new': typeof AppAdminCelebritiesNewRoute
   '/admin/seasons/$id': typeof AppAdminSeasonsIdRoute
   '/admin/seasons/new': typeof AppAdminSeasonsNewRoute
+  '/circles/$id/bets': typeof AppCirclesIdBetsRoute
   '/circles/$id/members': typeof AppCirclesIdMembersRoute
   '/circles/$id/settings': typeof AppCirclesIdSettingsRoute
   '/admin/celebrities/': typeof AppAdminCelebritiesIndexRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByTo {
   '/admin/celebrities/new': typeof AppAdminCelebritiesNewRoute
   '/admin/seasons/$id': typeof AppAdminSeasonsIdRoute
   '/admin/seasons/new': typeof AppAdminSeasonsNewRoute
+  '/circles/$id/bets': typeof AppCirclesIdBetsRoute
   '/circles/$id/members': typeof AppCirclesIdMembersRoute
   '/circles/$id/settings': typeof AppCirclesIdSettingsRoute
   '/admin/celebrities': typeof AppAdminCelebritiesIndexRoute
@@ -234,6 +242,7 @@ export interface FileRoutesById {
   '/_app/admin/celebrities/new': typeof AppAdminCelebritiesNewRoute
   '/_app/admin/seasons/$id': typeof AppAdminSeasonsIdRoute
   '/_app/admin/seasons/new': typeof AppAdminSeasonsNewRoute
+  '/_app/circles/$id/bets': typeof AppCirclesIdBetsRoute
   '/_app/circles/$id/members': typeof AppCirclesIdMembersRoute
   '/_app/circles/$id/settings': typeof AppCirclesIdSettingsRoute
   '/_app/admin/celebrities/': typeof AppAdminCelebritiesIndexRoute
@@ -262,6 +271,7 @@ export interface FileRouteTypes {
     | '/admin/celebrities/new'
     | '/admin/seasons/$id'
     | '/admin/seasons/new'
+    | '/circles/$id/bets'
     | '/circles/$id/members'
     | '/circles/$id/settings'
     | '/admin/celebrities/'
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
     | '/admin/celebrities/new'
     | '/admin/seasons/$id'
     | '/admin/seasons/new'
+    | '/circles/$id/bets'
     | '/circles/$id/members'
     | '/circles/$id/settings'
     | '/admin/celebrities'
@@ -314,6 +325,7 @@ export interface FileRouteTypes {
     | '/_app/admin/celebrities/new'
     | '/_app/admin/seasons/$id'
     | '/_app/admin/seasons/new'
+    | '/_app/circles/$id/bets'
     | '/_app/circles/$id/members'
     | '/_app/circles/$id/settings'
     | '/_app/admin/celebrities/'
@@ -479,6 +491,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCirclesIdMembersRouteImport
       parentRoute: typeof AppCirclesIdRoute
     }
+    '/_app/circles/$id/bets': {
+      id: '/_app/circles/$id/bets'
+      path: '/bets'
+      fullPath: '/circles/$id/bets'
+      preLoaderRoute: typeof AppCirclesIdBetsRouteImport
+      parentRoute: typeof AppCirclesIdRoute
+    }
     '/_app/admin/seasons/new': {
       id: '/_app/admin/seasons/new'
       path: '/seasons/new'
@@ -535,12 +554,14 @@ const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
 )
 
 interface AppCirclesIdRouteChildren {
+  AppCirclesIdBetsRoute: typeof AppCirclesIdBetsRoute
   AppCirclesIdMembersRoute: typeof AppCirclesIdMembersRoute
   AppCirclesIdSettingsRoute: typeof AppCirclesIdSettingsRoute
   AppCirclesIdIndexRoute: typeof AppCirclesIdIndexRoute
 }
 
 const AppCirclesIdRouteChildren: AppCirclesIdRouteChildren = {
+  AppCirclesIdBetsRoute: AppCirclesIdBetsRoute,
   AppCirclesIdMembersRoute: AppCirclesIdMembersRoute,
   AppCirclesIdSettingsRoute: AppCirclesIdSettingsRoute,
   AppCirclesIdIndexRoute: AppCirclesIdIndexRoute,

@@ -192,6 +192,16 @@ export function useCircleRank(
     });
 }
 
+/** Circle bets for the "Paris" tab — others' picks stay secret until reveal. */
+export function useCircleBets(circleId: string | undefined, year = CURRENT_YEAR) {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: circleId ? queryKeys.circles.bets(circleId, year) : ['circles', 'bets', 'none'],
+        queryFn: () => api.get<ApiBet[]>(`/circle/${circleId}/bets?year=${year}`),
+        enabled: !!circleId,
+    });
+}
+
 export function useUserBets(userId: string | undefined) {
     const api = useApiClient();
     return useQuery({

@@ -19,8 +19,13 @@ export function CircleTabs({ id, active }: { id: string; active: CircleTab }) {
             >
                 Classement
             </Link>
-            {/* Paris tab is not built yet — shown inert for context. */}
-            <span className={cn(tabClass, 'cursor-not-allowed text-ink-3')}>Paris</span>
+            <Link
+                to="/circles/$id/bets"
+                params={{ id }}
+                className={cn(tabClass, active === 'bets' ? onClass : offClass)}
+            >
+                Paris
+            </Link>
             <Link
                 to="/circles/$id/members"
                 params={{ id }}
