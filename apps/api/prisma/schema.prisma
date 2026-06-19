@@ -30,6 +30,18 @@ enum CircleVisibility {
   PUBLIC
 }
 
+enum SyncJobType {
+  WIKIDATA_BULK_ENRICH
+  DEATH_SCAN
+}
+
+enum SyncJobStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
 model User {
   id             String       @id @default(uuid())
   clerkId        String
@@ -110,6 +122,27 @@ model Season {
   closeDate    DateTime
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+/// Background job tracking (in-process worker): bulk Wikidata enrichment and
+/// the daily death scan. Lets the admin follow progress and history.
+model SyncJob {
+  id         String        @id @default(uuid())
+  type       SyncJobType
+  status     SyncJobStatus @default(PENDING)
+  total      Int           @default(0)
+  processed  Int           @default(0)
+  succeeded  Int           @default(0)
+  failed     Int           @default(0)
+  payload    Json?         // e.g. { celebrityIds: [...] }
+  result     Json?         // per-item errors / detected deaths
+  error      String?       // fatal error if the whole job crashed
+  startedAt  DateTime?
+  finishedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([type, createdAt])
 }
 
 model Membership {
