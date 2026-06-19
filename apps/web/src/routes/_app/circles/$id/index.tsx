@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { UserPlus } from 'lucide-react';
+import { Lock, UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { CircleBackLink } from '@/components/circles/CircleBackLink';
 import { CircleHeader } from '@/components/circles/CircleHeader';
@@ -10,9 +10,9 @@ import { LeaderPicksCard } from '@/components/circles/LeaderPicksCard';
 import { Podium } from '@/components/circles/Podium';
 import { YearTabs } from '@/components/circles/YearTabs';
 import { Button } from '@/components/ui/button';
-import { toLeaderboardEntry, toLeaderPicks } from '@/lib/api/adapters';
+import { isSeasonRevealed, toLeaderboardEntry, toLeaderPicks } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
-import { useCircleDetail, useCircleRank, useSeasonYearTabs } from '@/lib/api/queries';
+import { useCircleDetail, useCircleRank, useSeasons, useSeasonYearTabs } from '@/lib/api/queries';
 
 export const Route = createFileRoute('/_app/circles/$id/')({
     component: CircleLeaderboard,
@@ -29,6 +29,9 @@ function CircleLeaderboard() {
 
     const circle = useCircleDetail(id);
     const rankQuery = useCircleRank(id, year);
+    const seasons = useSeasons();
+    // Picks stay secret until the season opens (the server already blanks them).
+    const revealed = isSeasonRevealed(seasons.data?.find((s) => s.year === year));
 
     const leaderboard = useMemo(
         () => (rankQuery.data ?? []).map((bet) => toLeaderboardEntry(bet, user?.id)),
@@ -107,17 +110,31 @@ function CircleLeaderboard() {
                         </div>
                     </div>
 
-                    {leader && leaderBet && (
-                        <div className="hidden lg:block">
-                            <LeaderPicksCard
-                                name={leader.name}
-                                initials={leader.initials}
-                                points={leader.points}
-                                hits={leader.hits}
-                                picks={toLeaderPicks(leaderBet)}
-                            />
-                        </div>
-                    )}
+                    {leader &&
+                        leaderBet &&
+                        (revealed || leaderBet.userId === user?.id ? (
+                            <div className="hidden lg:block">
+                                <LeaderPicksCard
+                                    name={leader.name}
+                                    initials={leader.initials}
+                                    points={leader.points}
+                                    hits={leader.hits}
+                                    picks={toLeaderPicks(leaderBet)}
+                                />
+                            </div>
+                        ) : (
+                            <div className="hidden lg:block">
+                                <div className="flex h-full flex-col items-center justify-center gap-2 rounded-2xl border border-line bg-gradient-to-b from-surface-2 to-surface p-6 text-center">
+                                    <Lock size={20} className="text-ink-3" />
+                                    <p className="text-[13px] font-semibold text-ink-2">
+                                        Paris secrets
+                                    </p>
+                                    <p className="text-xs text-ink-3">
+                                        Les sélections seront visibles à l'ouverture de la saison.
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
                 </div>
             )}
         </div>

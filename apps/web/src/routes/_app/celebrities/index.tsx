@@ -90,12 +90,34 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
     const [category, setCategory] = useState('Tous');
 
     const selectedCircle = circles.find((c) => c.id === circleId);
-    // Season betting window closed (global) — overrides the per-circle flags.
-    const windowClosed = !!selectedCircle && !selectedCircle.bettingOpen;
-    // Circle lock: an existing bet needs allowEdit, a first bet needs allowNewBet.
-    const circleLocked =
-        !!selectedCircle && (bet ? !selectedCircle.allowEdit : !selectedCircle.allowNewBet);
-    const locked = windowClosed || circleLocked;
+    // Lock follows the season phase: during the betting window everyone edits
+    // freely; once the season is open it needs the circle "rallonge" flag
+    // (allowEdit to finish an existing bet, allowNewBet to start one); before /
+    // after the season it is locked. No season → the flag is the only gate (V1).
+    const phase = selectedCircle?.seasonPhase;
+    const flagOpen = bet ? selectedCircle?.allowEdit : selectedCircle?.allowNewBet;
+    const { locked, lockMessage } = useMemo(() => {
+        if (!selectedCircle) return { locked: false, lockMessage: '' };
+        switch (phase) {
+            case 'betting':
+                return { locked: false, lockMessage: '' };
+            case 'before':
+                return {
+                    locked: true,
+                    lockMessage: '🔒 Les paris ne sont pas encore ouverts pour cette saison.',
+                };
+            case 'closed':
+                return { locked: true, lockMessage: '🔒 Les paris sont fermés pour cette saison.' };
+            default: // 'season-open' | 'none'
+                if (flagOpen) return { locked: false, lockMessage: '' };
+                return {
+                    locked: true,
+                    lockMessage: bet
+                        ? "🔒 La liste n'est plus modifiable pour ce cercle."
+                        : '🔒 Les nouveaux paris sont fermés pour ce cercle.',
+                };
+        }
+    }, [selectedCircle, phase, flagOpen, bet]);
 
     // Deceased celebrities are no longer draftable — only living ones are shown.
     const cards = useMemo(
@@ -213,9 +235,7 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
 
             {locked && (
                 <p className="rounded-xl border border-line-2 bg-surface px-3.5 py-2.5 text-[13px] text-ink-2">
-                    {windowClosed
-                        ? '🔒 Les paris sont fermés pour cette saison.'
-                        : "🔒 La liste n'est pas modifiable pour ce cercle."}
+                    {lockMessage}
                 </p>
             )}
 

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { Check, Eye, Globe, Lock, Ticket, Users, WalletCards } from 'lucide-react';
+import { AlertTriangle, Check, Eye, Globe, Lock, Ticket, Users, WalletCards } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { ChoiceCard } from '@/components/circles/ChoiceCard';
@@ -166,14 +166,22 @@ function SettingsForm({ circle }: { circle: ApiCircle }) {
                     <SettingToggleRow
                         icon={WalletCards}
                         title="Liste modifiable"
-                        description="Modifier sa sélection jusqu'au 31 déc."
+                        description="Laisse modifier sa sélection une fois les paris fermés, jusqu'à la fin de saison"
                         checked={allowEdit}
                         onCheckedChange={setAllowEdit}
                     />
+                    {allowEdit && (
+                        <p className="flex items-start gap-1.5 px-1 text-xs text-coral">
+                            <AlertTriangle size={13} className="mt-0.5 shrink-0" />À utiliser avec
+                            précaution : à n'activer que pour dépanner un membre qui n'a pas pu
+                            finir son pari à temps. Pendant la période de paris, chacun peut déjà
+                            modifier librement sa sélection.
+                        </p>
+                    )}
                     <SettingToggleRow
                         icon={Eye}
                         title="Mises visibles"
-                        description="Chacun voit sur qui les autres ont parié"
+                        description="Chacun voit sur qui les autres ont parié, une fois la saison ouverte (les paris restent secrets pendant la période de paris)"
                         checked={betsVisible}
                         onCheckedChange={setBetsVisible}
                     />

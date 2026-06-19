@@ -188,8 +188,15 @@ export interface CircleSummaryDto {
     allowNewBet: boolean;
     /** Whether the season's betting window is currently open for this year. */
     bettingOpen: boolean;
+    /** Lifecycle phase of the season for this year (drives the draft UI). */
+    seasonPhase: SeasonPhase;
+    /** Whether other members' bets may be revealed (now ≥ openDate). */
+    revealed: boolean;
     podium: PodiumSlotDto[];
 }
+
+/** Lifecycle phase of a season (mirrors the API `SeasonPhase`). */
+export type SeasonPhase = 'none' | 'before' | 'betting' | 'season-open' | 'closed';
 
 /** A season (GET /seasons). Dates are ISO strings over the wire. */
 export interface ApiSeason {
