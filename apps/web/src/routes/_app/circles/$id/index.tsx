@@ -30,8 +30,10 @@ function CircleLeaderboard() {
     const circle = useCircleDetail(id);
     const rankQuery = useCircleRank(id, year);
     const seasons = useSeasons();
-    // Picks stay secret until the season opens (the server already blanks them).
-    const revealed = isSeasonRevealed(seasons.data?.find((s) => s.year === year));
+    // Picks stay secret until the season opens AND the circle shows bets (the
+    // server already blanks them) — mirror that gate to show the right card.
+    const seasonOpen = isSeasonRevealed(seasons.data?.find((s) => s.year === year));
+    const revealed = seasonOpen && (circle.data?.betsVisible ?? false);
 
     const leaderboard = useMemo(
         () => (rankQuery.data ?? []).map((bet) => toLeaderboardEntry(bet, user?.id)),
@@ -130,7 +132,9 @@ function CircleLeaderboard() {
                                         Paris secrets
                                     </p>
                                     <p className="text-xs text-ink-3">
-                                        Les sélections seront visibles à l'ouverture de la saison.
+                                        {seasonOpen
+                                            ? 'Les mises ne sont pas visibles dans ce cercle.'
+                                            : "Les sélections seront visibles à l'ouverture de la saison."}
                                     </p>
                                 </div>
                             </div>
