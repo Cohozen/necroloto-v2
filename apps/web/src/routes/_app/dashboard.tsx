@@ -3,14 +3,16 @@ import { Plus } from 'lucide-react';
 import { useMemo } from 'react';
 import { CircleCard } from '@/components/circles/CircleCard';
 import { BetProgressCard } from '@/components/dashboard/BetProgressCard';
+import { CountdownCard } from '@/components/dashboard/CountdownCard';
 import { DeathFeedItem } from '@/components/dashboard/DeathFeedItem';
 import { ScoreBand } from '@/components/dashboard/ScoreBand';
-import { toCircleSummary, toDeathFeedEntry } from '@/lib/api/adapters';
+import { nextCountdownTarget, toCircleSummary, toDeathFeedEntry } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
 import {
     MAX_BET_CELEBRITIES,
     useCircleSummaries,
     useDeathFeed,
+    useSeasons,
     useSeasonYear,
     useUserBets,
 } from '@/lib/api/queries';
@@ -25,12 +27,17 @@ function Dashboard() {
     const summariesQuery = useCircleSummaries(user?.id, year);
     const betsQuery = useUserBets(user?.id);
     const feedQuery = useDeathFeed();
+    const seasonsQuery = useSeasons();
 
     const circles = useMemo(
         () => (summariesQuery.data ?? []).map(toCircleSummary),
         [summariesQuery.data],
     );
     const feed = useMemo(() => (feedQuery.data ?? []).map(toDeathFeedEntry), [feedQuery.data]);
+    const countdownTarget = useMemo(
+        () => nextCountdownTarget(seasonsQuery.data),
+        [seasonsQuery.data],
+    );
 
     // Score band is composed client-side from the user's bets for the year.
     const stats = useMemo(() => {
@@ -111,6 +118,7 @@ function Dashboard() {
                         closesLabel="clôture 31 déc."
                         circleName={currentBet.circleName}
                     />
+                    {countdownTarget && <CountdownCard target={countdownTarget} />}
                     <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold">Décès récents</h2>
                         <span className="text-xs text-ink-3">qui ont marqué</span>

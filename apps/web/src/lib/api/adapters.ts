@@ -313,6 +313,52 @@ export function seasonStatus(season: ApiSeason, now: number = Date.now()): Seaso
     return 'upcoming';
 }
 
+/** Target of the dashboard countdown: the bet window opening or closing. */
+export type CountdownTarget = {
+    season: ApiSeason;
+    /** `opening` → counting to betStartDate, `closing` → counting to betEndDate. */
+    mode: 'opening' | 'closing';
+    /** Deadline in ms epoch (betStartDate for `opening`, betEndDate for `closing`). */
+    deadline: number;
+};
+
+/**
+ * Picks what the dashboard countdown should target, mirroring the season phase
+ * logic (`seasonStatus` / API `getSeasonPhase`):
+ *  1) a season whose bet window is open now (betStart ≤ now ≤ betEnd) → its end,
+ *  2) else the nearest upcoming bet window (smallest betStart > now) → its start,
+ *  3) else null (nothing to count down → the card is hidden).
+ */
+export function nextCountdownTarget(
+    seasons: ApiSeason[] | undefined,
+    now: number = Date.now(),
+): CountdownTarget | null {
+    if (!seasons?.length) return null;
+    const betting = seasons.find((s) => {
+        const start = new Date(s.betStartDate).getTime();
+        const end = new Date(s.betEndDate).getTime();
+        return now >= start && now <= end;
+    });
+    if (betting) {
+        return {
+            season: betting,
+            mode: 'closing',
+            deadline: new Date(betting.betEndDate).getTime(),
+        };
+    }
+    const upcoming = seasons
+        .filter((s) => new Date(s.betStartDate).getTime() > now)
+        .sort((a, b) => new Date(a.betStartDate).getTime() - new Date(b.betStartDate).getTime())[0];
+    if (upcoming) {
+        return {
+            season: upcoming,
+            mode: 'opening',
+            deadline: new Date(upcoming.betStartDate).getTime(),
+        };
+    }
+    return null;
+}
+
 /**
  * Whether other members' bets are revealed for a season: once it has opened
  * (now ≥ openDate). No season → true (V1 compat). Mirrors the API `isRevealed`.
