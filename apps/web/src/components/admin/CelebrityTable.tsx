@@ -8,6 +8,11 @@ interface CelebrityTableProps {
     selectedIds: Set<string>;
     onToggle: (id: string) => void;
     onToggleAll: () => void;
+    onApprove: (id: string, wikidataId?: string) => void;
+    onReject: (id: string) => void;
+    onMerge: (celeb: AdminCelebrity) => void;
+    /** Id of the celebrity currently mutating (disables its row actions). */
+    busyId?: string | null;
 }
 
 /** Catalogue table — header + rows, horizontally scrollable on narrow screens. */
@@ -16,6 +21,10 @@ export function CelebrityTable({
     selectedIds,
     onToggle,
     onToggleAll,
+    onApprove,
+    onReject,
+    onMerge,
+    busyId,
 }: CelebrityTableProps) {
     const selectedOnPage = celebrities.filter((c) => selectedIds.has(c.id)).length;
     const allSelected = celebrities.length > 0 && selectedOnPage === celebrities.length;
@@ -49,6 +58,10 @@ export function CelebrityTable({
                         celeb={celeb}
                         selected={selectedIds.has(celeb.id)}
                         onToggle={onToggle}
+                        onApprove={onApprove}
+                        onReject={onReject}
+                        onMerge={onMerge}
+                        busy={busyId === celeb.id}
                     />
                 ))}
             </div>

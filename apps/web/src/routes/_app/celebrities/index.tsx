@@ -2,8 +2,8 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { Check, ChevronDown, Plus, Search, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { CelebrityCard } from '@/components/celebrities/CelebrityCard';
-import { ProposeCelebrityDialog } from '@/components/celebrities/ProposeCelebrityDialog';
 import { DraftTray } from '@/components/celebrities/DraftTray';
+import { ProposeCelebrityDialog } from '@/components/celebrities/ProposeCelebrityDialog';
 import {
     DropdownMenu,
     DropdownMenuContent,

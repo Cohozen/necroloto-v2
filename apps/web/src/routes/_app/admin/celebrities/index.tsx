@@ -6,14 +6,17 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { BulkActionBar } from '@/components/admin/BulkActionBar';
 import { CatalogToolbar } from '@/components/admin/CatalogToolbar';
 import { CelebrityTable } from '@/components/admin/CelebrityTable';
+import { MergeCelebrityDialog } from '@/components/admin/MergeCelebrityDialog';
 import { toAdminCelebrity } from '@/lib/api/adapters';
 import {
     useAdminCelebrities,
+    useApproveCelebrity,
     useBulkDeleteCelebrities,
     useBulkEnrichCelebrities,
+    useRejectCelebrity,
     useSyncJob,
 } from '@/lib/api/queries';
-import type { CatalogFilter } from '@/types/admin';
+import type { AdminCelebrity, CatalogFilter } from '@/types/admin';
 
 export const Route = createFileRoute('/_app/admin/celebrities/')({
     component: AdminCatalogue,
@@ -37,6 +40,11 @@ function AdminCatalogue() {
     const qc = useQueryClient();
     const bulkDelete = useBulkDeleteCelebrities();
     const bulkEnrich = useBulkEnrichCelebrities();
+    const approve = useApproveCelebrity();
+    const reject = useRejectCelebrity();
+
+    // The pending proposal being merged into a target (null closes the dialog).
+    const [mergeSource, setMergeSource] = useState<AdminCelebrity | null>(null);
 
     // Async enrich: enqueue a job, then poll it for progress until terminal.
     const [syncJobId, setSyncJobId] = useState<string | null>(null);
@@ -78,6 +86,31 @@ function AdminCatalogue() {
             onError: () => toast.error('La suppression a échoué.'),
         });
     };
+
+    const handleApprove = (id: string, wikidataId?: string) => {
+        approve.mutate(
+            { id, wikidataId },
+            {
+                onSuccess: () => toast.success('Célébrité validée.'),
+                onError: () => toast.error('La validation a échoué.'),
+            },
+        );
+    };
+
+    const handleReject = (id: string) => {
+        reject.mutate(id, {
+            onSuccess: () => toast.success('Proposition rejetée.'),
+            onError: () => toast.error('Le rejet a échoué.'),
+        });
+    };
+
+    // Disable the row whose approve/reject is in flight.
+    const busyId =
+        approve.isPending && approve.variables
+            ? approve.variables.id
+            : reject.isPending && typeof reject.variables === 'string'
+              ? reject.variables
+              : null;
 
     const handleSync = () => {
         const ids = [...selected];
@@ -151,6 +184,10 @@ function AdminCatalogue() {
                         selectedIds={selected}
                         onToggle={toggle}
                         onToggleAll={toggleAll}
+                        onApprove={handleApprove}
+                        onReject={handleReject}
+                        onMerge={setMergeSource}
+                        busyId={busyId}
                     />
                     <div ref={sentinelRef} className="h-8" aria-hidden />
                     {isFetchingNextPage && (
@@ -177,6 +214,8 @@ function AdminCatalogue() {
                     }
                 />
             )}
+
+            <MergeCelebrityDialog source={mergeSource} onClose={() => setMergeSource(null)} />
         </div>
     );
 }

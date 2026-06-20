@@ -1,10 +1,11 @@
 import { Link } from '@tanstack/react-router';
-import { Pencil, RefreshCw, User } from 'lucide-react';
+import { Check, GitMerge, Globe, Pencil, RefreshCw, User, X } from 'lucide-react';
 import { CelebrityPortrait } from '@/components/celebrities/CelebrityPortrait';
 import { StatusBadge } from '@/components/celebrities/StatusBadge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import type { AdminCelebrity } from '@/types/admin';
+import { WikidataSearchDialog } from './WikidataSearchDialog';
 
 export const CATALOG_COLS = 'grid-cols-[34px_52px_minmax(0,1fr)_96px_150px_96px_78px_92px] gap-3';
 
@@ -12,11 +13,28 @@ interface CelebrityRowProps {
     celeb: AdminCelebrity;
     selected: boolean;
     onToggle: (id: string) => void;
+    /** Approve a pending proposal (optionally with a Wikidata QID to enrich). */
+    onApprove: (id: string, wikidataId?: string) => void;
+    /** Reject a pending proposal. */
+    onReject: (id: string) => void;
+    /** Open the merge picker for this (duplicate) celebrity. */
+    onMerge: (celeb: AdminCelebrity) => void;
+    /** Disables actions while a mutation is in flight. */
+    busy?: boolean;
 }
 
 /** One catalogue row — checkbox, portrait, identity, status, points, bettors, actions. */
-export function CelebrityRow({ celeb, selected, onToggle }: CelebrityRowProps) {
+export function CelebrityRow({
+    celeb,
+    selected,
+    onToggle,
+    onApprove,
+    onReject,
+    onMerge,
+    busy,
+}: CelebrityRowProps) {
     const dead = celeb.status === 'deceased';
+    const pending = celeb.proposalStatus === 'pending';
     return (
         <div
             className={cn(
@@ -41,8 +59,13 @@ export function CelebrityRow({ celeb, selected, onToggle }: CelebrityRowProps) {
                 <div className="truncate text-xs text-ink-3">{celeb.role}</div>
             </div>
             <div className="font-mono text-[13px] text-ink-2">°{celeb.born}</div>
-            <div>
+            <div className="flex items-center gap-1.5">
                 <StatusBadge status={celeb.status} />
+                {pending && (
+                    <span className="inline-flex h-6 items-center rounded-full border border-coral/40 bg-coral/10 px-2 text-[11px] font-semibold text-coral">
+                        En attente
+                    </span>
+                )}
             </div>
             <div>
                 <span
@@ -61,26 +84,73 @@ export function CelebrityRow({ celeb, selected, onToggle }: CelebrityRowProps) {
                 {celeb.bettors}
             </div>
             <div className="flex items-center justify-end gap-1.5">
-                <Link
-                    to="/admin/celebrities/$id"
-                    params={{ id: celeb.id }}
-                    className="inline-flex size-9 items-center justify-center rounded-[10px] border border-line-2 bg-surface-2 text-ink-2 hover:text-ink"
-                    aria-label={`Éditer ${celeb.name}`}
-                >
-                    <Pencil size={16} />
-                </Link>
-                <button
-                    type="button"
-                    aria-label="Recalculer les points"
-                    className={cn(
-                        'inline-flex size-9 items-center justify-center rounded-[10px] border bg-surface-2',
-                        dead
-                            ? 'border-neon/40 text-neon'
-                            : 'border-line-2 text-ink-2 hover:text-ink',
-                    )}
-                >
-                    <RefreshCw size={16} />
-                </button>
+                {pending ? (
+                    <>
+                        <WikidataSearchDialog
+                            initialQuery={celeb.name}
+                            onSelect={(c) => onApprove(celeb.id, c.wikidataId)}
+                        >
+                            <button
+                                type="button"
+                                disabled={busy}
+                                aria-label="Vérifier sur Wikidata"
+                                className="inline-flex size-9 items-center justify-center rounded-[10px] border border-line-2 bg-surface-2 text-ink-2 hover:text-ink disabled:opacity-50"
+                            >
+                                <Globe size={16} />
+                            </button>
+                        </WikidataSearchDialog>
+                        <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => onMerge(celeb)}
+                            aria-label="Fusionner"
+                            className="inline-flex size-9 items-center justify-center rounded-[10px] border border-line-2 bg-surface-2 text-ink-2 hover:text-ink disabled:opacity-50"
+                        >
+                            <GitMerge size={16} />
+                        </button>
+                        <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => onReject(celeb.id)}
+                            aria-label={`Rejeter ${celeb.name}`}
+                            className="inline-flex size-9 items-center justify-center rounded-[10px] border border-coral/40 bg-coral/10 text-coral hover:bg-coral/15 disabled:opacity-50"
+                        >
+                            <X size={16} />
+                        </button>
+                        <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => onApprove(celeb.id)}
+                            aria-label={`Approuver ${celeb.name}`}
+                            className="inline-flex size-9 items-center justify-center rounded-[10px] border border-neon/50 bg-neon/10 text-neon hover:bg-neon/15 disabled:opacity-50"
+                        >
+                            <Check size={16} />
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <Link
+                            to="/admin/celebrities/$id"
+                            params={{ id: celeb.id }}
+                            className="inline-flex size-9 items-center justify-center rounded-[10px] border border-line-2 bg-surface-2 text-ink-2 hover:text-ink"
+                            aria-label={`Éditer ${celeb.name}`}
+                        >
+                            <Pencil size={16} />
+                        </Link>
+                        <button
+                            type="button"
+                            aria-label="Recalculer les points"
+                            className={cn(
+                                'inline-flex size-9 items-center justify-center rounded-[10px] border bg-surface-2',
+                                dead
+                                    ? 'border-neon/40 text-neon'
+                                    : 'border-line-2 text-ink-2 hover:text-ink',
+                            )}
+                        >
+                            <RefreshCw size={16} />
+                        </button>
+                    </>
+                )}
             </div>
         </div>
     );

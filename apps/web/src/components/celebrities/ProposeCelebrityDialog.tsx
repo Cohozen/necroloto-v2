@@ -111,7 +111,6 @@ function SearchStep({ pending, onPick, onManual }: SearchStepProps) {
             <div className="mt-4 flex h-[46px] items-center gap-2.5 rounded-xl border border-line-2 bg-surface-2 px-3.5 focus-within:border-neon/50 focus-within:ring-2 focus-within:ring-neon/30">
                 <Search size={17} className="shrink-0 text-ink-3" />
                 <input
-                    autoFocus
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Nom de la célébrité"
@@ -210,7 +209,6 @@ function ManualStep({ pending, onBack, onSubmit }: ManualStepProps) {
             <label className="flex flex-col gap-1.5 text-[13px] font-semibold text-ink-2">
                 Nom
                 <input
-                    autoFocus
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}

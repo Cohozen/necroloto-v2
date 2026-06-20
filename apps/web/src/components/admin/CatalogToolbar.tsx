@@ -17,6 +17,7 @@ const SEGMENTS: { id: CatalogFilter; label: string }[] = [
     { id: 'all', label: 'Tous' },
     { id: 'alive', label: 'Vivant·e' },
     { id: 'deceased', label: 'Décédé·e' },
+    { id: 'pending', label: 'En attente' },
 ];
 
 /** Catalogue toolbar — search, status filter, count, and "new" action. */
