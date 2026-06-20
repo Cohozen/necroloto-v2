@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Plus, UserPlus } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { CircleAdminHeader } from '@/components/circles/CircleAdminHeader';
 import { InviteDialog } from '@/components/circles/InviteDialog';

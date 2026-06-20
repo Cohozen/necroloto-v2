@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CelebrityCard } from '@/components/celebrities/CelebrityCard';
 import { DraftTray } from '@/components/celebrities/DraftTray';
 import { ProposeCelebrityDialog } from '@/components/celebrities/ProposeCelebrityDialog';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -23,15 +24,12 @@ import {
     useUserBets,
 } from '@/lib/api/queries';
 import type { ApiBet, ApiCelebrity, CircleSummaryDto } from '@/lib/api/types';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 export const Route = createFileRoute('/_app/celebrities/')({
     component: Catalogue,
 });
 
 const TOTAL = MAX_BET_CELEBRITIES;
-const CATEGORIES = ['Tous', 'Cinéma', 'Musique', 'Royauté & politique', 'Sport', 'Affaires'];
 
 function Catalogue() {
     const { user } = useCurrentUser();
@@ -89,7 +87,6 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
     }, [circleId, yearBets]);
 
     const [query, setQuery] = useState('');
-    const [category, setCategory] = useState('Tous');
 
     const selectedCircle = circles.find((c) => c.id === circleId);
     // Lock follows the season phase: during the betting window everyone edits
@@ -150,12 +147,8 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
 
     const results = useMemo(() => {
         const q = query.trim().toLowerCase();
-        return cards.filter(
-            (c) =>
-                (category === 'Tous' || c.category === category) &&
-                (q === '' || c.name.toLowerCase().includes(q)),
-        );
-    }, [cards, query, category]);
+        return cards.filter((c) => q === '' || c.name.toLowerCase().includes(q));
+    }, [cards, query]);
 
     const isSaving = createBet.isPending || replaceBet.isPending;
     const canSave = !!circleId && selected.size > 0 && !isSaving && !locked;
@@ -235,30 +228,13 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
                 </div>
                 {!locked && (
                     <ProposeCelebrityDialog onProposed={addToSelection}>
-                        <Button >
-                            <Plus size={17} strokeWidth={2.2} /> <span className="hidden md:inline">Ajouter</span>
+                        <Button>
+                            <Plus size={17} strokeWidth={2.2} />{' '}
+                            <span className="hidden md:inline">Ajouter</span>
                         </Button>
                     </ProposeCelebrityDialog>
                 )}
             </div>
-
-            {/* <div className="flex flex-wrap items-center gap-2">
-                {CATEGORIES.map((cat) => (
-                    <button
-                        key={cat}
-                        type="button"
-                        onClick={() => setCategory(cat)}
-                        className={cn(
-                            'inline-flex h-8 items-center rounded-[9px] border px-3 text-[13px] font-semibold transition-colors',
-                            cat === category
-                                ? 'border-neon/50 bg-neon/8 text-neon'
-                                : 'border-line-2 bg-surface text-ink-2 hover:text-ink',
-                        )}
-                    >
-                        {cat}
-                    </button>
-                ))}
-            </div> */}
 
             {locked && (
                 <p className="rounded-xl border border-line-2 bg-surface px-3.5 py-2.5 text-[13px] text-ink-2">

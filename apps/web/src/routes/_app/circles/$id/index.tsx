@@ -44,7 +44,6 @@ function CircleLeaderboard() {
     const rest = leaderboard.slice(3);
     const leader = leaderboard[0];
     const leaderBet = rankQuery.data?.[0];
-    const totalBets = leaderboard.reduce((acc, entry) => acc + entry.bets, 0);
     const members = circle.data?.memberships?.length ?? leaderboard.length;
 
     return (
@@ -58,12 +57,13 @@ function CircleLeaderboard() {
                         members={members}
                     />
                     <div className="flex items-center gap-3">
-                        <YearTabs value={year} onValueChange={setPicked} years={years} className='hidden md:inline-flex' />
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setInviteOpen(true)}
-                        >
+                        <YearTabs
+                            value={year}
+                            onValueChange={setPicked}
+                            years={years}
+                            className="hidden md:inline-flex"
+                        />
+                        <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
                             <UserPlus size={15} /> Inviter
                         </Button>
                     </div>
