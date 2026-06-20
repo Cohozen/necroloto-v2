@@ -25,7 +25,7 @@ export function MiniPodium({ podium }: { podium: PodiumSlot[] }) {
                     <div
                         key={slot.place}
                         className={cn(
-                            'relative flex flex-col items-center gap-1.5 text-center',
+                            'relative flex min-w-0 flex-col items-center gap-1.5 text-center',
                             first && '-translate-y-1.5',
                         )}
                     >
