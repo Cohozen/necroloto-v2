@@ -184,6 +184,15 @@
     text-shadow: 0 0 calc(var(--glow) * 14px) rgb(var(--magenta-rgb) / calc(var(--glow) * 0.6));
 }
 
+/* hide the scrollbar while keeping the element scrollable (e.g. mobile filter pills) */
+@utility no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
 /* arcade screen shell: subtle film grain + CRT scanlines */
 .neon-surface {
     position: relative;

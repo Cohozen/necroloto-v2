@@ -29,8 +29,8 @@ export function CatalogToolbar({
     total,
 }: CatalogToolbarProps) {
     return (
-        <div className="flex flex-wrap items-center gap-3">
-            <div className="flex h-10 min-w-0 flex-1 items-center gap-2.5 rounded-xl border border-line-2 bg-surface px-3.5 text-[13px] text-ink-3 focus-within:border-neon/60 sm:max-w-[340px]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex h-11 w-full items-center gap-2.5 rounded-xl border border-line-2 bg-surface px-3.5 text-[13px] text-ink-3 focus-within:border-neon/60 sm:h-10 sm:max-w-[340px]">
                 <Search size={16} />
                 <input
                     type="search"
@@ -41,33 +41,37 @@ export function CatalogToolbar({
                 />
             </div>
 
-            <div className="inline-flex rounded-[11px] border border-line-2 bg-surface p-1">
-                {SEGMENTS.map((seg) => (
-                    <button
-                        key={seg.id}
-                        type="button"
-                        onClick={() => onFilterChange(seg.id)}
-                        className={cn(
-                            'rounded-[8px] px-3 py-1.5 text-[13px] font-semibold transition-colors',
-                            filter === seg.id
-                                ? 'bg-surface-3 text-ink'
-                                : 'text-ink-3 hover:text-ink-2',
-                        )}
-                    >
-                        {seg.label}
-                    </button>
-                ))}
+            <div className="no-scrollbar -mx-4 flex overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0">
+                <div className="inline-flex shrink-0 rounded-[11px] border border-line-2 bg-surface p-1">
+                    {SEGMENTS.map((seg) => (
+                        <button
+                            key={seg.id}
+                            type="button"
+                            onClick={() => onFilterChange(seg.id)}
+                            className={cn(
+                                'shrink-0 whitespace-nowrap rounded-[8px] px-3 py-1.5 text-[13px] font-semibold transition-colors',
+                                filter === seg.id
+                                    ? 'bg-surface-3 text-ink'
+                                    : 'text-ink-3 hover:text-ink-2',
+                            )}
+                        >
+                            {seg.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            <span className="text-[12.5px] text-ink-3">
-                {total} {total > 1 ? 'célébrités' : 'célébrité'}
-            </span>
+            <div className="flex items-center justify-between gap-3 sm:ml-auto">
+                <span className="text-[12.5px] text-ink-3">
+                    {total} {total > 1 ? 'célébrités' : 'célébrité'}
+                </span>
 
-            <Button asChild size="sm" className="ml-auto h-[38px]">
-                <Link to="/admin/celebrities/new">
-                    <Plus size={15} strokeWidth={2.2} /> Nouvelle célébrité
-                </Link>
-            </Button>
+                <Button asChild size="sm" className="h-[38px]">
+                    <Link to="/admin/celebrities/new">
+                        <Plus size={15} strokeWidth={2.2} /> Nouvelle célébrité
+                    </Link>
+                </Button>
+            </div>
         </div>
     );
 }
