@@ -19,6 +19,8 @@ function gradientFor(name: string) {
 interface CelebrityPortraitProps {
     name: string;
     status: CelebrityStatus;
+    /** Portrait URL — when set, rendered over the gradient; falls back to the monogram. */
+    photo?: string | null;
     /** Tailwind rounding class, e.g. 'rounded-2xl' or 'rounded-none'. */
     rounded?: string;
     className?: string;
@@ -28,6 +30,7 @@ interface CelebrityPortraitProps {
 export function CelebrityPortrait({
     name,
     status,
+    photo,
     rounded = 'rounded-2xl',
     className,
 }: CelebrityPortraitProps) {
@@ -46,9 +49,13 @@ export function CelebrityPortrait({
             }}
             aria-hidden="true"
         >
-            <span className="-mb-[4%] font-display text-[40cqi] font-extrabold leading-none text-white/90 mix-blend-soft-light">
-                {name.charAt(0).toUpperCase()}
-            </span>
+            {photo ? (
+                <img src={photo} alt="" className="absolute inset-0 size-full object-cover" />
+            ) : (
+                <span className="-mb-[4%] font-display text-[40cqi] font-extrabold leading-none text-white/90 mix-blend-soft-light">
+                    {name.charAt(0).toUpperCase()}
+                </span>
+            )}
             {dead && (
                 <span className="absolute inset-0 bg-gradient-to-b from-transparent to-coral/30 mix-blend-screen" />
             )}

@@ -269,6 +269,7 @@ export function toCelebrityDetail(
             name: isYou ? 'Vous' : name,
             initials: isYou ? 'ME' : initialsOf(name),
             circle: e.bet.Circle?.name ?? '—',
+            year: e.bet.year,
             isYou,
             points: dead ? e.points : points,
         };
@@ -284,6 +285,7 @@ export function toCelebrityDetail(
         status: dead ? 'deceased' : 'alive',
         deathLabel: c.death ? longDateLabel(c.death) : undefined,
         points,
+        photo: c.photo ?? undefined,
         bettors,
     };
 }

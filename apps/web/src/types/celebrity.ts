@@ -25,6 +25,8 @@ export interface Bettor {
     initials: string;
     /** Circle this player bet from. */
     circle: string;
+    /** Season year of the bet — used to group bettors by season on the fiche. */
+    year: number;
     isYou?: boolean;
     /** Points scored (deceased) or potential points (alive). */
     points: number;
@@ -45,5 +47,7 @@ export interface CelebrityDetail {
     deathLabel?: string;
     /** Points awarded (deceased) or potential if death this year (alive). */
     points: number;
+    /** Portrait URL (Wikidata/upload), when known — falls back to a monogram. */
+    photo?: string;
     bettors: Bettor[];
 }

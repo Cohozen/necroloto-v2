@@ -9,17 +9,16 @@ import { StatusBadge } from '@/components/celebrities/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { toCelebrityDetail } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
-import { CURRENT_YEAR, useCelebrity, useCircleSummaries } from '@/lib/api/queries';
+import { useCelebrity, useCircleSummaries, useSeasonYear } from '@/lib/api/queries';
 
 export const Route = createFileRoute('/_app/celebrities/$id')({
     component: CelebrityPage,
 });
 
-const YEAR = CURRENT_YEAR;
-
 function CelebrityPage() {
     const { id } = Route.useParams();
     const { user } = useCurrentUser();
+    const year = useSeasonYear();
     const celebQuery = useCelebrity(id);
     const summariesQuery = useCircleSummaries(user?.id);
 
@@ -28,6 +27,20 @@ function CelebrityPage() {
         const myCircleIds = new Set((summariesQuery.data ?? []).map((c) => c.id));
         return toCelebrityDetail(celebQuery.data, myCircleIds, user?.id);
     }, [celebQuery.data, summariesQuery.data, user?.id]);
+
+    // Bettors grouped by season year, active season first then past seasons desc.
+    const bettorGroups = useMemo(() => {
+        if (!celeb) return [];
+        const byYear = new Map<number, typeof celeb.bettors>();
+        for (const b of celeb.bettors) {
+            const arr = byYear.get(b.year) ?? [];
+            arr.push(b);
+            byYear.set(b.year, arr);
+        }
+        return [...byYear.entries()]
+            .sort((a, b) => b[0] - a[0])
+            .map(([groupYear, bettors]) => ({ year: groupYear, bettors }));
+    }, [celeb]);
 
     if (celebQuery.isLoading) {
         return <p className="p-6 text-sm text-ink-3">Chargement de la fiche…</p>;
@@ -76,6 +89,7 @@ function CelebrityPage() {
                         <CelebrityPortrait
                             name={celeb.name}
                             status={celeb.status}
+                            photo={celeb.photo}
                             className="aspect-square w-full"
                         />
                         <div className="absolute bottom-4 left-4 z-10">
@@ -101,7 +115,7 @@ function CelebrityPage() {
                     <PointsHero
                         status={celeb.status}
                         points={celeb.points}
-                        year={YEAR}
+                        year={year}
                         bettors={celeb.bettors.length}
                         deathLabel={celeb.deathLabel}
                     />
@@ -109,22 +123,34 @@ function CelebrityPage() {
                     <div>
                         <div className="mb-3 flex items-center justify-between">
                             <h2 className="text-lg font-semibold">Qui a parié dessus</h2>
-                            <span className="text-xs text-ink-3">
-                                dans vos cercles · {celeb.bettors.length} joueur·s
-                            </span>
+                            <span className="text-xs text-ink-3">dans vos cercles</span>
                         </div>
-                        {celeb.bettors.length === 0 ? (
+                        {bettorGroups.length === 0 ? (
                             <p className="rounded-xl border border-line bg-surface p-4 text-[13px] text-ink-3">
                                 Personne dans vos cercles n'a parié sur cette célébrité.
                             </p>
                         ) : (
-                            <div className="grid gap-2.5 sm:grid-cols-2">
-                                {celeb.bettors.map((bettor) => (
-                                    <BettorRow
-                                        key={bettor.id}
-                                        bettor={bettor}
-                                        status={celeb.status}
-                                    />
+                            <div className="flex flex-col gap-4">
+                                {bettorGroups.map((group) => (
+                                    <div key={group.year}>
+                                        <div className="mb-2 flex items-baseline gap-2">
+                                            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">
+                                                {group.year === year ? 'Cette saison' : group.year}
+                                            </span>
+                                            <span className="text-xs text-ink-3">
+                                                · {group.bettors.length} joueur·s
+                                            </span>
+                                        </div>
+                                        <div className="grid gap-2.5 sm:grid-cols-2">
+                                            {group.bettors.map((bettor) => (
+                                                <BettorRow
+                                                    key={bettor.id}
+                                                    bettor={bettor}
+                                                    status={celeb.status}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                         )}
