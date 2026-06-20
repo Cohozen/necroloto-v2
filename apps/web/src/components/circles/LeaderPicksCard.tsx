@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import { CelebrityPortrait } from '@/components/celebrities/CelebrityPortrait';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -41,9 +42,11 @@ export function LeaderPicksCard({ name, initials, points, hits, picks }: LeaderP
                 {picks.map((pick) => {
                     const dead = pick.status === 'deceased';
                     return (
-                        <div
+                        <Link
                             key={pick.id}
-                            className="flex items-center gap-3 rounded-xl border border-line bg-surface p-2.5 data-[dead=true]:border-coral/30"
+                            to="/celebrities/$id"
+                            params={{ id: pick.id }}
+                            className="flex items-center gap-3 rounded-xl border border-line bg-surface p-2.5 transition-colors hover:border-line-2 hover:bg-surface-2 data-[dead=true]:border-coral/30"
                             data-dead={dead}
                         >
                             <CelebrityPortrait
@@ -68,7 +71,7 @@ export function LeaderPicksCard({ name, initials, points, hits, picks }: LeaderP
                             ) : (
                                 <span className="size-2 animate-pulse-dot rounded-full bg-neon" />
                             )}
-                        </div>
+                        </Link>
                     );
                 })}
             </div>
