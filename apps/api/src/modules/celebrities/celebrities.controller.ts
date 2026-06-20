@@ -17,7 +17,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { CurrentClerkId } from '../auth/current-user.decorator';
+import { CurrentClerkId, IsAdminClaim } from '../auth/current-user.decorator';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { ClerkAuthGuard } from '../auth/guards/clerk.auth.guard';
 import { SeasonsService } from '../seasons/seasons.service';
@@ -26,6 +26,7 @@ import { CelebritiesService } from './celebrities.service';
 import { BulkCelebritiesDto } from './dto/bulk-celebrities.dto';
 import { CreateCelebrityDto } from './dto/create-celebrity.dto';
 import { EnrichCelebrityDto } from './dto/enrich-celebrity.dto';
+import { ProposeCelebrityDto } from './dto/propose-celebrity.dto';
 import { SearchCelebrityDto } from './dto/search-celebrity.dto';
 import { UpdateCelebrityDto } from './dto/update-celebrity.dto';
 
@@ -64,6 +65,28 @@ export class CelebritiesController {
         return this.celebritiesService.create(createCelebrityDto);
     }
 
+    // Any authenticated player may propose a missing celebrity from the bet
+    // draft. The entry is created PENDING (visible only to the proposer) until
+    // an admin approves it.
+    @Post('propose')
+    propose(@Body() dto: ProposeCelebrityDto, @CurrentClerkId() clerkId?: string) {
+        return this.celebritiesService.propose(dto, clerkId);
+    }
+
+    // Admin-only: validate a proposed celebrity (optionally enrich first).
+    @Post(':id/approve')
+    @UseGuards(AdminGuard)
+    approve(@Param('id') id: string, @Body() dto: EnrichCelebrityDto) {
+        return this.celebritiesService.approve(id, dto.wikidataId);
+    }
+
+    // Admin-only: reject a proposed celebrity (kept REJECTED, pulled from bets).
+    @Post(':id/reject')
+    @UseGuards(AdminGuard)
+    reject(@Param('id') id: string) {
+        return this.celebritiesService.reject(id);
+    }
+
     // Admin-only: delete several celebrities at once.
     @Delete('bulk')
     @UseGuards(AdminGuard)
@@ -72,8 +95,8 @@ export class CelebritiesController {
     }
 
     @Post('search')
-    search(@Body() searchCelebrityDto: SearchCelebrityDto) {
-        return this.celebritiesService.search(searchCelebrityDto);
+    search(@Body() searchCelebrityDto: SearchCelebrityDto, @CurrentClerkId() clerkId?: string) {
+        return this.celebritiesService.search(searchCelebrityDto, clerkId);
     }
 
     @Post(':sourceId/merge/:targetId')
@@ -82,9 +105,10 @@ export class CelebritiesController {
         return this.celebritiesService.merge(sourceId, targetId);
     }
 
-    // Admin-only: Wikidata candidates for a name (disambiguation before enrich).
+    // Wikidata candidates for a name (disambiguation before enrich / proposal).
+    // Read-only, so any authenticated user may call it — the bet-draft proposal
+    // flow searches Wikidata first.
     @Get('wikidata/search')
-    @UseGuards(AdminGuard)
     searchWikidata(@Query('name') name: string) {
         return this.celebritiesService.searchWikidata(name);
     }
@@ -97,8 +121,8 @@ export class CelebritiesController {
     }
 
     @Get()
-    findAll() {
-        return this.celebritiesService.findAll();
+    findAll(@CurrentClerkId() clerkId?: string) {
+        return this.celebritiesService.findAll(clerkId);
     }
 
     // Admin-only: paginated catalogue (name search, status filter, alphabetical).
@@ -107,7 +131,7 @@ export class CelebritiesController {
     @UseGuards(AdminGuard)
     findPage(
         @Query('search') search?: string,
-        @Query('status') status?: 'all' | 'alive' | 'deceased',
+        @Query('status') status?: 'all' | 'alive' | 'deceased' | 'pending',
         @Query('take', new DefaultValuePipe(24), ParseIntPipe) take = 24,
         @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip = 0,
     ) {
@@ -125,8 +149,12 @@ export class CelebritiesController {
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string, @CurrentClerkId() clerkId?: string) {
-        return this.celebritiesService.findOne(id, clerkId);
+    findOne(
+        @Param('id') id: string,
+        @CurrentClerkId() clerkId?: string,
+        @IsAdminClaim() isAdmin?: boolean,
+    ) {
+        return this.celebritiesService.findOne(id, clerkId, isAdmin);
     }
 
     @Patch(':id')

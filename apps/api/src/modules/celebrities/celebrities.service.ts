@@ -1,11 +1,12 @@
 import { ageInYears, calculPointByCelebrity, deathYear } from '@necroloto/shared';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SeasonsService } from '../seasons/seasons.service';
 import { StorageService } from '../storage/storage.service';
 import { WikidataService, type WikidataSummary } from '../wikidata/wikidata.service';
 import { CreateCelebrityDto } from './dto/create-celebrity.dto';
+import { ProposeCelebrityDto } from './dto/propose-celebrity.dto';
 import { SearchCelebrityDto } from './dto/search-celebrity.dto';
 import { UpdateCelebrityDto } from './dto/update-celebrity.dto';
 
@@ -36,8 +37,135 @@ export class CelebritiesService {
         return celebrity;
     }
 
-    async findAll() {
+    /** Maps a Clerk id to its DB `User.id`, or undefined (clerkId is not unique). */
+    private async resolveViewerId(clerkId?: string): Promise<string | undefined> {
+        if (!clerkId) return undefined;
+        const user = await this.prisma.user.findFirst({
+            where: { clerkId },
+            select: { id: true },
+        });
+        return user?.id;
+    }
+
+    /**
+     * A player proposes a missing celebrity from the bet draft. The entry is
+     * created PENDING and stays visible only to its proposer until an admin
+     * approves it. Dedup: a Wikidata pick reuses any existing row for that
+     * unique entity (and is refused if that entity was already REJECTED); a
+     * manual entry reuses an existing row with the same name (case-insensitive).
+     * When a `wikidataId` is given the row is enriched inline (dates/photo/role).
+     */
+    async propose(dto: ProposeCelebrityDto, viewerClerkId?: string) {
+        const viewerId = await this.resolveViewerId(viewerClerkId);
+
+        if (dto.wikidataId) {
+            const existing = await this.prisma.celebrity.findUnique({
+                where: { wikidataId: dto.wikidataId },
+            });
+            if (existing) {
+                if (existing.status === 'REJECTED') {
+                    throw new ForbiddenException('Cette célébrité a déjà été refusée.');
+                }
+                return existing;
+            }
+        } else {
+            const existing = await this.prisma.celebrity.findFirst({
+                where: { name: { equals: dto.name, mode: 'insensitive' } },
+            });
+            // Reuse a non-rejected same-name row; ignore rejected ones so a fresh
+            // proposal is still possible after an unrelated rejection.
+            if (existing && existing.status !== 'REJECTED') return existing;
+        }
+
+        let celebrity: { id: string };
+        try {
+            celebrity = await this.prisma.celebrity.create({
+                data: {
+                    name: dto.name,
+                    birth: dto.birth,
+                    death: dto.death,
+                    photo: dto.photo,
+                    role: dto.role,
+                    category: dto.category,
+                    wikidataId: dto.wikidataId,
+                    status: 'PENDING',
+                    proposedBy: viewerId,
+                    proposedAt: new Date(),
+                },
+            });
+        } catch (error) {
+            // Race: two simultaneous proposals of the same Wikidata entity.
+            if (
+                error instanceof Prisma.PrismaClientKnownRequestError &&
+                error.code === 'P2002' &&
+                dto.wikidataId
+            ) {
+                const existing = await this.prisma.celebrity.findUnique({
+                    where: { wikidataId: dto.wikidataId },
+                });
+                if (existing) return existing;
+            }
+            throw error;
+        }
+
+        if (dto.wikidataId) {
+            // Fills birth/death/photo/role from Wikidata and recalculates points.
+            return this.enrich(celebrity.id, dto.wikidataId);
+        }
+        await this.recalculatePoints(celebrity.id);
+        return this.prisma.celebrity.findUnique({ where: { id: celebrity.id } });
+    }
+
+    /** Admin: validate a proposed celebrity. Optionally enrich from Wikidata first. */
+    async approve(id: string, wikidataId?: string) {
+        const celebrity = await this.prisma.celebrity.findUnique({ where: { id } });
+        if (!celebrity) throw new NotFoundException('Celebrity not found');
+
+        const updated = await this.prisma.celebrity.update({
+            where: { id },
+            data: { status: 'APPROVED' },
+        });
+        if (wikidataId) {
+            // enrich already recalculates points.
+            return this.enrich(id, wikidataId);
+        }
+        await this.recalculatePoints(id);
+        return updated;
+    }
+
+    /**
+     * Admin: reject a proposed celebrity. The row is kept REJECTED (so the same
+     * Wikidata entity can't be re-proposed in a loop) but pulled out of every
+     * bet that listed it, so no bet keeps an unvalidated pick.
+     */
+    async reject(id: string) {
+        const celebrity = await this.prisma.celebrity.findUnique({ where: { id } });
+        if (!celebrity) throw new NotFoundException('Celebrity not found');
+
+        await this.prisma.$transaction([
+            this.prisma.celebritiesOnBet.deleteMany({ where: { celebrityId: id } }),
+            this.prisma.celebrity.update({
+                where: { id },
+                data: { status: 'REJECTED' },
+            }),
+        ]);
+        return this.prisma.celebrity.findUnique({ where: { id } });
+    }
+
+    /**
+     * Catalogue for the bet draft. Approved celebrities are visible to everyone;
+     * a viewer additionally sees their own still-pending proposals (so they can
+     * keep them in their bet). Rejected entries never surface here.
+     */
+    async findAll(viewerClerkId?: string) {
+        const viewerId = await this.resolveViewerId(viewerClerkId);
         return this.prisma.celebrity.findMany({
+            where: {
+                OR: [
+                    { status: 'APPROVED' },
+                    ...(viewerId ? [{ status: 'PENDING' as const, proposedBy: viewerId }] : []),
+                ],
+            },
             include: {
                 CelebritiesOnBet: true,
             },
@@ -51,7 +179,7 @@ export class CelebritiesService {
      */
     async findPage(params: {
         search?: string;
-        status?: 'all' | 'alive' | 'deceased';
+        status?: 'all' | 'alive' | 'deceased' | 'pending';
         take: number;
         skip: number;
     }): Promise<{ items: Awaited<ReturnType<CelebritiesService['findAll']>>; total: number }> {
@@ -62,12 +190,17 @@ export class CelebritiesService {
             }),
             ...(status === 'alive' && { death: null }),
             ...(status === 'deceased' && { death: { not: null } }),
+            ...(status === 'pending' && { status: 'PENDING' }),
         };
+
+        // The pending review queue reads newest-first; the rest stay alphabetical.
+        const orderBy: Prisma.CelebrityOrderByWithRelationInput =
+            status === 'pending' ? { proposedAt: 'desc' } : { name: 'asc' };
 
         const [items, total] = await this.prisma.$transaction([
             this.prisma.celebrity.findMany({
                 where,
-                orderBy: { name: 'asc' },
+                orderBy,
                 take,
                 skip,
                 include: { CelebritiesOnBet: true },
@@ -87,7 +220,9 @@ export class CelebritiesService {
         const end = new Date(Date.UTC(year + 1, 0, 1));
 
         const celebrities = await this.prisma.celebrity.findMany({
-            where: { death: { gte: start, lt: end } },
+            // Only validated deaths surface in the public feed — a pending
+            // proposal that dies stays private to its proposer until approved.
+            where: { status: 'APPROVED', death: { gte: start, lt: end } },
             orderBy: { death: 'desc' },
             take: limit,
             include: { CelebritiesOnBet: true },
@@ -117,7 +252,7 @@ export class CelebritiesService {
      * openDate) AND the circle has `betsVisible`, AND the viewer is a member of
      * that circle. Before reveal the picks stay secret.
      */
-    async findOne(id: string, viewerClerkId?: string) {
+    async findOne(id: string, viewerClerkId?: string, isAdmin = false) {
         const celebrity = await this.prisma.celebrity.findUnique({
             where: { id },
             include: {
@@ -132,13 +267,13 @@ export class CelebritiesService {
         });
         if (!celebrity) return celebrity;
 
-        const viewer = viewerClerkId
-            ? await this.prisma.user.findFirst({
-                  where: { clerkId: viewerClerkId },
-                  select: { id: true },
-              })
-            : null;
-        const viewerId = viewer?.id;
+        const viewerId = await this.resolveViewerId(viewerClerkId);
+
+        // A pending proposal is private: only its proposer (or an admin) may open
+        // the fiche. Others get a 404-like null.
+        if (celebrity.status === 'PENDING' && !isAdmin && celebrity.proposedBy !== viewerId) {
+            return null;
+        }
         const myCircleIds = new Set(
             viewerId
                 ? (
@@ -309,11 +444,23 @@ export class CelebritiesService {
         }
     }
 
-    async search(searchCelebrityDto: SearchCelebrityDto) {
+    async search(searchCelebrityDto: SearchCelebrityDto, viewerClerkId?: string) {
         const { name, isAlive, birthYear } = searchCelebrityDto;
+        const viewerId = await this.resolveViewerId(viewerClerkId);
 
         return this.prisma.celebrity.findMany({
             where: {
+                // Same visibility as the catalogue: approved to all, own pending to self.
+                AND: [
+                    {
+                        OR: [
+                            { status: 'APPROVED' },
+                            ...(viewerId
+                                ? [{ status: 'PENDING' as const, proposedBy: viewerId }]
+                                : []),
+                        ],
+                    },
+                ],
                 ...(name && {
                     name: {
                         contains: name,
@@ -336,16 +483,40 @@ export class CelebritiesService {
         });
     }
 
+    /**
+     * Merges a duplicate (source) into a target celebrity: every bet on the
+     * source is redirected to the target, then the source is deleted and the
+     * target's points recalculated. Bets that listed BOTH source and target
+     * would collide on the `(betId, celebrityId)` PK, so those source rows are
+     * dropped first (the target row already covers the bet).
+     */
     async merge(sourceId: string, targetId: string) {
-        // Update all CelebritiesOnBet from source to target
-        await this.prisma.celebritiesOnBet.updateMany({
-            where: { celebrityId: sourceId },
-            data: { celebrityId: targetId },
-        });
+        if (sourceId === targetId) {
+            throw new ForbiddenException('Source et cible identiques.');
+        }
 
-        // Delete the source celebrity
-        return this.prisma.celebrity.delete({
-            where: { id: sourceId },
-        });
+        // Bets that already point at the target: their source row would collide.
+        const targetBetIds = (
+            await this.prisma.celebritiesOnBet.findMany({
+                where: { celebrityId: targetId },
+                select: { betId: true },
+            })
+        ).map((r) => r.betId);
+
+        await this.prisma.$transaction([
+            // Drop colliding source rows (the bet keeps its target row).
+            this.prisma.celebritiesOnBet.deleteMany({
+                where: { celebrityId: sourceId, betId: { in: targetBetIds } },
+            }),
+            // Redirect the remaining source bets onto the target.
+            this.prisma.celebritiesOnBet.updateMany({
+                where: { celebrityId: sourceId },
+                data: { celebrityId: targetId },
+            }),
+            this.prisma.celebrity.delete({ where: { id: sourceId } }),
+        ]);
+
+        await this.recalculatePoints(targetId);
+        return this.prisma.celebrity.findUnique({ where: { id: targetId } });
     }
 }
