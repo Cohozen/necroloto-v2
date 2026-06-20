@@ -97,7 +97,28 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   token must include `public_metadata`) and `CircleAdminGuard` (circle admin via
   `Membership.role`, maps JWT `sub` → `User.clerkId`).
 - Celebrity catalog mutations + **season** mutations = global admin only. Circle settings/members
-  = circle admin.
+  = circle admin. **Exception**: `POST /celebrities/propose` is open to any authenticated user (see
+  "Celebrity proposals"), and `GET /celebrities/wikidata/search` was relaxed to `ClerkAuthGuard`
+  (read-only) so the bet-draft proposal flow can search Wikidata.
+- **Celebrity proposals (user-submitted, admin-validated)**: `Celebrity.status`
+  (`CelebrityStatus` PENDING/APPROVED/REJECTED, **default APPROVED** so legacy/admin-created rows are
+  inert) + `proposedBy` (a soft `User.id`, **no FK**) + `proposedAt`. A player adds a missing celebrity
+  from the bet draft via `CelebritiesService.propose` (`POST /celebrities/propose`): created PENDING,
+  immediately usable in their bet. **Dedup**: a Wikidata pick reuses any existing row for that
+  `wikidataId @unique` (refused if that entity is already REJECTED; P2002 race re-fetches the existing
+  row, à la `UsersService.create`); a manual entry reuses an exact case-insensitive name match. With a
+  `wikidataId` the row is **enriched inline** (`enrich` → dates/photo/role + `recalculatePoints`).
+  **Visibility, not scoring**: status governs *who sees* the row, never points — `recalculatePoints` is
+  untouched, so a PENDING that dies still scores for its proposer. A PENDING is visible **only to its
+  proposer**: `findAll`/`search` filter `OR[{APPROVED},{PENDING, proposedBy: viewer}]`, `findOne` 404s a
+  foreign PENDING (admins pass via the `@IsAdminClaim()` decorator), and `deathFeed` is `APPROVED`-only.
+  `proposedBy`/`proposedAt` ride **only** the admin payload (`findPage`, which gains a `pending` filter +
+  `proposedAt desc` order) — never the public catalogue. Admins validate via `:id/approve` (optional
+  Wikidata enrich) / `:id/reject` (kept REJECTED + pulled from every bet, so no bet keeps an unvalidated
+  pick). **Merge** (`POST /:sourceId/merge/:targetId`, admin) folds a duplicate into a target: it now
+  drops source `CelebritiesOnBet` rows that would collide with the target on the `(betId, celebrityId)`
+  PK **before** redirecting the rest, then `recalculatePoints(target)` (the old naive `updateMany` would
+  500 on a bet listing both).
 - **Seasons drive "the current year"**: a `Season` (`year @unique` + `openDate`/`betStartDate`/
   `betEndDate`/`closeDate`) is configured by global admins. ⚠️ **Betting precedes the season**: a
   season's betting window (`[betStartDate, betEndDate]`) is normally the ~month *before* `openDate`
@@ -207,7 +228,11 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   toasts. Only the **per-row "Recalculer" button stays decorative**
   (recalc is automatic on update server-side). The form sends ISO dates; `wikidataId` is set only
   via `POST /celebrities/:id/enrich` (no field on the create/update DTOs), reached through the
-  `WikidataSearchDialog`. Photo upload (`POST /celebrities/:id/photo`, multipart) is **not wired
+  `WikidataSearchDialog`. The status filter gains an **"En attente"** tab (`status=pending`); pending
+  rows show the proposal badge and swap their edit/recalc actions for **approve / reject / verify-on-
+  Wikidata / merge** (`useApproveCelebrity`/`useRejectCelebrity`/`useMergeCelebrities`; see "Celebrity
+  proposals"). Merge opens `MergeCelebrityDialog` (search the approved catalogue for the target).
+  Photo upload (`POST /celebrities/:id/photo`, multipart) is **not wired
   yet** — the client only does JSON. All `/admin/*` routes are gated by the `_app/admin.tsx` layout
   route on the Clerk `public_metadata.roles` admin claim (mirrors the API `AdminGuard`); non-admins
   get the `AdminForbidden` screen. The gate is bypassed when Clerk is unconfigured (previewable dev).
@@ -233,7 +258,12 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   **read-only** (cards + validate disabled, with a phase-specific banner) driven by
   `CircleSummary.seasonPhase` + `allowEdit`/`allowNewBet` (see "Bet locks": free during `betting`,
   flag-gated in `season-open`, locked `before`/`closed`). The fiche's bettors list is gated
-  server-side (see "Bet secrecy") and still narrowed client-side to the viewer's circles.
+  server-side (see "Bet secrecy") and still narrowed client-side to the viewer's circles. An
+  **"Ajouter une célébrité"** button (hidden when locked) opens `ProposeCelebrityDialog`
+  (`components/celebrities/`): a two-step flow — Wikidata search first (reuses `useWikidataSearch`),
+  manual fallback ("je ne trouve pas") — calling `useProposeCelebrity`; the returned id is added
+  straight to the selection and pending cards carry an "En attente" badge (`proposalStatus` on the
+  `CelebritySummary`, an axis **orthogonal** to alive/deceased). See "Celebrity proposals".
 - **"Paris" tab** (`/circles/$id/bets`, `useCircleBets` → `GET /circle/:id/bets`): lists every
   member's bet for the selected season; before reveal (or with `betsVisible` off) the server returns
   only the viewer's own bet and the page shows a "secret" banner. The leaderboard's `LeaderPicksCard`

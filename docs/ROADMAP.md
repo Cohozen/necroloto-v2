@@ -32,6 +32,13 @@ ferme — à arbitrer au fil de l'eau.
   (`adapters.ts`) : **fin des paris** (`betEndDate`, corail) si une fenêtre est ouverte, sinon
   **ouverture des paris** (`betStartDate`, néon) de la prochaine saison, sinon masqué. Refresh à
   la minute (pas de secondes).
+- ➕ **Ajouter une célébrité hors base lors du pari** — bouton « Ajouter » dans le draft
+  (`ProposeCelebrityDialog` : recherche Wikidata d'abord, repli manuel) → `POST /celebrities/propose`
+  (ouvert à tous). La fiche est créée **PENDING** (`CelebrityStatus`, default APPROVED), visible du
+  **seul proposeur** jusqu'à validation ; le scoring est inchangé (le statut gère la visibilité, pas
+  les points). Dédup par `wikidataId @unique` + nom exact, enrich inline si QID. Validation admin
+  (onglet « En attente » : approve / reject / vérif Wikidata) + **fusion** des doublons
+  (`MergeCelebrityDialog`, `merge` durci contre la collision de PK `CelebritiesOnBet`).
 
 ## 🎯 Backlog priorisable
 
@@ -39,11 +46,6 @@ ferme — à arbitrer au fil de l'eau.
   TopBar (`apps/web/src/components/layout/TopBar.tsx`) au `CommandDialog` déjà présent
   (`apps/web/src/components/ui/command.tsx`, lib `cmdk`) : raccourci clavier global +
   recherche célébrités / cercles.
-- ➕ **Ajouter une célébrité hors base lors du pari** — pendant la composition du pari
-  (`apps/web/src/routes/_app/celebrities/index.tsx`, sélection-only aujourd'hui), permettre
-  de proposer/créer une célébrité absente du catalogue. Création actuellement **admin-only**
-  (`POST /celebrities`, `@UseGuards(AdminGuard)`). À cadrer : proposition à valider par un
-  admin vs création directe + enrichissement Wikidata automatique.
 - 🔔 **Notifications** — page + génération sur événements (décès d'une célébrité pariée,
   nouveau membre, ouverture/fermeture de saison, changement de place au classement…).
   S'appuie sur l'intégration **Resend** (e-mails) encore *pending*. Modèle `Notification`
