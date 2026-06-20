@@ -269,6 +269,19 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   manual fallback ("je ne trouve pas") — calling `useProposeCelebrity`; the returned id is added
   straight to the selection and pending cards carry an "En attente" badge (`proposalStatus` on the
   `CelebritySummary`, an axis **orthogonal** to alive/deceased). See "Celebrity proposals".
+- **Celebrity fiche** (`/celebrities/$id`, `useCelebrity` → `GET /celebrities/:id`): a **read-only
+  public detail** open to any authenticated user (not admin-gated). Reached by clicking a celebrity
+  in `LeaderPicksCard` (so from **both** the "Paris" tab and the leaderboard — one shared component)
+  and via an **"Eye" action** on each approved row of the admin catalogue (`CelebrityRow` /
+  `CelebrityCard`). Shows the portrait (Wikidata `photo` over the gradient, monogram fallback —
+  `CelebrityPortrait` gained a `photo` prop), Wikidata facts (role/category/birth/age), a `PointsHero`
+  (awarded vs potential, on the **active season** via `useSeasonYear`), and **"Qui a parié dessus"
+  grouped by season** ("Cette saison" first, then past years desc — `Bettor.year` carried from
+  `bet.year`; the API already returns every year). Bettors are gated server-side (see "Bet secrecy")
+  then narrowed to the viewer's circles. The back button uses `router.history.back()` when there is
+  history (returns to the originating circle leaderboard), falling back to the catalogue link on a
+  direct/deep-link load (`useCanGoBack`). Photo upload still isn't wired; in local dev the `photo`
+  URLs may 404 (Storage not cloned). Global search will later reuse this same screen.
 - **"Paris" tab** (`/circles/$id/bets`, `useCircleBets` → `GET /circle/:id/bets`): lists every
   member's bet for the selected season; before reveal (or with `betsVisible` off) the server returns
   only the viewer's own bet and the page shows a "secret" banner. The leaderboard's `LeaderPicksCard`
