@@ -148,13 +148,13 @@ function Profile() {
 
                     <div className="mt-2 flex items-center justify-between">
                         <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-                            Badges arcade
+                            Badges
                         </span>
                         <span className="text-xs text-ink-3">
                             {unlocked} / {badges.length} débloqués
                         </span>
                     </div>
-                    <div className="grid grid-cols-4 gap-2.5 md:grid-cols-5">
+                    <div className="grid grid-cols-3 gap-2.5 md:grid-cols-5">
                         {badges.map((badge) => (
                             <AchievementBadge key={badge.id} {...badge} />
                         ))}

@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import type { CelebritySummary } from '@/types/celebrity';
 import { CelebrityPortrait } from './CelebrityPortrait';
 import { StatusBadge } from './StatusBadge';
+import { Badge } from '../ui/badge';
 
 interface CelebrityCardProps {
     celebrity: CelebritySummary;
@@ -16,7 +17,7 @@ interface CelebrityCardProps {
 export function CelebrityCard({ celebrity, selected, onToggle, disabled }: CelebrityCardProps) {
     const { id, name, age, born, role, status, proposalStatus } = celebrity;
     const isPending = proposalStatus === 'pending';
-    const meta = [age > 0 ? `${age} ans` : null, born > 0 ? `°${born}` : null, role]
+    const meta = [age > 0 ? `${age} ans` : null, born > 0 ? `${born}` : null]
         .filter(Boolean)
         .join(' · ');
     return (
@@ -45,13 +46,14 @@ export function CelebrityCard({ celebrity, selected, onToggle, disabled }: Celeb
             <div>
                 <div className="text-sm font-bold leading-tight">{name}</div>
                 <div className="text-xs text-ink-3">{meta || '—'}</div>
+                <div className="text-xs text-ink-3 truncate">{role || '—'}</div>
             </div>
-            <div className="flex items-center justify-between gap-2">
-                <StatusBadge status={status} className="h-6 px-2 text-[11px]" />
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <StatusBadge status={status} className="h-6 px-1 text-[10px] md:text-xs" />
                 {isPending && (
-                    <span className="inline-flex h-6 items-center rounded-full border border-coral/40 bg-coral/10 px-2 text-[11px] font-semibold text-coral">
+                    <Badge variant='secondary' className='h-6 px-1 text-[10px] md:text-xs px-2.5'>
                         En attente
-                    </span>
+                    </Badge>
                 )}
             </div>
         </button>

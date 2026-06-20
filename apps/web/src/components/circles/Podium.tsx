@@ -44,7 +44,7 @@ function PodiumCell({ entry, place }: { entry: LeaderboardEntry; place: number }
                 {place}
             </span>
             <Avatar
-                className={cn(
+                className={cn('mt-2',
                     first ? 'size-[48px] sm:size-[60px]' : 'size-[40px] sm:size-[50px]',
                     first && 'ring-2 ring-neon/65 ring-offset-2 ring-offset-bg',
                 )}
@@ -54,7 +54,7 @@ function PodiumCell({ entry, place }: { entry: LeaderboardEntry; place: number }
                 </AvatarFallback>
             </Avatar>
             <div className="flex flex-col items-center gap-0.5">
-                <div className="text-sm font-bold">{entry.name}</div>
+                <div className="flex flex-wrap text-sm font-bold">{entry.name}</div>
                 <div className="text-[11px] text-ink-3">{entry.hits} décès marqués</div>
             </div>
             <div

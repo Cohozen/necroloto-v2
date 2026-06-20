@@ -14,7 +14,7 @@ interface SegmentedProps<T extends string> {
 /** Segmented filter control (nl-seg) — active segment glows neon. */
 export function Segmented<T extends string>({ options, value, onValueChange }: SegmentedProps<T>) {
     return (
-        <div className="inline-flex gap-[3px] rounded-[11px] border border-line bg-surface p-1">
+        <div className="inline-flex gap-[3px] rounded-xl border border-line bg-surface p-1">
             {options.map((option) => (
                 <button
                     key={option.id}

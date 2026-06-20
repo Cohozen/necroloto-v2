@@ -85,7 +85,7 @@ function Dashboard() {
                         <h2 className="text-lg font-semibold">Vos cercles</h2>
                         <Link
                             to="/circles"
-                            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line-2 bg-surface px-3 text-[13px] font-semibold text-ink-2 transition-colors hover:text-ink"
+                            className="hidden md:inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line-2 bg-surface px-3 text-[13px] font-semibold text-ink-2 transition-colors hover:text-ink"
                         >
                             <Plus size={14} /> Nouveau cercle
                         </Link>

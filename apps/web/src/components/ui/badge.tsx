@@ -16,9 +16,9 @@ const badgeVariants = cva(
                 outline:
                     'border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
                 // nl-status--alive
-                alive: 'border-neon/40 bg-neon/10 font-bold uppercase tracking-[0.06em] text-neon',
+                alive: 'border-neon/40 bg-neon/10 font-bold tracking-[0.06em] text-neon',
                 // nl-status--dead
-                dead: 'border-coral/45 bg-coral/12 font-bold uppercase tracking-[0.06em] text-coral',
+                dead: 'border-coral/45 bg-coral/12 font-bold tracking-[0.06em] text-coral',
                 // nl-score
                 score: 'border-neon/40 bg-neon/10 font-bold text-neon shadow-glow-soft',
                 // nl-streak

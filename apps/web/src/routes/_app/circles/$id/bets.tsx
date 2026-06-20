@@ -45,9 +45,12 @@ function CircleBets() {
                         visibility={circle.data?.visibility ?? 'PRIVATE'}
                         members={members}
                     />
-                    <YearTabs value={year} onValueChange={setPicked} years={years} />
+                    <YearTabs value={year} onValueChange={setPicked} years={years} className='hidden md:inline-flex' />
                 </div>
                 <CircleTabs id={id} active="bets" />
+                <div className="flex md:hidden items-center gap-3">
+                    <YearTabs value={year} onValueChange={setPicked} years={years} />
+                </div>
             </div>
 
             {!fullyVisible && (

@@ -24,6 +24,7 @@ import {
 } from '@/lib/api/queries';
 import type { ApiBet, ApiCelebrity, CircleSummaryDto } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 export const Route = createFileRoute('/_app/celebrities/')({
     component: Catalogue,
@@ -178,7 +179,7 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
                     </span>
                     <h1 className="font-display text-3xl font-extrabold">Composez votre liste</h1>
                 </div>
-                <span className="inline-flex h-[34px] items-center rounded-full border border-neon/40 bg-neon/10 px-3 text-[13px] font-semibold text-neon">
+                <span className="hidden md:inline-flex h-[34px] items-center rounded-full border border-neon/40 bg-neon/10 px-3 text-[13px] font-semibold text-neon">
                     {selected.size} / {TOTAL} sélectionnées
                 </span>
             </div>
@@ -192,26 +193,31 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
                     </Link>
                 </p>
             ) : (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <button
-                            type="button"
-                            className="inline-flex h-10 w-fit items-center gap-2 rounded-xl border border-line-2 bg-surface px-3.5 text-[14px] font-semibold text-ink-2 hover:text-ink"
-                        >
-                            <Users size={16} className="text-ink-3" />
-                            {selectedCircle?.name ?? 'Choisir un cercle'}
-                            <ChevronDown size={15} className="text-ink-3" />
-                        </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-60">
-                        {circles.map((c) => (
-                            <DropdownMenuItem key={c.id} onSelect={() => setCircleId(c.id)}>
-                                <Users size={15} /> {c.name}
-                                {c.id === circleId && <Check size={15} className="ml-auto" />}
-                            </DropdownMenuItem>
-                        ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button
+                                type="button"
+                                className="inline-flex h-10 w-fit items-center gap-2 rounded-xl border border-line-2 bg-surface px-3.5 text-[14px] font-semibold text-ink-2 hover:text-ink"
+                            >
+                                <Users size={16} className="text-ink-3" />
+                                {selectedCircle?.name ?? 'Choisir un cercle'}
+                                <ChevronDown size={15} className="text-ink-3" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-60">
+                            {circles.map((c) => (
+                                <DropdownMenuItem key={c.id} onSelect={() => setCircleId(c.id)}>
+                                    <Users size={15} /> {c.name}
+                                    {c.id === circleId && <Check size={15} className="ml-auto" />}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <span className="inline-flex md:hidden h-[34px] items-center rounded-full border border-neon/40 bg-neon/10 px-3 text-[13px] font-semibold text-neon">
+                        {selected.size} / {TOTAL} sélectionnées
+                    </span>
+                </div>
             )}
 
             <div className="flex items-center gap-2.5">
@@ -229,18 +235,14 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
                 </div>
                 {!locked && (
                     <ProposeCelebrityDialog onProposed={addToSelection}>
-                        <button
-                            type="button"
-                            className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl border border-neon/40 bg-neon/10 px-3.5 text-[14px] font-semibold text-neon transition-colors hover:bg-neon/15"
-                        >
-                            <Plus size={16} />
-                            <span className="hidden sm:inline">Ajouter</span>
-                        </button>
+                        <Button >
+                            <Plus size={17} strokeWidth={2.2} /> <span className="hidden md:inline">Ajouter</span>
+                        </Button>
                     </ProposeCelebrityDialog>
                 )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            {/* <div className="flex flex-wrap items-center gap-2">
                 {CATEGORIES.map((cat) => (
                     <button
                         key={cat}
@@ -256,7 +258,7 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
                         {cat}
                     </button>
                 ))}
-            </div>
+            </div> */}
 
             {locked && (
                 <p className="rounded-xl border border-line-2 bg-surface px-3.5 py-2.5 text-[13px] text-ink-2">

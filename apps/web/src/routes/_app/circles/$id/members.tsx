@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Plus } from 'lucide-react';
+import { Plus, UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { CircleAdminHeader } from '@/components/circles/CircleAdminHeader';
 import { InviteDialog } from '@/components/circles/InviteDialog';
@@ -89,7 +89,7 @@ function CircleMembers() {
                     onClick={() => setInviteOpen(true)}
                     className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-neon/50 bg-neon/[0.08] px-3 text-[13px] font-semibold text-neon"
                 >
-                    <Plus size={14} strokeWidth={2.2} /> Inviter
+                    <UserPlus size={14} strokeWidth={2.2} /> Inviter
                 </button>
             </div>
 

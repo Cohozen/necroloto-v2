@@ -58,11 +58,10 @@ function CircleLeaderboard() {
                         members={members}
                     />
                     <div className="flex items-center gap-3">
-                        <YearTabs value={year} onValueChange={setPicked} years={years} />
+                        <YearTabs value={year} onValueChange={setPicked} years={years} className='hidden md:inline-flex' />
                         <Button
                             variant="outline"
                             size="sm"
-                            className="hidden md:inline-flex"
                             onClick={() => setInviteOpen(true)}
                         >
                             <UserPlus size={15} /> Inviter
@@ -70,6 +69,9 @@ function CircleLeaderboard() {
                     </div>
                 </div>
                 <CircleTabs id={id} active="leaderboard" />
+                <div className="flex md:hidden items-center gap-3">
+                    <YearTabs value={year} onValueChange={setPicked} years={years} />
+                </div>
             </div>
 
             <InviteDialog
@@ -89,13 +91,13 @@ function CircleLeaderboard() {
             ) : (
                 <div className="grid gap-5 lg:grid-cols-[1.55fr_1fr]">
                     <div className="flex flex-col gap-4">
-                        <div className="rounded-2xl border border-line bg-gradient-to-b from-surface-2 to-surface p-5 md:p-6">
+                        <div className="rounded-2xl border border-line bg-gradient-to-b from-surface-2 to-surface p-4 md:p-6">
                             <div className="mb-5 flex items-center justify-between">
                                 <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">
                                     Podium · saison {year}
                                 </span>
                                 <span className="text-xs text-ink-3">
-                                    {leaderboard.length} joueurs · {totalBets} mises
+                                    {leaderboard.length} joueurs
                                 </span>
                             </div>
                             <Podium top3={top3} />

@@ -78,19 +78,18 @@ function CirclesHub() {
                 </div>
                 <Button asChild variant="outline">
                     <Link to="/circles/join">
-                        <Hash size={17} /> Rejoindre via code
+                        <Hash size={17} /> Rejoindre <span className="hidden md:inline">via code</span>
                     </Link>
                 </Button>
                 <Button asChild>
                     <Link to="/circles/new">
-                        <Plus size={17} strokeWidth={2.2} /> Créer un cercle
+                        <Plus size={17} strokeWidth={2.2} /> <span className="hidden md:inline">Créer un cercle</span>
                     </Link>
                 </Button>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
                 <Segmented options={filters} value={filter} onValueChange={setFilter} />
-                <span className="ml-auto text-[13px] text-ink-3">Saison 2026</span>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
