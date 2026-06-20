@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import type { AdminCelebrity } from '@/types/admin';
 import { WikidataSearchDialog } from './WikidataSearchDialog';
 
-export const CATALOG_COLS = 'grid-cols-[34px_52px_minmax(0,1fr)_96px_150px_96px_78px_92px] gap-3';
+export const CATALOG_COLS = 'grid-cols-[34px_52px_minmax(0,1fr)_84px_184px_84px_72px_172px] gap-3';
 
 interface CelebrityRowProps {
     celeb: AdminCelebrity;
