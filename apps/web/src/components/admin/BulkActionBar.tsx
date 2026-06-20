@@ -49,8 +49,14 @@ export function BulkActionBar({
                 {count} sélectionnée{count > 1 ? 's' : ''}
             </span>
 
-            <div className="ml-auto flex items-center gap-2.5">
-                <Button variant="secondary" size="sm" onClick={onSync} disabled={busy}>
+            <div className="flex w-full items-center gap-2.5 sm:ml-auto sm:w-auto">
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={onSync}
+                    disabled={busy}
+                    className="flex-1 sm:flex-none"
+                >
                     <Sparkles size={15} strokeWidth={2} />
                     {syncLabel}
                 </Button>
@@ -61,7 +67,7 @@ export function BulkActionBar({
                             variant="ghost"
                             size="sm"
                             disabled={busy}
-                            className="border border-coral/35 text-coral hover:bg-coral/10 hover:text-coral"
+                            className="flex-1 border border-coral/35 text-coral hover:bg-coral/10 hover:text-coral sm:flex-none"
                         >
                             <Skull size={15} strokeWidth={2} /> Supprimer
                         </Button>
