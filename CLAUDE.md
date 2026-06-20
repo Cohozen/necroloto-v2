@@ -233,7 +233,12 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   Wikidata / merge** (`useApproveCelebrity`/`useRejectCelebrity`/`useMergeCelebrities`; see "Celebrity
   proposals"). Merge opens `MergeCelebrityDialog` (search the approved catalogue for the target).
   Photo upload (`POST /celebrities/:id/photo`, multipart) is **not wired
-  yet** — the client only does JSON. All `/admin/*` routes are gated by the `_app/admin.tsx` layout
+  yet** — the client only does JSON. **Responsive**: the catalogue is a dense `CelebrityTable`
+  (`hidden md:block`, widened Statut/Actions tracks so a pending row's two badges + four actions fit)
+  on desktop, swapped for a stacked `CelebrityCard` list (`md:hidden`, large touch targets, labelled
+  approve/reject buttons) on mobile; the `CatalogToolbar` stacks (full-width search, horizontally
+  scrollable filter pills via the `no-scrollbar` utility) and the `BulkActionBar` lets its buttons take
+  a full-width row below `sm`. All `/admin/*` routes are gated by the `_app/admin.tsx` layout
   route on the Clerk `public_metadata.roles` admin claim (mirrors the API `AdminGuard`); non-admins
   get the `AdminForbidden` screen. The gate is bypassed when Clerk is unconfigured (previewable dev).
 - **Admin — Seasons** (`/admin/seasons/*`): list + create/edit on the `SeasonForm` component
