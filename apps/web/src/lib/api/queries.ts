@@ -24,6 +24,7 @@ import type {
     CreateSeasonPayload,
     DeathFeedEntryDto,
     EnrichCelebrityPayload,
+    ProposeCelebrityPayload,
     RankedBet,
     ReplaceCelebritiesPayload,
     SortByRank,
@@ -413,6 +414,64 @@ export function useEnrichCelebrity() {
             api.post<ApiCelebrity>(`/celebrities/${id}/enrich`, payload),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['celebrities'] });
+        },
+    });
+}
+
+/**
+ * Propose a missing celebrity from the bet draft (POST /celebrities/propose).
+ * The API creates it PENDING (or returns an existing dedup match). Invalidates
+ * the catalogue so the proposer's pending pick shows up.
+ */
+export function useProposeCelebrity() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: ProposeCelebrityPayload) =>
+            api.post<ApiCelebrity>('/celebrities/propose', payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+        },
+    });
+}
+
+/** Admin: approve a proposed celebrity (optionally enrich from Wikidata first). */
+export function useApproveCelebrity() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, ...payload }: { id: string } & EnrichCelebrityPayload) =>
+            api.post<ApiCelebrity>(`/celebrities/${id}/approve`, payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+            qc.invalidateQueries({ queryKey: ['bets'] });
+        },
+    });
+}
+
+/** Admin: reject a proposed celebrity (kept REJECTED, pulled from bets). */
+export function useRejectCelebrity() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => api.post<ApiCelebrity>(`/celebrities/${id}/reject`, {}),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+            qc.invalidateQueries({ queryKey: ['bets'] });
+        },
+    });
+}
+
+/** Admin: merge a duplicate (source) into a target celebrity, redirecting bets. */
+export function useMergeCelebrities() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ sourceId, targetId }: { sourceId: string; targetId: string }) =>
+            api.post<ApiCelebrity>(`/celebrities/${sourceId}/merge/${targetId}`, {}),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+            qc.invalidateQueries({ queryKey: ['bets'] });
         },
     });
 }

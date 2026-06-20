@@ -3,7 +3,13 @@
 
 import { calculPointByCelebrity } from '@necroloto/shared/scoring';
 import type { AdminCelebrity } from '@/types/admin';
-import type { Bettor, CelebrityDetail, CelebrityStatus, CelebritySummary } from '@/types/celebrity';
+import type {
+    Bettor,
+    CelebrityDetail,
+    CelebrityProposalStatus,
+    CelebrityStatus,
+    CelebritySummary,
+} from '@/types/celebrity';
 import type {
     CircleMember,
     CircleSummary,
@@ -181,6 +187,9 @@ export function toLeaderboardEntry(bet: RankedBet, currentUserId?: string): Lead
 
 const celebrityStatus = (death: string | null): CelebrityStatus => (death ? 'deceased' : 'alive');
 
+const proposalStatus = (status: ApiCelebrity['status']): CelebrityProposalStatus =>
+    status === 'PENDING' ? 'pending' : status === 'REJECTED' ? 'rejected' : 'approved';
+
 /**
  * API celebrity list item → admin catalogue row. `bettors` counts the bet join
  * rows; `points` uses the shared scoring (awarded if dead, else potential value).
@@ -192,6 +201,8 @@ export function toAdminCelebrity(c: ApiCelebrityListItem): AdminCelebrity {
         role: c.role ?? '',
         born: c.birth ? new Date(c.birth).getUTCFullYear() : 0,
         status: celebrityStatus(c.death),
+        proposalStatus: proposalStatus(c.status),
+        hasWikidata: !!c.wikidataId,
         points: celebrityPoints(c),
         bettors: c.CelebritiesOnBet.length,
     };
@@ -208,6 +219,7 @@ export function toCelebritySummary(c: ApiCelebrity): CelebritySummary {
         born: bornYear,
         role: c.role ?? undefined,
         status: celebrityStatus(c.death),
+        proposalStatus: proposalStatus(c.status),
         category: c.category ?? undefined,
     };
 }

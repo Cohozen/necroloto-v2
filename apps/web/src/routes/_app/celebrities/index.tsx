@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { Check, ChevronDown, Search, Users } from 'lucide-react';
+import { Check, ChevronDown, Plus, Search, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { CelebrityCard } from '@/components/celebrities/CelebrityCard';
+import { ProposeCelebrityDialog } from '@/components/celebrities/ProposeCelebrityDialog';
 import { DraftTray } from '@/components/celebrities/DraftTray';
 import {
     DropdownMenu,
@@ -135,6 +136,17 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
         });
     };
 
+    // A freshly proposed celebrity is added straight to the selection (the
+    // catalogue refetches in the background to surface its pending card).
+    const addToSelection = (id: string) => {
+        setSelected((prev) => {
+            if (prev.has(id) || prev.size >= TOTAL) return prev;
+            const next = new Set(prev);
+            next.add(id);
+            return next;
+        });
+    };
+
     const results = useMemo(() => {
         const q = query.trim().toLowerCase();
         return cards.filter(
@@ -202,17 +214,30 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
                 </DropdownMenu>
             )}
 
-            <div className="relative">
-                <Search
-                    size={16}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3"
-                />
-                <Input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Rechercher une célébrité…"
-                    className="h-11 pl-10"
-                />
+            <div className="flex items-center gap-2.5">
+                <div className="relative flex-1">
+                    <Search
+                        size={16}
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3"
+                    />
+                    <Input
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Rechercher une célébrité…"
+                        className="h-11 pl-10"
+                    />
+                </div>
+                {!locked && (
+                    <ProposeCelebrityDialog onProposed={addToSelection}>
+                        <button
+                            type="button"
+                            className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl border border-neon/40 bg-neon/10 px-3.5 text-[14px] font-semibold text-neon transition-colors hover:bg-neon/15"
+                        >
+                            <Plus size={16} />
+                            <span className="hidden sm:inline">Ajouter</span>
+                        </button>
+                    </ProposeCelebrityDialog>
+                )}
             </div>
 
             <div className="flex flex-wrap items-center gap-2">

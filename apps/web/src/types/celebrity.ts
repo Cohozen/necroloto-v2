@@ -1,5 +1,8 @@
 export type CelebrityStatus = 'alive' | 'deceased';
 
+/** Validation lifecycle, orthogonal to the alive/deceased axis. */
+export type CelebrityProposalStatus = 'pending' | 'approved' | 'rejected';
+
 export interface CelebritySummary {
     id: string;
     name: string;
@@ -10,6 +13,8 @@ export interface CelebritySummary {
     /** Occupation, when known. */
     role?: string;
     status: CelebrityStatus;
+    /** Validation lifecycle — `pending` rows are user proposals awaiting an admin. */
+    proposalStatus: CelebrityProposalStatus;
     /** Coarse category used for filtering, when known. */
     category?: string;
 }

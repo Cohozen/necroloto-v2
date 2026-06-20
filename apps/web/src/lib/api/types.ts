@@ -25,6 +25,9 @@ export interface ApiUser {
     updatedAt: string;
 }
 
+/** Lifecycle of a celebrity entry (mirrors the Prisma `CelebrityStatus`). */
+export type CelebrityProposalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
 export interface ApiCelebrity {
     id: string;
     name: string;
@@ -34,6 +37,7 @@ export interface ApiCelebrity {
     wikidataId: string | null;
     role: string | null;
     category: string | null;
+    status: CelebrityProposalStatus;
 }
 
 export interface ApiCelebritiesOnBet {
@@ -68,10 +72,14 @@ export interface ApiCelebrityDetail extends ApiCelebrity {
 /** Celebrity list item (GET /celebrities) — bet join rows for counting bettors. */
 export interface ApiCelebrityListItem extends ApiCelebrity {
     CelebritiesOnBet: { points: number }[];
+    /** Proposer's User.id — only populated on the admin catalogue payload. */
+    proposedBy?: string | null;
+    /** ISO date the celebrity was proposed (admin catalogue only). */
+    proposedAt?: string | null;
 }
 
 /** Admin catalogue status filter (GET /celebrities/admin/list). */
-export type AdminCelebrityStatus = 'all' | 'alive' | 'deceased';
+export type AdminCelebrityStatus = 'all' | 'alive' | 'deceased' | 'pending';
 
 /** Result of a bulk delete (DELETE /celebrities/bulk). */
 export interface BulkDeleteResult {
@@ -293,6 +301,17 @@ export type UpdateCelebrityPayload = Partial<CreateCelebrityPayload>;
 export interface EnrichCelebrityPayload {
     /** Explicit Wikidata QID; the API falls back to the existing link or name. */
     wikidataId?: string;
+}
+
+/** A player proposing a missing celebrity from the bet draft (POST /celebrities/propose). */
+export interface ProposeCelebrityPayload {
+    name: string;
+    /** Set when picked from Wikidata; the API enriches + dedupes on it. */
+    wikidataId?: string;
+    birth?: string | null;
+    death?: string | null;
+    role?: string | null;
+    category?: string;
 }
 
 export interface CreateSeasonPayload {
