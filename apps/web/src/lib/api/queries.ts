@@ -16,6 +16,7 @@ import type {
     ApiSeason,
     ApiUser,
     BulkDeleteResult,
+    CircleSearchResultDto,
     CircleSummaryDto,
     CreateBetPayload,
     CreateCelebrityPayload,
@@ -486,6 +487,31 @@ export function useWikidataSearch(name: string) {
             api.get<WikidataSummaryDto[]>(
                 `/celebrities/wikidata/search?name=${encodeURIComponent(trimmed)}`,
             ),
+        enabled: trimmed.length > 0,
+    });
+}
+
+// --- Global search ---
+
+/** Circle name search (public + own circles) for the global search palette. */
+export function useCircleSearch(query: string) {
+    const api = useApiClient();
+    const trimmed = query.trim();
+    return useQuery({
+        queryKey: queryKeys.circles.search(trimmed),
+        queryFn: () =>
+            api.get<CircleSearchResultDto[]>(`/circle/search?q=${encodeURIComponent(trimmed)}`),
+        enabled: trimmed.length > 0,
+    });
+}
+
+/** Celebrity name search (visibility-aware) for the global search palette. */
+export function useCelebritySearch(query: string) {
+    const api = useApiClient();
+    const trimmed = query.trim();
+    return useQuery({
+        queryKey: queryKeys.celebrities.search(trimmed),
+        queryFn: () => api.post<ApiCelebrity[]>('/celebrities/search', { name: trimmed }),
         enabled: trimmed.length > 0,
     });
 }

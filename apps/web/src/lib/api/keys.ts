@@ -10,6 +10,7 @@ export const queryKeys = {
         detail: (id: string) => ['circles', 'detail', id] as const,
         byCode: (code: string) => ['circles', 'code', code] as const,
         bets: (id: string, year: number) => ['circles', 'bets', id, year] as const,
+        search: (q: string) => ['circles', 'search', q] as const,
     },
     bets: {
         rank: (circleId: string, year: number, sort: SortByRank) =>
@@ -23,6 +24,7 @@ export const queryKeys = {
         detail: (id: string) => ['celebrities', 'detail', id] as const,
         deathFeed: (year: number, limit: number) => ['celebrities', 'deaths', year, limit] as const,
         wikidata: (name: string) => ['celebrities', 'wikidata', name] as const,
+        search: (q: string) => ['celebrities', 'search', q] as const,
     },
     seasons: {
         list: () => ['seasons', 'list'] as const,

@@ -203,6 +203,15 @@ export interface CircleSummaryDto {
     podium: PodiumSlotDto[];
 }
 
+/** Lightweight circle hit for the global search palette (GET /circle/search). */
+export interface CircleSearchResultDto {
+    id: string;
+    name: string;
+    visibility: CircleVisibility;
+    members: number;
+    isMember: boolean;
+}
+
 /** Lifecycle phase of a season (mirrors the API `SeasonPhase`). */
 export type SeasonPhase = 'none' | 'before' | 'betting' | 'season-open' | 'closed';
 
