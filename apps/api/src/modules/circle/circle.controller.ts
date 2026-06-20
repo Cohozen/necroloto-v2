@@ -38,6 +38,13 @@ export class CircleController {
         return this.circleService.findAll();
     }
 
+    // Name search for the global search palette (public + own circles).
+    // Declared before ':id' so "search" isn't captured as a circle id.
+    @Get('search')
+    search(@Query('q') q: string, @CurrentClerkId() clerkId?: string) {
+        return this.circleService.search(q ?? '', clerkId);
+    }
+
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.circleService.findOne(id);

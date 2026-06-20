@@ -17,6 +17,15 @@ export interface PodiumSlot {
     isYou: boolean;
 }
 
+/** Lightweight circle hit for the global search palette. */
+export interface CircleSearchResult {
+    id: string;
+    name: string;
+    visibility: CircleVisibility;
+    members: number;
+    isMember: boolean;
+}
+
 /** Per-circle summary for a user (powers the hub + dashboard cards). */
 export interface CircleSummary {
     id: string;
@@ -186,6 +195,49 @@ export class CircleService {
                 },
             },
         });
+    }
+
+    /**
+     * Name search for the global search palette: public circles + the viewer's
+     * own circles (any visibility) matching the query. Lightweight payload.
+     */
+    async search(query: string, viewerClerkId?: string): Promise<CircleSearchResult[]> {
+        const trimmed = query.trim();
+        if (trimmed.length === 0) return [];
+
+        const viewer = viewerClerkId
+            ? await this.prisma.user.findFirst({
+                  where: { clerkId: viewerClerkId },
+                  select: { id: true },
+              })
+            : null;
+        const viewerId = viewer?.id;
+
+        const circles = await this.prisma.circle.findMany({
+            where: {
+                name: { contains: trimmed, mode: 'insensitive' },
+                OR: [
+                    { visibility: 'PUBLIC' },
+                    ...(viewerId ? [{ memberships: { some: { userId: viewerId } } }] : []),
+                ],
+            },
+            include: {
+                _count: { select: { memberships: true } },
+                ...(viewerId
+                    ? { memberships: { where: { userId: viewerId }, select: { id: true } } }
+                    : {}),
+            },
+            orderBy: { name: 'asc' },
+            take: 8,
+        });
+
+        return circles.map((circle) => ({
+            id: circle.id,
+            name: circle.name,
+            visibility: circle.visibility,
+            members: circle._count.memberships,
+            isMember: viewerId ? (circle.memberships?.length ?? 0) > 0 : false,
+        }));
     }
 
     async findByCode(code: string) {
