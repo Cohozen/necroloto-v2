@@ -51,7 +51,7 @@ export function CelebrityCard({ celebrity, selected, onToggle, disabled }: Celeb
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <StatusBadge status={status} className="h-6 px-1 text-[10px] md:text-xs" />
                 {isPending && (
-                    <Badge variant='secondary' className='h-6 px-1 text-[10px] md:text-xs px-2.5'>
+                    <Badge variant="secondary" className="h-6 px-1 text-[10px] md:text-xs px-2.5">
                         En attente
                     </Badge>
                 )}

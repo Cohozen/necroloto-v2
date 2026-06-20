@@ -78,12 +78,14 @@ function CirclesHub() {
                 </div>
                 <Button asChild variant="outline">
                     <Link to="/circles/join">
-                        <Hash size={17} /> Rejoindre <span className="hidden md:inline">via code</span>
+                        <Hash size={17} /> Rejoindre{' '}
+                        <span className="hidden md:inline">via code</span>
                     </Link>
                 </Button>
                 <Button asChild>
                     <Link to="/circles/new">
-                        <Plus size={17} strokeWidth={2.2} /> <span className="hidden md:inline">Créer un cercle</span>
+                        <Plus size={17} strokeWidth={2.2} />{' '}
+                        <span className="hidden md:inline">Créer un cercle</span>
                     </Link>
                 </Button>
             </div>
