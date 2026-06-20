@@ -42,6 +42,16 @@ enum SyncJobStatus {
   FAILED
 }
 
+/// Lifecycle of a celebrity entry. Admin-created rows are APPROVED; entries a
+/// player proposes from the bet draft start PENDING and stay visible only to
+/// their proposer until an admin approves them. REJECTED keeps the row so the
+/// same Wikidata entity can't be re-proposed in a loop.
+enum CelebrityStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id             String       @id @default(uuid())
   clerkId        String
@@ -67,7 +77,14 @@ model Celebrity {
   wikidataId       String?            @unique
   role             String?
   category         String?
+  status           CelebrityStatus    @default(APPROVED)
+  proposedBy       String?            // User.id of the proposer (null for admin/legacy rows)
+  proposedAt       DateTime?          // null for admin/legacy rows
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
   CelebritiesOnBet CelebritiesOnBet[]
+
+  @@index([status])
 }
 
 model Bet {
