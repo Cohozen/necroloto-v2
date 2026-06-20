@@ -1,6 +1,7 @@
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import type { AdminCelebrity } from '@/types/admin';
+import { CelebrityCard } from './CelebrityCard';
 import { CATALOG_COLS, CelebrityRow } from './CelebrityRow';
 
 interface CelebrityTableProps {
@@ -31,29 +32,56 @@ export function CelebrityTable({
     const someSelected = selectedOnPage > 0 && !allSelected;
 
     return (
-        <div className="overflow-x-auto">
-            <div className="min-w-[760px] overflow-hidden rounded-2xl border border-line bg-surface">
-                <div
-                    className={cn(
-                        'grid items-center px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3',
-                        CATALOG_COLS,
-                    )}
-                >
+        <>
+            {/* Desktop: dense table (horizontally scrollable on narrow desktop widths). */}
+            <div className="hidden overflow-x-auto md:block">
+                <div className="min-w-[860px] overflow-hidden rounded-2xl border border-line bg-surface">
+                    <div
+                        className={cn(
+                            'grid items-center px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3',
+                            CATALOG_COLS,
+                        )}
+                    >
+                        <Checkbox
+                            checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                            onCheckedChange={onToggleAll}
+                            aria-label="Tout sélectionner"
+                        />
+                        <div />
+                        <div>Nom</div>
+                        <div>Naissance</div>
+                        <div>Statut</div>
+                        <div>Points</div>
+                        <div>Paris</div>
+                        <div className="text-right">Actions</div>
+                    </div>
+                    {celebrities.map((celeb) => (
+                        <CelebrityRow
+                            key={celeb.id}
+                            celeb={celeb}
+                            selected={selectedIds.has(celeb.id)}
+                            onToggle={onToggle}
+                            onApprove={onApprove}
+                            onReject={onReject}
+                            onMerge={onMerge}
+                            busy={busyId === celeb.id}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Mobile: stacked cards with large touch targets. */}
+            <div className="flex flex-col gap-3 md:hidden">
+                <label className="flex items-center gap-2.5 px-1 text-[13px] font-semibold text-ink-3">
                     <Checkbox
                         checked={allSelected ? true : someSelected ? 'indeterminate' : false}
                         onCheckedChange={onToggleAll}
                         aria-label="Tout sélectionner"
                     />
-                    <div />
-                    <div>Nom</div>
-                    <div>Naissance</div>
-                    <div>Statut</div>
-                    <div>Points</div>
-                    <div>Paris</div>
-                    <div className="text-right">Actions</div>
-                </div>
+                    Tout sélectionner
+                </label>
                 {celebrities.map((celeb) => (
-                    <CelebrityRow
+                    <CelebrityCard
                         key={celeb.id}
                         celeb={celeb}
                         selected={selectedIds.has(celeb.id)}
@@ -65,6 +93,6 @@ export function CelebrityTable({
                     />
                 ))}
             </div>
-        </div>
+        </>
     );
 }
