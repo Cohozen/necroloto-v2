@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Check, GitMerge, Globe, Pencil, RefreshCw, User, X } from 'lucide-react';
+import { Check, Eye, GitMerge, Globe, Pencil, RefreshCw, User, X } from 'lucide-react';
 import { CelebrityPortrait } from '@/components/celebrities/CelebrityPortrait';
 import { StatusBadge } from '@/components/celebrities/StatusBadge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -132,6 +132,14 @@ export function CelebrityCard({
                     </>
                 ) : (
                     <>
+                        <Link
+                            to="/celebrities/$id"
+                            params={{ id: celeb.id }}
+                            className="inline-flex size-11 shrink-0 items-center justify-center rounded-[12px] border border-line-2 bg-surface-2 text-ink-2 hover:text-ink"
+                            aria-label={`Voir la fiche de ${celeb.name}`}
+                        >
+                            <Eye size={18} />
+                        </Link>
                         <Link
                             to="/admin/celebrities/$id"
                             params={{ id: celeb.id }}

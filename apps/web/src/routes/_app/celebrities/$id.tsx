@@ -1,12 +1,11 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { ChevronLeft, Globe, Plus } from 'lucide-react';
+import { createFileRoute, Link, useCanGoBack, useRouter } from '@tanstack/react-router';
+import { ChevronLeft, Globe } from 'lucide-react';
 import { useMemo } from 'react';
 import { BettorRow } from '@/components/celebrities/BettorRow';
 import { CelebrityPortrait } from '@/components/celebrities/CelebrityPortrait';
 import { Fact } from '@/components/celebrities/Fact';
 import { PointsHero } from '@/components/celebrities/PointsHero';
 import { StatusBadge } from '@/components/celebrities/StatusBadge';
-import { Button } from '@/components/ui/button';
 import { toCelebrityDetail } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
 import { useCelebrity, useCircleSummaries, useSeasonYear } from '@/lib/api/queries';
@@ -17,6 +16,8 @@ export const Route = createFileRoute('/_app/celebrities/$id')({
 
 function CelebrityPage() {
     const { id } = Route.useParams();
+    const router = useRouter();
+    const canGoBack = useCanGoBack();
     const { user } = useCurrentUser();
     const year = useSeasonYear();
     const celebQuery = useCelebrity(id);
@@ -52,23 +53,29 @@ function CelebrityPage() {
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 p-4 md:p-6">
             <div className="flex items-center gap-3">
-                <Link
-                    to="/celebrities"
-                    aria-label="Retour au catalogue"
-                    className="inline-flex size-[38px] items-center justify-center rounded-[11px] border border-line-2 bg-surface-2 text-ink-2"
-                >
-                    <ChevronLeft size={18} />
-                </Link>
+                {canGoBack ? (
+                    <button
+                        type="button"
+                        onClick={() => router.history.back()}
+                        aria-label="Retour"
+                        className="inline-flex size-[38px] items-center justify-center rounded-[11px] border border-line-2 bg-surface-2 text-ink-2"
+                    >
+                        <ChevronLeft size={18} />
+                    </button>
+                ) : (
+                    <Link
+                        to="/celebrities"
+                        aria-label="Retour au catalogue"
+                        className="inline-flex size-[38px] items-center justify-center rounded-[11px] border border-line-2 bg-surface-2 text-ink-2"
+                    >
+                        <ChevronLeft size={18} />
+                    </Link>
+                )}
                 <span className="text-[13px] text-ink-3">
                     Catalogue <span className="opacity-50">/</span>{' '}
-                    <span className="text-ink">Fiche célébrité</span>
+                    <span className="text-ink">{celeb.name}</span>
                 </span>
                 <div className="flex-1" />
-                <Button variant="outline" size="sm" asChild>
-                    <Link to="/celebrities">
-                        <Plus size={15} /> Ajouter à mon pari
-                    </Link>
-                </Button>
             </div>
 
             <div className="flex flex-col gap-1">
@@ -97,7 +104,7 @@ function CelebrityPage() {
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 rounded-2xl border border-line bg-surface p-[18px]">
-                        <Fact label="Naissance" value={celeb.born > 0 ? `°${celeb.born}` : '—'} />
+                        <Fact label="Naissance" value={celeb.born > 0 ? `${celeb.born}` : '—'} />
                         <Fact label="Âge" value={celeb.age > 0 ? `${celeb.age} ans` : '—'} />
                         <div className="col-span-2 flex flex-col gap-1.5">
                             <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">

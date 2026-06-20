@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Check, GitMerge, Globe, Pencil, RefreshCw, User, X } from 'lucide-react';
+import { Check, Eye, GitMerge, Globe, Pencil, RefreshCw, User, X } from 'lucide-react';
 import { CelebrityPortrait } from '@/components/celebrities/CelebrityPortrait';
 import { StatusBadge } from '@/components/celebrities/StatusBadge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -58,7 +58,7 @@ export function CelebrityRow({
                 <div className="truncate text-[14.5px] font-semibold">{celeb.name}</div>
                 <div className="truncate text-xs text-ink-3">{celeb.role}</div>
             </div>
-            <div className="font-mono text-[13px] text-ink-2">°{celeb.born}</div>
+            <div className="font-mono text-[13px] text-ink-2">{celeb.born}</div>
             <div className="flex items-center gap-1.5">
                 <StatusBadge status={celeb.status} />
                 {pending && (
@@ -129,6 +129,14 @@ export function CelebrityRow({
                     </>
                 ) : (
                     <>
+                        <Link
+                            to="/celebrities/$id"
+                            params={{ id: celeb.id }}
+                            className="inline-flex size-9 items-center justify-center rounded-[10px] border border-line-2 bg-surface-2 text-ink-2 hover:text-ink"
+                            aria-label={`Voir la fiche de ${celeb.name}`}
+                        >
+                            <Eye size={16} />
+                        </Link>
                         <Link
                             to="/admin/celebrities/$id"
                             params={{ id: celeb.id }}
