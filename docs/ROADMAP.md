@@ -48,10 +48,22 @@ ferme — à arbitrer au fil de l'eau.
 
 ## 🎯 Backlog priorisable
 
-- 🔔 **Notifications** — page + génération sur événements (décès d'une célébrité pariée,
-  nouveau membre, ouverture/fermeture de saison, changement de place au classement…).
-  S'appuie sur l'intégration **Resend** (e-mails) encore *pending*. Modèle `Notification`
-  côté API + centre de notifications côté web.
+- ✅ **Notifications (phase 1)** — modèle `Notification` (store par utilisateur) peuplé en
+  asynchrone via `@nestjs/event-emitter` : handlers `@OnEvent` dans `NotificationsModule`,
+  émetteurs dans les modules domaine. Événements livrés : **décès d'une célébrité pariée**
+  (`DeathDetectionService` + saisie admin), **nouveau membre de cercle**, **jalons de saison**
+  (`SeasonSchedulerService` : ouverture des paris / ouverture / fermeture). Page web
+  `/notifications` (lecture auto à l'ouverture + suppression) + badge cloche
+  (`GET /notifications/unread-count`). Destinataires des events globaux = membres de cercle.
+- 🔔 **Notifications (phase 2)** — événements restants : **changement de place au classement**
+  (nécessite un snapshot de rang, ex. `lastRank` sur `Bet`, diffé après chaque scan de décès,
+  le rang étant aujourd'hui calculé à la volée) ; proposition approuvée/rejetée (→ proposeur),
+  nouvelle proposition en attente (→ admins), retrait/promotion admin, changement de réglages
+  cercle, rappel « les paris ferment bientôt », classement final / vainqueur, bienvenue.
+- 📧 **Notifications — canaux de diffusion** — sur le même store : **e-mail** via **Resend**
+  (encore *pending*) et **Web Push (PWA / service worker)** pour le push mobile (Web Push API ;
+  iOS ≥ 16.4 uniquement si la PWA est installée sur l'écran d'accueil — clés VAPID + table
+  `PushSubscription` + lib `web-push`).
 - 🔢 **Nombre de paris configurable par cercle** — aujourd'hui figé à
   `MAX_BET_CELEBRITIES = 50` (`apps/web/src/lib/api/queries.ts`). Champ sur le modèle
   `Circle` (Prisma) + réglage dans `/circles/$id/settings`, appliqué à la validation du
