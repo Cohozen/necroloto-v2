@@ -20,6 +20,41 @@ interface GlobalSearchDialogProps {
 
 const MAX_PER_GROUP = 6;
 
+/** Highlights the (case-insensitive) occurrences of `query` within `text`. */
+function HighlightMatch({ text, query }: { text: string; query: string }) {
+    const needle = query.trim();
+    if (needle.length === 0) return <>{text}</>;
+
+    const lower = text.toLowerCase();
+    const lowerNeedle = needle.toLowerCase();
+    const parts: Array<{ value: string; match: boolean }> = [];
+    let cursor = 0;
+    let index = lower.indexOf(lowerNeedle);
+    while (index !== -1) {
+        if (index > cursor) parts.push({ value: text.slice(cursor, index), match: false });
+        parts.push({ value: text.slice(index, index + needle.length), match: true });
+        cursor = index + needle.length;
+        index = lower.indexOf(lowerNeedle, cursor);
+    }
+    if (cursor < text.length) parts.push({ value: text.slice(cursor), match: false });
+
+    return (
+        <>
+            {parts.map((part, i) =>
+                part.match ? (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: parts derive from a stable string split
+                    <mark key={i} className="bg-transparent font-semibold text-neon">
+                        {part.value}
+                    </mark>
+                ) : (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: parts derive from a stable string split
+                    <span key={i}>{part.value}</span>
+                ),
+            )}
+        </>
+    );
+}
+
 /**
  * Global search palette (⌘K): name search over the viewer's circles + public
  * circles and the celebrity catalogue. Keyboard-navigable (cmdk), redirects to
@@ -105,7 +140,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
                                             <Users size={16} />
                                         </span>
                                         <span className="min-w-0 flex-1 truncate font-medium text-ink">
-                                            {circle.name}
+                                            <HighlightMatch text={circle.name} query={debounced} />
                                         </span>
                                         <span className="shrink-0 text-[11px] text-ink-3">
                                             {circle.isMember
@@ -138,7 +173,10 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
                                             className="size-9 shrink-0"
                                         />
                                         <span className="min-w-0 flex-1 truncate font-medium text-ink">
-                                            {celebrity.name}
+                                            <HighlightMatch
+                                                text={celebrity.name}
+                                                query={debounced}
+                                            />
                                         </span>
                                         {celebrity.role && (
                                             <span className="shrink-0 truncate text-[11px] text-ink-3">
