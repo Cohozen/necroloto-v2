@@ -21,9 +21,11 @@ function targetFor(notification: ApiNotification): string {
     if (circleId) return `/circles/${circleId}`;
     switch (notification.type) {
         case 'SEASON_BETS_OPEN':
+        case 'BET_CLOSING_SOON':
             return '/celebrities';
         case 'SEASON_OPENED':
         case 'SEASON_CLOSED':
+        case 'SEASON_WINNER':
             return '/circles';
         default:
             return '/dashboard';
