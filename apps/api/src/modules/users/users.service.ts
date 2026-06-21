@@ -1,11 +1,16 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationEvents, type UserWelcomedEvent } from '../notifications/events';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        private events: EventEmitter2,
+    ) {}
 
     async create(createUserDto: CreateUserDto) {
         // Idempotent provisioning. A Clerk user may already have a row (re-login),
@@ -37,9 +42,14 @@ export class UsersService {
             }
         }
 
-        return this.prisma.user.create({
+        const created = await this.prisma.user.create({
             data: createUserDto,
         });
+        // Genuinely new player (not a re-login or email relink) → welcome them.
+        this.events.emit(NotificationEvents.UserWelcomed, {
+            userId: created.id,
+        } satisfies UserWelcomedEvent);
+        return created;
     }
 
     async findAll() {
