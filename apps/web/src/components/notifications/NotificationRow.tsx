@@ -10,12 +10,24 @@ interface NotificationRowProps {
     onDelete: (id: string) => void;
 }
 
-/** Resolves the deep-link target for a notification, or null when it has none. */
-function targetFor(notification: ApiNotification): string | null {
+/**
+ * Where a notification navigates when clicked. Prefers a specific entity from
+ * its payload (celebrity fiche / circle), else falls back per type: betting
+ * opening → the bet draft, season open/close → the leaderboard hub.
+ */
+function targetFor(notification: ApiNotification): string {
     const { celebrityId, circleId } = notification.data ?? {};
     if (celebrityId) return `/celebrities/${celebrityId}`;
     if (circleId) return `/circles/${circleId}`;
-    return null;
+    switch (notification.type) {
+        case 'SEASON_BETS_OPEN':
+            return '/celebrities';
+        case 'SEASON_OPENED':
+        case 'SEASON_CLOSED':
+            return '/circles';
+        default:
+            return '/dashboard';
+    }
 }
 
 export function NotificationRow({ notification, onDelete }: NotificationRowProps) {
@@ -52,21 +64,15 @@ export function NotificationRow({ notification, onDelete }: NotificationRowProps
         </>
     );
 
-    const innerClass = 'flex flex-1 items-start gap-3.5 text-left';
-
     return (
         <div className="group flex items-start gap-3.5 rounded-[13px] border border-line bg-surface p-3.5 transition-colors focus-within:border-line-2 hover:border-line-2">
-            {target ? (
-                <button
-                    type="button"
-                    className={cn(innerClass, 'cursor-pointer')}
-                    onClick={() => navigate({ to: target })}
-                >
-                    {body}
-                </button>
-            ) : (
-                <div className={innerClass}>{body}</div>
-            )}
+            <button
+                type="button"
+                className="flex flex-1 cursor-pointer items-start gap-3.5 text-left"
+                onClick={() => navigate({ to: target })}
+            >
+                {body}
+            </button>
 
             <button
                 type="button"
