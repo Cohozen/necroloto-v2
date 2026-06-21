@@ -164,6 +164,26 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   in `JobsService.recordDeathScan` so each run is a `DEATH_SCAN` `SyncJob` — both job types surface on
   the admin `/admin/automation` screen (`GET /jobs`). The bulk-enrich endpoint lives on `JobsController`
   (not `CelebritiesController`) to keep module deps one-directional (`JobsModule` → `CelebritiesModule`).
+- **Notifications** (`modules/notifications`): per-user in-app `Notification` rows, populated
+  **asynchronously** via `@nestjs/event-emitter`. Domain modules **emit** events after commit; the
+  `NotificationsService` **consumes** them with `@OnEvent` (fire-and-forget — each handler is wrapped in
+  try/catch + `Logger` so a notification failure never breaks the triggering action). One-directional by
+  design: domain modules import only `notifications/events.ts` (event-name constants + payload types, no
+  DI), so nothing creates a cycle on `NotificationsModule`. `NotificationsModule` itself imports
+  `BetsModule` (to compute the per-circle winner on season close). Events: `celebrity.died`
+  (`DeathDetectionService` + admin manual death), `membership.created`, season milestones
+  (`SeasonSchedulerService`, daily `@Cron` 5h, monotone `Season.notifiedMilestone` cursor — bets open /
+  open / closed, fired once), `season.closed` also announces the winner (`SEASON_WINNER`), `bets.closingSoon`
+  (reminder ~3 days before `betEndDate`, once per season via `Season.betsClosingNotifiedAt`, to members
+  without a bet that year), proposal lifecycle (`proposal.pending`→admins, `proposal.approved`/`rejected`
+  →proposer, emitted from `CelebritiesService.propose`/`approve`/`reject`), and `user.welcomed`
+  (`UsersService.create`, genuine new row only). **Recipients of season-wide events = circle members**
+  (users with ≥1 `Membership`). ⚠️ Global admins live in Clerk (no DB role), so admin-targeted
+  notifications resolve recipients from the **`ADMIN_CLERK_IDS`** env (CSV of Clerk ids → `User` by
+  `clerkId`; empty = no-op). API: `GET /notifications`, `GET /notifications/unread-count`,
+  `POST /notifications/read` (mark all), `DELETE /notifications/:id`, `DELETE /notifications`. Web: page
+  `/notifications` (auto-marks read on open) + bell badge in `TopBar`. The **ranking-change** event was
+  deliberately dropped (rank is computed on the fly; a snapshot was judged too costly for the value).
 
 ## Front web (`apps/web`)
 

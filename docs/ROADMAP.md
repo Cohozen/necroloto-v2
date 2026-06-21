@@ -55,11 +55,16 @@ ferme — à arbitrer au fil de l'eau.
   (`SeasonSchedulerService` : ouverture des paris / ouverture / fermeture). Page web
   `/notifications` (lecture auto à l'ouverture + suppression) + badge cloche
   (`GET /notifications/unread-count`). Destinataires des events globaux = membres de cercle.
-- 🔔 **Notifications (phase 2)** — événements restants : **changement de place au classement**
-  (nécessite un snapshot de rang, ex. `lastRank` sur `Bet`, diffé après chaque scan de décès,
-  le rang étant aujourd'hui calculé à la volée) ; proposition approuvée/rejetée (→ proposeur),
-  nouvelle proposition en attente (→ admins), retrait/promotion admin, changement de réglages
-  cercle, rappel « les paris ferment bientôt », classement final / vainqueur, bienvenue.
+- ✅ **Notifications (phase 2)** — events ajoutés sur le même store/pattern : **propositions de
+  célébrités** (`proposal.pending` → admins via `ADMIN_CLERK_IDS`, `proposal.approved`/`rejected` →
+  proposeur), **bienvenue** à la 1ère connexion (`user.welcomed` sur `UsersService.create`), **vainqueur
+  de saison** (sur `season.closed`, gagnant calculé par cercle via `BetsService`), et **rappel paris
+  bientôt fermés** (`SeasonSchedulerService`, ~3 j avant `betEndDate`, une fois via
+  `Season.betsClosingNotifiedAt`, aux membres sans pari pour l'année).
+- 🔔 **Notifications — reste phase 2+** : **vie du cercle** (retrait/promotion admin, changement de
+  réglages mises visibles / liste modifiable). ❌ **Changement de place au classement abandonné** :
+  le rang est calculé à la volée, un snapshot (`lastRank` sur `Bet` diffé après chaque scan de décès)
+  a été jugé trop coûteux pour l'intérêt.
 - 📧 **Notifications — canaux de diffusion** — sur le même store : **e-mail** via **Resend**
   (encore *pending*) et **Web Push (PWA / service worker)** pour le push mobile (Web Push API ;
   iOS ≥ 16.4 uniquement si la PWA est installée sur l'écran d'accueil — clés VAPID + table
