@@ -1,4 +1,6 @@
+import { useNavigate } from '@tanstack/react-router';
 import { Bell, Search } from 'lucide-react';
+import { useUnreadNotificationsCount } from '@/lib/api/queries';
 import { Logo } from './Logo';
 import { UserMenu } from './UserMenu';
 
@@ -12,6 +14,10 @@ interface TopBarProps {
 
 /** App header — desktop (search + bell + account) and mobile (logo + search + bell + account). */
 export function TopBar({ onOpenSearch }: TopBarProps) {
+    const navigate = useNavigate();
+    const { data: unread } = useUnreadNotificationsCount();
+    const count = unread?.count ?? 0;
+
     return (
         <header className="flex items-center gap-3 border-b border-line bg-bg/55 px-4 py-3.5 backdrop-blur-md md:gap-3.5 md:px-5.5">
             {/* mobile: brand */}
@@ -41,8 +47,18 @@ export function TopBar({ onOpenSearch }: TopBarProps) {
             >
                 <Search size={18} />
             </button>
-            <button type="button" aria-label="Notifications" className={iconBtn}>
+            <button
+                type="button"
+                aria-label="Notifications"
+                onClick={() => navigate({ to: '/notifications' })}
+                className={`${iconBtn} relative`}
+            >
                 <Bell size={18} />
+                {count > 0 && (
+                    <span className="-right-1 -top-1 absolute inline-flex min-w-[18px] items-center justify-center rounded-full bg-coral px-1 font-medium text-[10px] text-bg leading-[18px] shadow-glow-coral">
+                        {count > 9 ? '9+' : count}
+                    </span>
+                )}
             </button>
             {/* Account avatar lives here on mobile; on desktop it sits at the bottom of the side rail. */}
             <span className="md:hidden">
