@@ -35,4 +35,8 @@ export const queryKeys = {
         list: (type?: string) => ['jobs', 'list', type ?? 'all'] as const,
         detail: (id: string) => ['jobs', 'detail', id] as const,
     },
+    notifications: {
+        list: () => ['notifications', 'list'] as const,
+        unreadCount: () => ['notifications', 'unread-count'] as const,
+    },
 } as const;

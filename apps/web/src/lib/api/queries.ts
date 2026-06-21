@@ -3,6 +3,7 @@
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from './context';
+import { useCurrentUser } from './currentUser';
 import { queryKeys } from './keys';
 import type {
     AdminCelebrityPage,
@@ -13,6 +14,7 @@ import type {
     ApiCelebrityListItem,
     ApiCircle,
     ApiMembership,
+    ApiNotification,
     ApiSeason,
     ApiUser,
     BulkDeleteResult,
@@ -30,6 +32,7 @@ import type {
     ReplaceCelebritiesPayload,
     SortByRank,
     SyncJob,
+    UnreadCountDto,
     UpdateCelebrityPayload,
     UpdateCirclePayload,
     UpdateMemberRolePayload,
@@ -600,4 +603,65 @@ export function useSeasonYearTabs(): { years: number[]; defaultYear: number } {
         years: years.length ? years : [defaultYear],
         defaultYear,
     };
+}
+
+// --- Notifications ---
+
+/** The current user's notifications (newest first). Gated on a resolved user. */
+export function useNotifications() {
+    const api = useApiClient();
+    const { user } = useCurrentUser();
+    return useQuery({
+        queryKey: queryKeys.notifications.list(),
+        queryFn: () => api.get<ApiNotification[]>('/notifications'),
+        enabled: !!user,
+    });
+}
+
+/** Unread notification count for the bell badge. Polls while signed in. */
+export function useUnreadNotificationsCount() {
+    const api = useApiClient();
+    const { user } = useCurrentUser();
+    return useQuery({
+        queryKey: queryKeys.notifications.unreadCount(),
+        queryFn: () => api.get<UnreadCountDto>('/notifications/unread-count'),
+        enabled: !!user,
+        refetchInterval: 30_000,
+    });
+}
+
+/** Mark every notification as read (clears the bell badge). */
+export function useMarkNotificationsRead() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: () => api.post<null>('/notifications/read'),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['notifications'] });
+        },
+    });
+}
+
+/** Delete a single notification. */
+export function useDeleteNotification() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => api.delete<null>(`/notifications/${id}`),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['notifications'] });
+        },
+    });
+}
+
+/** Clear all of the current user's notifications. */
+export function useClearNotifications() {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: () => api.delete<null>('/notifications'),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['notifications'] });
+        },
+    });
 }

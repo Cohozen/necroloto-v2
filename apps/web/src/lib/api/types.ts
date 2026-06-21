@@ -334,3 +334,35 @@ export interface CreateSeasonPayload {
 }
 
 export type UpdateSeasonPayload = Partial<CreateSeasonPayload>;
+
+// --- Notifications ---
+
+/** Kind of in-app notification (mirrors the Prisma `NotificationType`). */
+export type NotificationType =
+    | 'CELEBRITY_DEATH'
+    | 'CIRCLE_NEW_MEMBER'
+    | 'SEASON_BETS_OPEN'
+    | 'SEASON_OPENED'
+    | 'SEASON_CLOSED';
+
+/** Optional deep-link payload carried by a notification. */
+export interface NotificationData {
+    circleId?: string;
+    celebrityId?: string;
+    year?: number;
+}
+
+export interface ApiNotification {
+    id: string;
+    type: NotificationType;
+    title: string;
+    body: string;
+    data: NotificationData | null;
+    /** ISO date, or null while unread. */
+    readAt: string | null;
+    createdAt: string;
+}
+
+export interface UnreadCountDto {
+    count: number;
+}

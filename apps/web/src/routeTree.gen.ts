@@ -16,6 +16,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
+import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppCirclesIndexRouteImport } from './routes/_app/circles/index'
@@ -68,6 +69,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -175,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/sso-callback': typeof SsoCallbackRoute
   '/admin': typeof AppAdminRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
+  '/notifications': typeof AppNotificationsRoute
   '/profile': typeof AppProfileRoute
   '/admin/automation': typeof AppAdminAutomationRoute
   '/celebrities/$id': typeof AppCelebritiesIdRoute
@@ -202,6 +209,7 @@ export interface FileRoutesByTo {
   '/sso-callback': typeof SsoCallbackRoute
   '/admin': typeof AppAdminRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
+  '/notifications': typeof AppNotificationsRoute
   '/profile': typeof AppProfileRoute
   '/admin/automation': typeof AppAdminAutomationRoute
   '/celebrities/$id': typeof AppCelebritiesIdRoute
@@ -230,6 +238,7 @@ export interface FileRoutesById {
   '/sso-callback': typeof SsoCallbackRoute
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/notifications': typeof AppNotificationsRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/admin/automation': typeof AppAdminAutomationRoute
   '/_app/celebrities/$id': typeof AppCelebritiesIdRoute
@@ -259,6 +268,7 @@ export interface FileRouteTypes {
     | '/sso-callback'
     | '/admin'
     | '/dashboard'
+    | '/notifications'
     | '/profile'
     | '/admin/automation'
     | '/celebrities/$id'
@@ -286,6 +296,7 @@ export interface FileRouteTypes {
     | '/sso-callback'
     | '/admin'
     | '/dashboard'
+    | '/notifications'
     | '/profile'
     | '/admin/automation'
     | '/celebrities/$id'
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
     | '/sso-callback'
     | '/_app/admin'
     | '/_app/dashboard'
+    | '/_app/notifications'
     | '/_app/profile'
     | '/_app/admin/automation'
     | '/_app/celebrities/$id'
@@ -391,6 +403,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/notifications': {
+      id: '/_app/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -574,6 +593,7 @@ const AppCirclesIdRouteWithChildren = AppCirclesIdRoute._addFileChildren(
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
+  AppNotificationsRoute: typeof AppNotificationsRoute
   AppProfileRoute: typeof AppProfileRoute
   AppCelebritiesIdRoute: typeof AppCelebritiesIdRoute
   AppCirclesIdRoute: typeof AppCirclesIdRouteWithChildren
@@ -586,6 +606,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
+  AppNotificationsRoute: AppNotificationsRoute,
   AppProfileRoute: AppProfileRoute,
   AppCelebritiesIdRoute: AppCelebritiesIdRoute,
   AppCirclesIdRoute: AppCirclesIdRouteWithChildren,

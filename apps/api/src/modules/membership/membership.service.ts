@@ -1,21 +1,31 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma/prisma.service';
+import { type MembershipCreatedEvent, NotificationEvents } from '../notifications/events';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { SearchMembershipDto } from './dto/search-membership.dto';
 import { UpdateMembershipDto } from './dto/update-membership.dto';
 
 @Injectable()
 export class MembershipService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        private events: EventEmitter2,
+    ) {}
 
     async create(createMembershipDto: CreateMembershipDto) {
-        return this.prisma.membership.create({
+        const membership = await this.prisma.membership.create({
             data: createMembershipDto,
             include: {
                 user: true,
                 circle: true,
             },
         });
+        this.events.emit(NotificationEvents.MembershipCreated, {
+            circleId: membership.circleId,
+            userId: membership.userId,
+        } satisfies MembershipCreatedEvent);
+        return membership;
     }
 
     async findAll() {
