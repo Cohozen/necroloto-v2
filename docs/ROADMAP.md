@@ -39,13 +39,15 @@ ferme — à arbitrer au fil de l'eau.
   les points). Dédup par `wikidataId @unique` + nom exact, enrich inline si QID. Validation admin
   (onglet « En attente » : approve / reject / vérif Wikidata) + **fusion** des doublons
   (`MergeCelebrityDialog`, `merge` durci contre la collision de PK `CelebritiesOnBet`).
+- 🔍 **Recherche globale ⌘K** — palette `GlobalSearchDialog` (cmdk) ouverte au raccourci global
+  **⌘K / Ctrl+K** ou au clic (barre TopBar desktop devenue cliquable + bouton loupe mobile).
+  Deux groupes navigables au clavier : **Cercles** (`GET /circle/search` — publics + cercles du
+  joueur) et **Célébrités** (`POST /celebrities/search`, visibilité PENDING/APPROVED). Recherche
+  côté serveur (`shouldFilter={false}`), terme recherché surligné, Entrée → fiche cercle ou
+  célébrité. _Reste possible_ : étendre aux paris, recherches récentes.
 
 ## 🎯 Backlog priorisable
 
-- ⌘ **Recherche globale Cmd+K** — câbler l'input « ⌘K » aujourd'hui **décoratif** de la
-  TopBar (`apps/web/src/components/layout/TopBar.tsx`) au `CommandDialog` déjà présent
-  (`apps/web/src/components/ui/command.tsx`, lib `cmdk`) : raccourci clavier global +
-  recherche célébrités / cercles.
 - 🔔 **Notifications** — page + génération sur événements (décès d'une célébrité pariée,
   nouveau membre, ouverture/fermeture de saison, changement de place au classement…).
   S'appuie sur l'intégration **Resend** (e-mails) encore *pending*. Modèle `Notification`

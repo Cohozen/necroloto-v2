@@ -183,6 +183,15 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   of the desktop side rail (no dropdown). The desktop year selector was removed. A sonner `Toaster`
   is mounted in `routes/__root.tsx` for app-wide toasts. Enabled buttons get `cursor: pointer` via a
   base rule in `globals.css`.
+- **Global search (⌘K)**: `GlobalSearchDialog` (`components/search/`) is a cmdk command palette
+  mounted in `AppShell`, which **owns the open state + the global `⌘K` / `Ctrl+K` keydown listener**
+  (toggle). It opens from the desktop TopBar search bar (now a `<button>`, was decorative) and a
+  **mobile search-icon button** added to the TopBar. Two keyboard-navigable groups — **Cercles**
+  (`useCircleSearch` → `GET /circle/search?q=`: public circles + the viewer's own, lightweight
+  `CircleSearchResultDto`) and **Célébrités** (`useCelebritySearch` → `POST /celebrities/search`,
+  PENDING/APPROVED visibility) — debounced ~250ms. Search is **server-side**, so cmdk's own filtering
+  is off (`shouldFilter={false}`); the matched term is highlighted via a local `HighlightMatch`
+  helper. `onSelect` navigates to `/circles/$id` or `/celebrities/$id` and closes the dialog.
 - **API client** (`src/lib/api/`): a Clerk-authenticated fetch wrapper (`client.ts` — Bearer
   token, `ApiError`) provided via `ApiClientProvider`/`context.ts` (anonymous variant when Clerk
   is unconfigured, so the UI stays previewable); hand-written DTOs (`types.ts` — the API has **no
@@ -281,7 +290,7 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   then narrowed to the viewer's circles. The back button uses `router.history.back()` when there is
   history (returns to the originating circle leaderboard), falling back to the catalogue link on a
   direct/deep-link load (`useCanGoBack`). Photo upload still isn't wired; in local dev the `photo`
-  URLs may 404 (Storage not cloned). Global search will later reuse this same screen.
+  URLs may 404 (Storage not cloned). The global search palette (⌘K) navigates here too.
 - **"Paris" tab** (`/circles/$id/bets`, `useCircleBets` → `GET /circle/:id/bets`): lists every
   member's bet for the selected season; before reveal (or with `betsVisible` off) the server returns
   only the viewer's own bet and the page shows a "secret" banner. The leaderboard's `LeaderPicksCard`
