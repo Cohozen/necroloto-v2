@@ -1,7 +1,9 @@
 import { ageInYears, calculPointByCelebrity, deathYear } from '@necroloto/shared';
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { type CelebrityDiedEvent, NotificationEvents } from '../notifications/events';
 import { SeasonsService } from '../seasons/seasons.service';
 import { StorageService } from '../storage/storage.service';
 import { WikidataService, type WikidataSummary } from '../wikidata/wikidata.service';
@@ -27,6 +29,7 @@ export class CelebritiesService {
         private wikidata: WikidataService,
         private storage: StorageService,
         private seasons: SeasonsService,
+        private events: EventEmitter2,
     ) {}
 
     async create(createCelebrityDto: CreateCelebrityDto) {
@@ -306,12 +309,25 @@ export class CelebritiesService {
     }
 
     async update(id: string, updateCelebrityDto: UpdateCelebrityDto) {
+        // Capture the prior death so we can notify bettors when an admin records
+        // a death by hand (the automated path notifies from DeathDetectionService).
+        const before = await this.prisma.celebrity.findUnique({
+            where: { id },
+            select: { death: true },
+        });
         const celebrity = await this.prisma.celebrity.update({
             where: { id },
             data: updateCelebrityDto,
         });
         // A change to birth/death can change every dependent bet's points.
         await this.recalculatePoints(id);
+
+        if (!before?.death && celebrity.death) {
+            this.events.emit(NotificationEvents.CelebrityDied, {
+                celebrityId: id,
+                deathYear: celebrity.death.getUTCFullYear(),
+            } satisfies CelebrityDiedEvent);
+        }
         return celebrity;
     }
 

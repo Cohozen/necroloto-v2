@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { CircleVisibility } from '@/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BetsService } from '../bets/bets.service';
+import { type MembershipCreatedEvent, NotificationEvents } from '../notifications/events';
 import { type SeasonPhase, SeasonsService } from '../seasons/seasons.service';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateCircleDto } from './dto/create-circle.dto';
@@ -71,6 +73,7 @@ export class CircleService {
         private prisma: PrismaService,
         private bets: BetsService,
         private seasons: SeasonsService,
+        private events: EventEmitter2,
     ) {}
 
     async create(createCircleDto: CreateCircleDto) {
@@ -290,7 +293,7 @@ export class CircleService {
     }
 
     async addMember(circleId: string, dto: AddMemberDto) {
-        return this.prisma.membership.create({
+        const membership = await this.prisma.membership.create({
             data: {
                 circleId,
                 userId: dto.userId,
@@ -301,6 +304,11 @@ export class CircleService {
                 circle: true,
             },
         });
+        this.events.emit(NotificationEvents.MembershipCreated, {
+            circleId,
+            userId: dto.userId,
+        } satisfies MembershipCreatedEvent);
+        return membership;
     }
 
     async updateMemberRole(circleId: string, userId: string, dto: UpdateMemberRoleDto) {

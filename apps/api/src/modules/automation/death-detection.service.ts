@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CelebritiesService } from '../celebrities/celebrities.service';
 import { JobsService } from '../jobs/jobs.service';
+import { type CelebrityDiedEvent, NotificationEvents } from '../notifications/events';
 import { WikidataService } from '../wikidata/wikidata.service';
 
 export interface DetectedDeath {
@@ -31,6 +33,7 @@ export class DeathDetectionService {
         private wikidata: WikidataService,
         private celebrities: CelebritiesService,
         private jobs: JobsService,
+        private events: EventEmitter2,
     ) {}
 
     @Cron(CronExpression.EVERY_DAY_AT_4AM)
@@ -71,6 +74,11 @@ export class DeathDetectionService {
                 data: { death: summary.death },
             });
             await this.celebrities.recalculatePoints(celebrity.id);
+
+            this.events.emit(NotificationEvents.CelebrityDied, {
+                celebrityId: celebrity.id,
+                deathYear: summary.death.getUTCFullYear(),
+            } satisfies CelebrityDiedEvent);
 
             const death = summary.death.toISOString().slice(0, 10);
             this.logger.log(`Detected death: ${celebrity.name} (${death})`);
