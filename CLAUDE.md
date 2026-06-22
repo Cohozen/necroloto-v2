@@ -122,9 +122,9 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   `[openDate, closeDate]` window only (betting windows may fall in the previous year); duplicate year
   → 409 via the `year @unique` P2002 mapping. The whole thing is a **no-op until a season row exists**
   (fallbacks preserve V1 behaviour), so the migration (`add_season`, additive table-only) is a safe
-  prod deploy. ⚠️ DTO dates arrive as **ISO strings** (transform-only `ValidationPipe`) — the service
-  coerces with `new Date()`, and `update` merges only the dates actually sent (the DTO carries
-  untouched fields as `undefined`, which would otherwise blank the window).
+  prod deploy. ⚠️ DTO dates are coerced to `Date` by `@Type(() => Date)` on the season DTOs; the
+  service still wraps them in `new Date()` defensively, and `update` merges only the dates actually
+  sent (the DTO carries untouched fields as `undefined`, which would otherwise blank the window).
 - **Bet locks (phase-based)**: betting happens **before** the season opens, so `BetsService.create` /
   `replaceCelebrities` gate on the **season phase** (`SeasonsService.getSeasonPhase`: `none` / `before`
   / `betting` / `season-open` / `closed`) via `assertCanBet(year, mode, flag)`, not on a single
@@ -382,6 +382,4 @@ history stays a readable thread and any step can be rolled back in isolation.
 
 ## Known debt
 
-- DTOs lack class-validator decorators, so the global `ValidationPipe` runs in
-  `transform`-only mode (no `whitelist`). Decorate DTOs to tighten this.
 - pg adapter logs a benign `client.query when already executing` deprecation warning.

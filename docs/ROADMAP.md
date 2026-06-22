@@ -65,6 +65,10 @@ ferme — à arbitrer au fil de l'eau.
   Wikidata** ; **filtres admin** et **année sélectionnée d'un cercle** persistés en **querystring**
   (TanStack Router `validateSearch`) — survivent au retour/refresh ; **favicon** dérivé du logo
   « invader » néon de la TopBar (`apps/web/public/`, généré par `scripts/generate-favicon.mjs`).
+- 🛡️ **Validation DTO** — tous les DTOs portent désormais des décorateurs class-validator
+  (dates via `@Type(() => Date)`), et le `ValidationPipe` global tourne en **whitelist +
+  forbidNonWhitelisted** (`apps/api/src/main.ts`) : les champs inconnus sont retirés/rejetés (400)
+  et les types validés. `enableImplicitConversion` reste off (coercition pilotée par les `@Type`).
 
 ## 🎯 Backlog priorisable
 
@@ -92,7 +96,5 @@ ferme — à arbitrer au fil de l'eau.
 
 ## 🛠️ Tech / dette
 
-- ✔️ **Validation DTO** — décorer les DTOs (class-validator) pour activer le `whitelist` du
-  `ValidationPipe` global (cf. « Known debt » dans CLAUDE.md).
 - 🔑 **Contrainte `@unique` sur `User.clerkId`** — après dédoublonnage, pour verrouiller
   l'intégrité du provisioning (cf. fix de réconciliation par email).
