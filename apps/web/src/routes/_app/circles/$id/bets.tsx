@@ -78,22 +78,25 @@ function CircleBets() {
                     Aucun pari pour la saison {year} dans ce cercle.
                 </p>
             ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                // Masonry (CSS columns) so expanding one card grows only its own
+                // column instead of stretching its row neighbours (rigid grid).
+                <div className="columns-1 gap-4 md:columns-2 lg:columns-3">
                     {bets.map((bet) => {
                         const isYou = bet.userId === user?.id;
                         const name = isYou ? 'Vous' : userDisplayName(bet.user);
                         const points = bet.CelebritiesOnBet.reduce((acc, c) => acc + c.points, 0);
                         const hits = bet.CelebritiesOnBet.filter((c) => !!c.celebrity.death).length;
                         return (
-                            <LeaderPicksCard
-                                key={bet.id}
-                                name={name}
-                                initials={isYou ? 'ME' : initialsOf(name)}
-                                points={points}
-                                hits={hits}
-                                picks={toLeaderPicks(bet)}
-                                collapsible
-                            />
+                            <div key={bet.id} className="mb-4 break-inside-avoid">
+                                <LeaderPicksCard
+                                    name={name}
+                                    initials={isYou ? 'ME' : initialsOf(name)}
+                                    points={points}
+                                    hits={hits}
+                                    picks={toLeaderPicks(bet)}
+                                    collapsible
+                                />
+                            </div>
                         );
                     })}
                 </div>
