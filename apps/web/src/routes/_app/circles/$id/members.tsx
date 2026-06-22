@@ -27,12 +27,9 @@ function creatorUserId(circle: ApiCircle): string | undefined {
     return admins[0]?.userId;
 }
 
-/** Rank ascending; members without a bet this year (rank 0) sink to the bottom. */
-function byRank(a: CircleMember, b: CircleMember): number {
-    if (a.rank === 0 && b.rank === 0) return 0;
-    if (a.rank === 0) return 1;
-    if (b.rank === 0) return -1;
-    return a.rank - b.rank;
+/** Alphabetical by display name (fr, accent/case-insensitive). */
+function byName(a: CircleMember, b: CircleMember): number {
+    return a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' });
 }
 
 function CircleMembers() {
@@ -52,7 +49,7 @@ function CircleMembers() {
         const creatorId = creatorUserId(circle);
         return (circle.memberships ?? [])
             .map((m) => toCircleMember(m, rankByUser.get(m.userId), user?.id, creatorId))
-            .sort(byRank);
+            .sort(byName);
     }, [circle, rankQuery.data, user?.id]);
 
     if (circleQuery.isLoading) {
