@@ -64,7 +64,13 @@ export function useUpdateUser() {
     const api = useApiClient();
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, ...payload }: { id: string; clerkId: string } & UpdateUserPayload) =>
+        // clerkId is only used by onSuccess (via the original variables); strip it
+        // from the body so the whitelisted UpdateUserDto doesn't 400 on it.
+        mutationFn: ({
+            id,
+            clerkId: _clerkId,
+            ...payload
+        }: { id: string; clerkId: string } & UpdateUserPayload) =>
             api.patch<ApiUser>(`/users/${id}`, payload),
         onSuccess: (updated, { clerkId }) => {
             qc.setQueryData(queryKeys.users.byClerk(clerkId), updated);
