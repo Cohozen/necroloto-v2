@@ -13,11 +13,18 @@ async function bootstrap() {
         logger: ['log', 'error', 'warn'],
     });
 
-    // transform-only for now: validation still runs on decorated DTOs (e.g.
-    // ReplaceCelebritiesDto). whitelist/forbidNonWhitelisted are intentionally
-    // off until every DTO carries class-validator decorators (otherwise their
-    // properties would be stripped/rejected).
-    app.useGlobalPipes(new ValidationPipe({ transform: true }));
+    // Every DTO now carries class-validator decorators, so we can validate and
+    // lock down inputs: whitelist strips unknown properties, forbidNonWhitelisted
+    // rejects them with a 400. transform coerces payloads (e.g. @Type(() => Date)
+    // on ISO-string dates). enableImplicitConversion stays OFF on purpose — we
+    // rely on explicit @Type decorators to keep coercion predictable.
+    app.useGlobalPipes(
+        new ValidationPipe({
+            transform: true,
+            whitelist: true,
+            forbidNonWhitelisted: true,
+        }),
+    );
     app.useGlobalFilters(new AllExceptionsFilter());
 
     // Allow the web/mobile clients to call the API. Comma-separated origins in
