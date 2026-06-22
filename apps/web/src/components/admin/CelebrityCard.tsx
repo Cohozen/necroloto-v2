@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/celebrities/StatusBadge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import type { AdminCelebrity } from '@/types/admin';
+import { WikidataIndicator } from './WikidataIndicator';
 import { WikidataSearchDialog } from './WikidataSearchDialog';
 
 interface CelebrityCardProps {
@@ -49,6 +50,7 @@ export function CelebrityCard({
                 <CelebrityPortrait
                     name={celeb.name}
                     status={celeb.status}
+                    photo={celeb.photo}
                     rounded="rounded-[11px]"
                     className="size-12"
                 />
@@ -75,6 +77,7 @@ export function CelebrityCard({
                         En attente
                     </span>
                 )}
+                <WikidataIndicator linked={celeb.hasWikidata} />
                 <span className="ml-auto inline-flex items-center gap-2 text-sm font-bold text-ink-2">
                     <span className="inline-flex items-center gap-1.5">
                         <User size={14} className="text-ink-3" />

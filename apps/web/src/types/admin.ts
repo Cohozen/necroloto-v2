@@ -12,10 +12,12 @@ export interface AdminCelebrity {
     proposalStatus: CelebrityProposalStatus;
     /** Whether the entry is linked to a Wikidata entity. */
     hasWikidata: boolean;
+    /** Portrait URL (Wikidata/upload), when known — falls back to a monogram. */
+    photo?: string;
     /** Points awarded once deceased (0 while alive). */
     points: number;
     /** Number of lists betting on this celebrity. */
     bettors: number;
 }
 
-export type CatalogFilter = 'all' | 'alive' | 'deceased' | 'pending';
+export type CatalogFilter = 'all' | 'alive' | 'deceased' | 'pending' | 'unlinked';

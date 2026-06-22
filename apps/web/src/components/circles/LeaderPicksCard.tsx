@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CelebrityPortrait } from '@/components/celebrities/CelebrityPortrait';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,17 @@ export function LeaderPicksCard({
     collapsible = false,
 }: LeaderPicksCardProps) {
     const [open, setOpen] = useState(!collapsible);
+    // Deceased first, then alphabetical (fr, accent/case-insensitive).
+    const sortedPicks = useMemo(
+        () =>
+            [...picks].sort((a, b) => {
+                const aDead = a.status === 'deceased';
+                const bDead = b.status === 'deceased';
+                if (aDead !== bDead) return aDead ? -1 : 1;
+                return a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' });
+            }),
+        [picks],
+    );
     const header = (
         <>
             <div className="flex items-center gap-3">
@@ -80,7 +91,7 @@ export function LeaderPicksCard({
                 <>
                     <Separator className="bg-line" />
                     <div className="flex flex-col gap-2">
-                        {picks.map((pick) => {
+                        {sortedPicks.map((pick) => {
                             const dead = pick.status === 'deceased';
                             return (
                                 <Link
@@ -93,6 +104,7 @@ export function LeaderPicksCard({
                                     <CelebrityPortrait
                                         name={pick.name}
                                         status={pick.status}
+                                        photo={pick.photo}
                                         rounded="rounded-lg"
                                         className="size-[38px] shrink-0"
                                     />

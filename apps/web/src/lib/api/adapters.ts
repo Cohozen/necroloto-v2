@@ -203,6 +203,7 @@ export function toAdminCelebrity(c: ApiCelebrityListItem): AdminCelebrity {
         status: celebrityStatus(c.death),
         proposalStatus: proposalStatus(c.status),
         hasWikidata: !!c.wikidataId,
+        photo: c.photo ?? undefined,
         points: celebrityPoints(c),
         bettors: c.CelebritiesOnBet.length,
     };
@@ -221,6 +222,7 @@ export function toCelebritySummary(c: ApiCelebrity): CelebritySummary {
         status: celebrityStatus(c.death),
         proposalStatus: proposalStatus(c.status),
         category: c.category ?? undefined,
+        photo: c.photo ?? undefined,
     };
 }
 
@@ -297,6 +299,7 @@ export function toLeaderPicks(bet: ApiBet): LeaderPick[] {
         name: c.celebrity.name,
         role: '',
         status: celebrityStatus(c.celebrity.death),
+        photo: c.celebrity.photo,
         points: c.celebrity.death ? c.points : undefined,
     }));
 }

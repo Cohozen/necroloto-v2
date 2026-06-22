@@ -17,6 +17,8 @@ export interface CelebritySummary {
     proposalStatus: CelebrityProposalStatus;
     /** Coarse category used for filtering, when known. */
     category?: string;
+    /** Portrait URL (Wikidata/upload), when known — falls back to a monogram. */
+    photo?: string;
 }
 
 export interface Bettor {

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { CelebrityStatus } from '@/types/celebrity';
 
@@ -35,7 +36,9 @@ export function CelebrityPortrait({
     className,
 }: CelebrityPortraitProps) {
     const [from, to] = gradientFor(name);
+    const [failed, setFailed] = useState(false);
     const dead = status === 'deceased';
+    const showPhoto = !!photo && !failed;
     return (
         <div
             className={cn(
@@ -49,8 +52,13 @@ export function CelebrityPortrait({
             }}
             aria-hidden="true"
         >
-            {photo ? (
-                <img src={photo} alt="" className="absolute inset-0 size-full object-cover" />
+            {showPhoto ? (
+                <img
+                    src={photo ?? undefined}
+                    alt=""
+                    className="absolute inset-0 size-full object-cover"
+                    onError={() => setFailed(true)}
+                />
             ) : (
                 <span className="-mb-[4%] font-display text-[40cqi] font-extrabold leading-none text-white/90 mix-blend-soft-light">
                     {name.charAt(0).toUpperCase()}

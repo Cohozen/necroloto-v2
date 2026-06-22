@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/celebrities/StatusBadge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import type { AdminCelebrity } from '@/types/admin';
+import { WikidataIndicator } from './WikidataIndicator';
 import { WikidataSearchDialog } from './WikidataSearchDialog';
 
 export const CATALOG_COLS = 'grid-cols-[34px_52px_minmax(0,1fr)_84px_184px_84px_72px_172px] gap-3';
@@ -51,6 +52,7 @@ export function CelebrityRow({
             <CelebrityPortrait
                 name={celeb.name}
                 status={celeb.status}
+                photo={celeb.photo}
                 rounded="rounded-[11px]"
                 className="size-11"
             />
@@ -59,13 +61,14 @@ export function CelebrityRow({
                 <div className="truncate text-xs text-ink-3">{celeb.role}</div>
             </div>
             <div className="font-mono text-[13px] text-ink-2">{celeb.born}</div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
                 <StatusBadge status={celeb.status} />
                 {pending && (
                     <span className="inline-flex h-6 items-center rounded-full border border-coral/40 bg-coral/10 px-2 text-[11px] font-semibold text-coral">
                         En attente
                     </span>
                 )}
+                <WikidataIndicator linked={celeb.hasWikidata} />
             </div>
             <div>
                 <span
