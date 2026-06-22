@@ -1,4 +1,17 @@
-import { CalendarCheck, CalendarClock, Flag, type LucideIcon, Skull, UserPlus } from 'lucide-react';
+import {
+    AlarmClock,
+    BadgeCheck,
+    CalendarCheck,
+    CalendarClock,
+    Flag,
+    Hourglass,
+    type LucideIcon,
+    PartyPopper,
+    Skull,
+    Trophy,
+    UserPlus,
+    XCircle,
+} from 'lucide-react';
 import type { NotificationType } from '@/lib/api/types';
 
 export type NotificationTone = 'neon' | 'coral' | 'magenta';
@@ -15,6 +28,12 @@ const VIEW: Record<NotificationType, NotificationView> = {
     SEASON_BETS_OPEN: { icon: CalendarClock, tone: 'magenta' },
     SEASON_OPENED: { icon: CalendarCheck, tone: 'neon' },
     SEASON_CLOSED: { icon: Flag, tone: 'coral' },
+    CELEBRITY_PROPOSAL_APPROVED: { icon: BadgeCheck, tone: 'neon' },
+    CELEBRITY_PROPOSAL_REJECTED: { icon: XCircle, tone: 'coral' },
+    CELEBRITY_PROPOSAL_PENDING: { icon: Hourglass, tone: 'magenta' },
+    WELCOME: { icon: PartyPopper, tone: 'neon' },
+    SEASON_WINNER: { icon: Trophy, tone: 'magenta' },
+    BET_CLOSING_SOON: { icon: AlarmClock, tone: 'coral' },
 };
 
 export function notificationView(type: NotificationType): NotificationView {

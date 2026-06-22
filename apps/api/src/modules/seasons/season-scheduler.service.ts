@@ -14,6 +14,9 @@ const EVENT_BY_MILESTONE: Record<SeasonMilestone, string> = {
     CLOSED: NotificationEvents.SeasonClosed,
 };
 
+/** How long before betEndDate the "betting closes soon" reminder fires. */
+const CLOSING_REMINDER_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
+
 /**
  * Daily watcher that turns date-based season transitions into events. Each
  * season carries a `notifiedMilestone` cursor; when "now" crosses a later
@@ -45,10 +48,32 @@ export class SeasonSchedulerService {
         for (const season of seasons) {
             try {
                 await this.processSeason(season, now);
+                await this.processClosingReminder(season, now);
             } catch (error) {
                 this.logger.error(`Season ${season.year} scheduling failed`, error as Error);
             }
         }
+    }
+
+    /**
+     * Fires the "betting closes soon" reminder once, when betEndDate is within
+     * {@link CLOSING_REMINDER_MS} and the betting window is still open.
+     */
+    private async processClosingReminder(season: Season, now: number): Promise<void> {
+        if (season.betsClosingNotifiedAt) return; // already reminded
+        const end = season.betEndDate.getTime();
+        const inWindow = now >= season.betStartDate.getTime() && now <= end;
+        if (!inWindow || end - now > CLOSING_REMINDER_MS) return;
+
+        this.events.emit(NotificationEvents.BetsClosingSoon, {
+            seasonId: season.id,
+            year: season.year,
+        } satisfies SeasonMilestoneEvent);
+
+        await this.prisma.season.update({
+            where: { id: season.id },
+            data: { betsClosingNotifiedAt: new Date() },
+        });
     }
 
     private async processSeason(season: Season, now: number): Promise<void> {

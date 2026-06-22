@@ -14,7 +14,29 @@ export const NotificationEvents = {
     SeasonOpened: 'season.opened',
     /** A season just closed (now ≥ closeDate). */
     SeasonClosed: 'season.closed',
+    /** A player proposed a missing celebrity (still PENDING admin validation). */
+    ProposalPending: 'proposal.pending',
+    /** An admin approved a player's celebrity proposal. */
+    ProposalApproved: 'proposal.approved',
+    /** An admin rejected a player's celebrity proposal. */
+    ProposalRejected: 'proposal.rejected',
+    /** A brand-new user row was provisioned (first sign-in). */
+    UserWelcomed: 'user.welcomed',
+    /** A season's betting window is about to close (reminder). */
+    BetsClosingSoon: 'bets.closingSoon',
 } as const;
+
+/** Payload for the proposal lifecycle events. */
+export interface ProposalEvent {
+    celebrityId: string;
+    celebrityName: string;
+    /** The proposer's User.id (null for admin/legacy rows — no proposer to notify). */
+    proposerId: string | null;
+}
+
+export interface UserWelcomedEvent {
+    userId: string;
+}
 
 export interface CelebrityDiedEvent {
     celebrityId: string;

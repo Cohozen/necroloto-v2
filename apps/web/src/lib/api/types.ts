@@ -343,7 +343,13 @@ export type NotificationType =
     | 'CIRCLE_NEW_MEMBER'
     | 'SEASON_BETS_OPEN'
     | 'SEASON_OPENED'
-    | 'SEASON_CLOSED';
+    | 'SEASON_CLOSED'
+    | 'CELEBRITY_PROPOSAL_APPROVED'
+    | 'CELEBRITY_PROPOSAL_REJECTED'
+    | 'CELEBRITY_PROPOSAL_PENDING'
+    | 'WELCOME'
+    | 'SEASON_WINNER'
+    | 'BET_CLOSING_SOON';
 
 /** Optional deep-link payload carried by a notification. */
 export interface NotificationData {

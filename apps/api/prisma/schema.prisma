@@ -60,6 +60,12 @@ enum NotificationType {
   SEASON_BETS_OPEN
   SEASON_OPENED
   SEASON_CLOSED
+  CELEBRITY_PROPOSAL_APPROVED
+  CELEBRITY_PROPOSAL_REJECTED
+  CELEBRITY_PROPOSAL_PENDING
+  WELCOME
+  SEASON_WINNER
+  BET_CLOSING_SOON
 }
 
 /// Monotonic lifecycle milestone of a season, used as the cursor of the daily
@@ -175,6 +181,8 @@ model Season {
   closeDate    DateTime
   /// Cursor of the daily season scheduler: the latest milestone already notified.
   notifiedMilestone SeasonMilestone?
+  /// When the "betting closes soon" reminder was sent (once per season).
+  betsClosingNotifiedAt DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

@@ -3,7 +3,11 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { type CelebrityDiedEvent, NotificationEvents } from '../notifications/events';
+import {
+    type CelebrityDiedEvent,
+    NotificationEvents,
+    type ProposalEvent,
+} from '../notifications/events';
 import { SeasonsService } from '../seasons/seasons.service';
 import { StorageService } from '../storage/storage.service';
 import { WikidataService, type WikidataSummary } from '../wikidata/wikidata.service';
@@ -111,6 +115,13 @@ export class CelebritiesService {
             throw error;
         }
 
+        // A genuinely new PENDING proposal — let the admins know it awaits validation.
+        this.events.emit(NotificationEvents.ProposalPending, {
+            celebrityId: celebrity.id,
+            celebrityName: dto.name,
+            proposerId: viewerId ?? null,
+        } satisfies ProposalEvent);
+
         if (dto.wikidataId) {
             // Fills birth/death/photo/role from Wikidata and recalculates points.
             return this.enrich(celebrity.id, dto.wikidataId);
@@ -128,6 +139,14 @@ export class CelebritiesService {
             where: { id },
             data: { status: 'APPROVED' },
         });
+        // Notify the proposer their pending pick was validated.
+        if (celebrity.status === 'PENDING' && celebrity.proposedBy) {
+            this.events.emit(NotificationEvents.ProposalApproved, {
+                celebrityId: id,
+                celebrityName: celebrity.name,
+                proposerId: celebrity.proposedBy,
+            } satisfies ProposalEvent);
+        }
         if (wikidataId) {
             // enrich already recalculates points.
             return this.enrich(id, wikidataId);
@@ -152,6 +171,14 @@ export class CelebritiesService {
                 data: { status: 'REJECTED' },
             }),
         ]);
+        // Notify the proposer their pending pick was turned down.
+        if (celebrity.status === 'PENDING' && celebrity.proposedBy) {
+            this.events.emit(NotificationEvents.ProposalRejected, {
+                celebrityId: id,
+                celebrityName: celebrity.name,
+                proposerId: celebrity.proposedBy,
+            } satisfies ProposalEvent);
+        }
         return this.prisma.celebrity.findUnique({ where: { id } });
     }
 
