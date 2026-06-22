@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useCanGoBack, useRouter } from '@tanstack/react-router';
-import { ChevronLeft, Globe } from 'lucide-react';
+import { ChevronLeft, ExternalLink, Globe } from 'lucide-react';
 import { useMemo } from 'react';
 import { BettorRow } from '@/components/celebrities/BettorRow';
 import { CelebrityPortrait } from '@/components/celebrities/CelebrityPortrait';
@@ -26,8 +26,8 @@ function CelebrityPage() {
     const celeb = useMemo(() => {
         if (!celebQuery.data) return null;
         const myCircleIds = new Set((summariesQuery.data ?? []).map((c) => c.id));
-        return toCelebrityDetail(celebQuery.data, myCircleIds, user?.id);
-    }, [celebQuery.data, summariesQuery.data, user?.id]);
+        return toCelebrityDetail(celebQuery.data, myCircleIds, user?.id, year);
+    }, [celebQuery.data, summariesQuery.data, user?.id, year]);
 
     // Bettors grouped by season year, active season first then past seasons desc.
     const bettorGroups = useMemo(() => {
@@ -150,11 +150,7 @@ function CelebrityPage() {
                                         </div>
                                         <div className="grid gap-2.5 sm:grid-cols-2">
                                             {group.bettors.map((bettor) => (
-                                                <BettorRow
-                                                    key={bettor.id}
-                                                    bettor={bettor}
-                                                    status={celeb.status}
-                                                />
+                                                <BettorRow key={bettor.id} bettor={bettor} />
                                             ))}
                                         </div>
                                     </div>
@@ -163,9 +159,21 @@ function CelebrityPage() {
                         )}
                     </div>
 
-                    <div className="mt-auto flex items-center gap-2 text-xs text-ink-3">
-                        <Globe size={14} /> Données biographiques synchronisées depuis Wikidata
-                    </div>
+                    {celeb.wikidataId ? (
+                        <a
+                            href={`https://www.wikidata.org/wiki/${celeb.wikidataId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-auto inline-flex w-fit items-center gap-2 text-xs text-ink-3 transition-colors hover:text-neon"
+                        >
+                            <Globe size={14} /> Voir sur Wikidata
+                            <ExternalLink size={12} />
+                        </a>
+                    ) : (
+                        <div className="mt-auto flex items-center gap-2 text-xs text-ink-3">
+                            <Globe size={14} /> Données biographiques synchronisées depuis Wikidata
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

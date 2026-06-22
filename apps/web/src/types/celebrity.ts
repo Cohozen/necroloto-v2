@@ -21,6 +21,14 @@ export interface CelebritySummary {
     photo?: string;
 }
 
+/**
+ * Outcome of a bet on this celebrity, per bet year:
+ * - `scored`   — the celebrity died in the bet's year (points awarded),
+ * - `potential` — the bet is still live (current/future season, no death yet),
+ * - `missed`   — the bet's year is over (or the death fell in another year) without scoring.
+ */
+export type BettorOutcome = 'scored' | 'potential' | 'missed';
+
 export interface Bettor {
     id: string;
     name: string;
@@ -30,7 +38,8 @@ export interface Bettor {
     /** Season year of the bet — used to group bettors by season on the fiche. */
     year: number;
     isYou?: boolean;
-    /** Points scored (deceased) or potential points (alive). */
+    outcome: BettorOutcome;
+    /** Points scored (`scored`) or potential points (`potential`); 0 when `missed`. */
     points: number;
 }
 
@@ -51,5 +60,7 @@ export interface CelebrityDetail {
     points: number;
     /** Portrait URL (Wikidata/upload), when known — falls back to a monogram. */
     photo?: string;
+    /** Wikidata entity id (e.g. "Q42"), when linked — powers the Wikidata link. */
+    wikidataId?: string;
     bettors: Bettor[];
 }

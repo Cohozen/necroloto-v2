@@ -2,16 +2,14 @@ import { Users } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { Bettor, CelebrityStatus } from '@/types/celebrity';
+import type { Bettor } from '@/types/celebrity';
 
 interface BettorRowProps {
     bettor: Bettor;
-    status: CelebrityStatus;
 }
 
 /** A player who bet on this celebrity, in one of your circles. */
-export function BettorRow({ bettor, status }: BettorRowProps) {
-    const dead = status === 'deceased';
+export function BettorRow({ bettor }: BettorRowProps) {
     return (
         <div
             className={cn(
@@ -38,13 +36,17 @@ export function BettorRow({ bettor, status }: BettorRowProps) {
                     <Users size={11} /> <span className="truncate">{bettor.circle}</span>
                 </div>
             </div>
-            {dead ? (
+            {bettor.outcome === 'scored' ? (
                 <Badge
                     variant="score"
                     className="border-coral/40 bg-coral/12 font-display text-base text-coral"
                 >
                     +{bettor.points}
                 </Badge>
+            ) : bettor.outcome === 'missed' ? (
+                <span className="shrink-0 rounded-full border border-line-2 bg-surface-2 px-2.5 py-1 text-[11px] font-semibold text-ink-3">
+                    Pari manqué
+                </span>
             ) : (
                 <div className="text-right">
                     <div className="text-[10px] uppercase tracking-[0.1em] text-ink-3">

@@ -256,6 +256,7 @@ export function toCelebrityDetail(
     c: ApiCelebrityDetail,
     myCircleIds: Set<string>,
     currentUserId: string | undefined,
+    activeYear: number,
 ): CelebrityDetail {
     const dead = !!c.death;
     const points = celebrityPoints(c);
@@ -266,6 +267,10 @@ export function toCelebrityDetail(
     ).map((e) => {
         const isYou = e.bet.userId === currentUserId;
         const name = userDisplayName(e.bet.user);
+        // Scoring is per-year (death year must match bet year), so a past bet that
+        // didn't score is a miss — never show a "potential" for a year that's over.
+        const outcome: Bettor['outcome'] =
+            e.points > 0 ? 'scored' : dead || e.bet.year < activeYear ? 'missed' : 'potential';
         return {
             id: e.bet.id,
             name: isYou ? 'Vous' : name,
@@ -273,7 +278,8 @@ export function toCelebrityDetail(
             circle: e.bet.Circle?.name ?? '—',
             year: e.bet.year,
             isYou,
-            points: dead ? e.points : points,
+            outcome,
+            points: outcome === 'scored' ? e.points : outcome === 'potential' ? points : 0,
         };
     });
 
@@ -288,6 +294,7 @@ export function toCelebrityDetail(
         deathLabel: c.death ? longDateLabel(c.death) : undefined,
         points,
         photo: c.photo ?? undefined,
+        wikidataId: c.wikidataId ?? undefined,
         bettors,
     };
 }
