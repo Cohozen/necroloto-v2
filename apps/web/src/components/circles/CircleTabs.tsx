@@ -10,11 +10,14 @@ const offClass = 'text-ink-2 hover:text-ink';
 
 /** In-circle tab nav: Classement · Paris · Membres · Réglages (nl-tabs). */
 export function CircleTabs({ id, active }: { id: string; active: CircleTab }) {
+    // Carry the layout's `year` search across tabs so the selected season sticks.
+    const keepSearch = (prev: Record<string, unknown>) => prev;
     return (
         <div className="inline-flex gap-1 rounded-xl border border-line bg-surface p-1">
             <Link
                 to="/circles/$id"
                 params={{ id }}
+                search={keepSearch}
                 className={cn(tabClass, active === 'leaderboard' ? onClass : offClass)}
             >
                 Classement
@@ -22,6 +25,7 @@ export function CircleTabs({ id, active }: { id: string; active: CircleTab }) {
             <Link
                 to="/circles/$id/bets"
                 params={{ id }}
+                search={keepSearch}
                 className={cn(tabClass, active === 'bets' ? onClass : offClass)}
             >
                 Paris
@@ -29,6 +33,7 @@ export function CircleTabs({ id, active }: { id: string; active: CircleTab }) {
             <Link
                 to="/circles/$id/members"
                 params={{ id }}
+                search={keepSearch}
                 className={cn(tabClass, active === 'members' ? onClass : offClass)}
             >
                 Membres
@@ -36,6 +41,7 @@ export function CircleTabs({ id, active }: { id: string; active: CircleTab }) {
             <Link
                 to="/circles/$id/settings"
                 params={{ id }}
+                search={keepSearch}
                 className={cn(tabClass, active === 'settings' ? onClass : offClass)}
             >
                 Réglages

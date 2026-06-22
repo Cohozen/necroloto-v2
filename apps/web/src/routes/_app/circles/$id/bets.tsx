@@ -1,6 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 import { Lock } from 'lucide-react';
-import { useState } from 'react';
 import { CircleBackLink } from '@/components/circles/CircleBackLink';
 import { CircleHeader } from '@/components/circles/CircleHeader';
 import { CircleTabs } from '@/components/circles/CircleTabs';
@@ -14,13 +13,19 @@ export const Route = createFileRoute('/_app/circles/$id/bets')({
     component: CircleBets,
 });
 
+// Selected year lives in the circle layout's URL search (shared across tabs).
+const circleRoute = getRouteApi('/_app/circles/$id');
+
 /** "Paris" tab — every member's bet for the selected season (secret until open). */
 function CircleBets() {
     const { id } = Route.useParams();
     const { years, defaultYear } = useSeasonYearTabs();
-    // null until the user picks a tab → falls back to the active season's year.
-    const [picked, setPicked] = useState<number | null>(null);
+    const navigate = circleRoute.useNavigate();
+    // Undefined until the user picks a year → falls back to the active season's year.
+    const { year: picked } = circleRoute.useSearch();
     const year = picked ?? defaultYear;
+    const setYear = (next: number) =>
+        navigate({ search: (prev) => ({ ...prev, year: next }), replace: true });
     const { user } = useCurrentUser();
 
     const circle = useCircleDetail(id);
@@ -47,14 +52,14 @@ function CircleBets() {
                     />
                     <YearTabs
                         value={year}
-                        onValueChange={setPicked}
+                        onValueChange={setYear}
                         years={years}
                         className="hidden md:inline-flex"
                     />
                 </div>
                 <CircleTabs id={id} active="bets" />
                 <div className="flex md:hidden items-center gap-3">
-                    <YearTabs value={year} onValueChange={setPicked} years={years} />
+                    <YearTabs value={year} onValueChange={setYear} years={years} />
                 </div>
             </div>
 
