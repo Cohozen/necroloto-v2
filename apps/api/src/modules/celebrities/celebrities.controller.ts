@@ -132,10 +132,11 @@ export class CelebritiesController {
     findPage(
         @Query('search') search?: string,
         @Query('status') status?: 'all' | 'alive' | 'deceased' | 'pending',
+        @Query('wikidata') wikidata?: 'linked' | 'unlinked',
         @Query('take', new DefaultValuePipe(24), ParseIntPipe) take = 24,
         @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip = 0,
     ) {
-        return this.celebritiesService.findPage({ search, status, take, skip });
+        return this.celebritiesService.findPage({ search, status, wikidata, take, skip });
     }
 
     // Recent deaths for the dashboard feed. Declared before ":id" for clarity.

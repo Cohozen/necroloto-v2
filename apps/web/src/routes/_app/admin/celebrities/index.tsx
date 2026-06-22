@@ -34,8 +34,14 @@ function AdminCatalogue() {
         return () => clearTimeout(id);
     }, [search]);
 
+    // "unlinked" is a Wikidata-link axis, not a status — map it to that param so it
+    // matches every status (alive/deceased/pending) with no wikidataId.
     const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage } =
-        useAdminCelebrities({ search: debouncedSearch, status: filter });
+        useAdminCelebrities(
+            filter === 'unlinked'
+                ? { search: debouncedSearch, status: 'all', wikidata: 'unlinked' }
+                : { search: debouncedSearch, status: filter },
+        );
 
     const qc = useQueryClient();
     const bulkDelete = useBulkDeleteCelebrities();

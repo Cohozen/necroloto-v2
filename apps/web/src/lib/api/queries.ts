@@ -283,12 +283,17 @@ export const ADMIN_CATALOGUE_PAGE = 24;
  * Paginated admin catalogue (GET /celebrities/admin/list) with server-side name
  * search, status filter and alphabetical order. Drives infinite scroll.
  */
-export function useAdminCelebrities(params: { search: string; status: AdminCelebrityStatus }) {
+export function useAdminCelebrities(params: {
+    search: string;
+    status: AdminCelebrityStatus;
+    /** Wikidata-link axis, orthogonal to `status` (e.g. "unlinked" = wikidataId null). */
+    wikidata?: 'linked' | 'unlinked';
+}) {
     const api = useApiClient();
     const search = params.search.trim();
-    const { status } = params;
+    const { status, wikidata } = params;
     return useInfiniteQuery({
-        queryKey: queryKeys.celebrities.adminList(search, status),
+        queryKey: queryKeys.celebrities.adminList(search, status, wikidata ?? ''),
         initialPageParam: 0,
         queryFn: ({ pageParam }) => {
             const qs = new URLSearchParams({
@@ -297,6 +302,7 @@ export function useAdminCelebrities(params: { search: string; status: AdminCeleb
                 skip: String(pageParam),
             });
             if (search) qs.set('search', search);
+            if (wikidata) qs.set('wikidata', wikidata);
             return api.get<AdminCelebrityPage>(`/celebrities/admin/list?${qs.toString()}`);
         },
         getNextPageParam: (lastPage, allPages) => {

@@ -210,10 +210,11 @@ export class CelebritiesService {
     async findPage(params: {
         search?: string;
         status?: 'all' | 'alive' | 'deceased' | 'pending';
+        wikidata?: 'linked' | 'unlinked';
         take: number;
         skip: number;
     }): Promise<{ items: Awaited<ReturnType<CelebritiesService['findAll']>>; total: number }> {
-        const { search, status = 'all', take, skip } = params;
+        const { search, status = 'all', wikidata, take, skip } = params;
         const where: Prisma.CelebrityWhereInput = {
             ...(search && {
                 name: { contains: search, mode: 'insensitive' },
@@ -221,6 +222,8 @@ export class CelebritiesService {
             ...(status === 'alive' && { death: null }),
             ...(status === 'deceased' && { death: { not: null } }),
             ...(status === 'pending' && { status: 'PENDING' }),
+            ...(wikidata === 'unlinked' && { wikidataId: null }),
+            ...(wikidata === 'linked' && { wikidataId: { not: null } }),
         };
 
         // The pending review queue reads newest-first; the rest stay alphabetical.
