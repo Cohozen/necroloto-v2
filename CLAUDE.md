@@ -139,7 +139,7 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   always sees their own. Enforced in `celebrities.findOne` (fiche bettors), `bets.rankByYearAndCircle`
   (leader roster blanked, ranks/points kept) and `GET /circle/:id/bets` (the "Paris" tab). The viewer
   is resolved from the JWT via the `@CurrentClerkId()` param-decorator (`modules/auth/
-  current-user.decorator.ts`) → `User` by `clerkId` (note: `clerkId` not unique → `findFirst`).
+  current-user.decorator.ts`) → `User` by `clerkId` (`@unique` since `add_user_clerkid_unique`, so `findUnique`).
 - **Async jobs** (`modules/jobs`): long/networked admin work runs **in-process** (no queue infra —
   no Redis), tracked in the `SyncJob` table (status + progress counters + JSON `payload`/`result`).
   `JobsService.enqueueBulkEnrich` creates the row and **fire-and-forgets** the worker (`void
@@ -214,10 +214,12 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   `User` row and **provisioned on first sign-in** by `CurrentUserProvider` (GET `/users/clerk/:id`,
   POST `/users` on miss); read it via `useCurrentUser()`. Reuse this pattern for new slices.
   ⚠️ `POST /users` (`UsersService.create`) is **idempotent**: it returns the existing row for a
-  known `clerkId`, or **relinks the `clerkId` onto the row matching the email** (email is
-  `@unique`, `clerkId` is not) — so a verified email signing in under a new `clerkId` (prod row
+  known `clerkId`, or **relinks the `clerkId` onto the row matching the email** (both `email` and
+  `clerkId` are `@unique`) — so a verified email signing in under a new `clerkId` (prod row
   cloned locally, Clerk instance migration) reconciles instead of hitting the unique(email)
-  constraint. Adding `@unique` on `User.clerkId` (after dedup) is tracked in `docs/ROADMAP.md`.
+  constraint. `clerkId` gained `@unique` in `add_user_clerkid_unique` (after running
+  `apps/api/scripts/dedupe-clerk-ids.mjs --apply` to fold duplicates); single-row clerkId lookups
+  use `findUnique`.
   ⚠️ Nest serializes a `null` handler return as an **empty body** — `client.ts` returns `null`
   (not `undefined`) on 204/empty, else TanStack Query throws "query data cannot be undefined".
 - **Wired vs mock**: every screen is wired — circles (`/circles` hub, `/circles/new`,

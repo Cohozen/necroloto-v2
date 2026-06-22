@@ -69,6 +69,11 @@ ferme — à arbitrer au fil de l'eau.
   (dates via `@Type(() => Date)`), et le `ValidationPipe` global tourne en **whitelist +
   forbidNonWhitelisted** (`apps/api/src/main.ts`) : les champs inconnus sont retirés/rejetés (400)
   et les types validés. `enableImplicitConversion` reste off (coercition pilotée par les `@Type`).
+- 🔑 **Contrainte `@unique` sur `User.clerkId`** — verrouille l'invariant de provisioning (un
+  `User` par identité Clerk). Migration `add_user_clerkid_unique` (index unique seul) précédée du
+  script de dédoublonnage `apps/api/scripts/dedupe-clerk-ids.mjs` (`--apply`, à lancer avant le
+  deploy prod). Les lookups simples passent en `findUnique` ; la réconciliation par email de
+  `UsersService.create` est conservée.
 
 ## 🎯 Backlog priorisable
 
@@ -96,5 +101,4 @@ ferme — à arbitrer au fil de l'eau.
 
 ## 🛠️ Tech / dette
 
-- 🔑 **Contrainte `@unique` sur `User.clerkId`** — après dédoublonnage, pour verrouiller
-  l'intégrité du provisioning (cf. fix de réconciliation par email).
+- _(rien d'urgent en cours — voir « Known debt » dans CLAUDE.md.)_
