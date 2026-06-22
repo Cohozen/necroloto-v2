@@ -92,6 +92,7 @@ function CircleBets() {
                                 points={points}
                                 hits={hits}
                                 picks={toLeaderPicks(bet)}
+                                collapsible
                             />
                         );
                     })}
