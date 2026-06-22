@@ -162,6 +162,69 @@ est détaillée dans la section « Local dev environment » de [CLAUDE.md](CLAUD
 Un décès ne rapporte qu'aux paris **de l'année du décès**. Source de vérité :
 [`packages/shared/src/scoring.ts`](packages/shared/src/scoring.ts).
 
+Le recalcul est **centralisé et idempotent** : `CelebritiesService.recalculatePoints(id)`
+est l'unique source de vérité, rejouée à chaque création/édition d'une célébrité et après
+chaque modification de paris. Un décès ne score que les paris dont l'année correspond à
+l'année du décès.
+
+## Automatisations backend (crons, Wikidata, jobs)
+
+Le backend n'a **aucune infra de queue** (pas de Redis/BullMQ) : tout tourne **in-process**
+dans le conteneur API. Trois briques se combinent.
+
+### Wikidata (`modules/wikidata`)
+
+Client **lecture seule** de l'API Wikidata (`www.wikidata.org/w/api.php`), **sans clé API**,
+avec un `User-Agent` descriptif (exigé par Wikidata). Il sert à deux choses :
+
+- **Recherche** par nom (`wbsearchentities`, FR) et récupération d'entités par Q-id
+  (`wbgetentities`, batché par 50), parsées en `WikidataSummary` (libellé, description,
+  naissance P569, décès P570, photo Commons P18, métiers P106, `instance of human` P31=Q5).
+  Les humains sont remontés en tête des résultats.
+- **Enrichissement** d'une fiche (`CelebritiesService.enrich`) : remplit naissance / décès /
+  rôle (1er métier P106 résolu en libellé FR) / photo, et stocke le `wikidataId` lié. Les
+  valeurs Wikidata priment, les valeurs manquantes ne sont pas écrasées ; **ré-exécutable** et
+  suivi d'un `recalculatePoints` (un décès peut être nouvellement connu). La **photo Commons
+  est ré-hébergée** dans le bucket Supabase Storage (repli sur l'URL Commons si Storage est
+  désactivé ou si le téléchargement échoue).
+
+### Tâches planifiées (`@nestjs/schedule`, `ScheduleModule.forRoot()`)
+
+Deux crons quotidiens (heure du serveur), volontairement décalés :
+
+| Cron | Heure | Service | Rôle |
+|---|---|---|---|
+| `EVERY_DAY_AT_4AM` | 4 h | `DeathDetectionService` (`modules/automation`) | **Détection des décès** : interroge Wikidata pour toutes les célébrités *suivies mais vivantes* (`wikidataId != null` et `death == null`), enregistre les nouveaux décès, rescore et émet l'event `celebrity.died`. Idempotent. |
+| `0 5 * * *` | 5 h | `SeasonSchedulerService` (`modules/seasons`) | **Jalons de saison** : transforme les transitions de dates en events. Curseur monotone `Season.notifiedMilestone` (ouverture des paris → ouverture → fermeture, chaque jalon **une seule fois**) + **rappel « paris bientôt fermés »** ~3 j avant `betEndDate` (une fois via `Season.betsClosingNotifiedAt`). |
+
+La détection des décès est aussi déclenchable **manuellement** par un admin via
+`POST /automation/detect-deaths`.
+
+### Jobs asynchrones (`modules/jobs`, table `SyncJob`)
+
+Le travail long/réseau (sync Wikidata en masse, scans de décès) est tracé dans la table
+`SyncJob` (statut + compteurs de progression + `payload`/`result` JSON).
+
+- **Bulk-enrich** (`POST /jobs/bulk-enrich`) crée la ligne et **fire-and-forget** le worker →
+  réponse `202` immédiate ; le front poll `GET /jobs/:id`. Un **sémaphore global** (3 en
+  parallèle, fait main car `p-limit` v6 est ESM-only et casse le build CJS) limite les appels
+  Wikidata concurrents **tous jobs confondus**. Les échecs par fiche sont isolés dans
+  `result.errors`.
+- **Scans de décès** sont enrobés en `DEATH_SCAN` (`recordDeathScan`), donc cron et
+  déclenchement manuel apparaissent tous deux dans l'historique `GET /jobs` (écran admin
+  `/admin/automation`).
+- ⚠️ **Compromis in-process** : un job laissé `RUNNING`/`PENDING` à un redéploiement Railway
+  est **réconcilié en `FAILED`** au boot (`onApplicationBootstrap`) — pas de reprise.
+
+### Notifications (`modules/notifications`, `@nestjs/event-emitter`)
+
+Toutes ces automatisations **émettent des events** (`celebrity.died`, jalons de saison,
+`bets.closingSoon`, lifecycle des propositions…) consommés en asynchrone par
+`NotificationsService` (`@OnEvent`, fire-and-forget try/catch) pour peupler les notifications
+in-app. Sens unique : les modules domaine n'importent que `notifications/events.ts` (constantes
++ types), donc aucun cycle. Détail complet des events et destinataires dans
+[CLAUDE.md](CLAUDE.md) (section « Notifications »).
+
 ## Déploiement
 
 API sur Railway via Docker — procédure complète dans
