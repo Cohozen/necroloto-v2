@@ -1,10 +1,18 @@
+import { useClerk } from '@clerk/clerk-react';
 import { Link } from '@tanstack/react-router';
-import { Bot, CalendarRange, Shield } from 'lucide-react';
+import { Bot, CalendarRange, LogOut, Shield } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { initialsOf, userDisplayName } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
+import { isClerkConfigured } from '@/lib/auth/clerk';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 import { NAV_ITEMS } from './nav-items';
@@ -30,6 +38,7 @@ function RailTooltip({ label, children }: { label: string; children: ReactNode }
 /** Desktop vertical nav rail (nl-side). Hidden on mobile. */
 export function SideNav() {
     const { user, isAdmin } = useCurrentUser();
+    const { signOut } = useClerk();
     const initials = user ? initialsOf(userDisplayName(user)) : '··';
     return (
         <TooltipProvider delayDuration={150}>
@@ -72,15 +81,25 @@ export function SideNav() {
                         </RailTooltip>
                     </>
                 )}
-                <RailTooltip label="Mon profil">
-                    <Link to="/profile" aria-label="Mon profil">
+                <DropdownMenu>
+                    <DropdownMenuTrigger
+                        className="rounded-full outline-none ring-offset-bg focus-visible:ring-2 focus-visible:ring-neon/60"
+                        aria-label="Menu du compte"
+                    >
                         <Avatar className="size-[42px] ring-2 ring-neon/60 ring-offset-2 ring-offset-bg">
                             <AvatarFallback className="bg-gradient-to-br from-[#2bd4ff] to-neon font-display font-extrabold text-[#07140b]">
                                 {initials}
                             </AvatarFallback>
                         </Avatar>
-                    </Link>
-                </RailTooltip>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent side="right" align="end" className="w-48">
+                        {isClerkConfigured && (
+                            <DropdownMenuItem variant="destructive" onSelect={() => signOut()}>
+                                <LogOut size={16} /> Déconnexion
+                            </DropdownMenuItem>
+                        )}
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </aside>
         </TooltipProvider>
     );
