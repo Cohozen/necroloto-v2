@@ -63,7 +63,8 @@ ferme — à arbitrer au fil de l'eau.
   membres **par ordre alphabétique** ; **dropdown « Déconnexion »** dans la sidebar desktop ; fiche :
   **« Pari manqué »** sur un pari d'année passée non gagnant (au lieu d'un potentiel) + **lien
   Wikidata** ; **filtres admin** et **année sélectionnée d'un cercle** persistés en **querystring**
-  (TanStack Router `validateSearch`) — survivent au retour/refresh.
+  (TanStack Router `validateSearch`) — survivent au retour/refresh ; **favicon** dérivé du logo
+  « invader » néon de la TopBar (`apps/web/public/`, généré par `scripts/generate-favicon.mjs`).
 
 ## 🎯 Backlog priorisable
 
