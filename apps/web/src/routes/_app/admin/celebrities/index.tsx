@@ -18,29 +18,58 @@ import {
 } from '@/lib/api/queries';
 import type { AdminCelebrity, CatalogFilter } from '@/types/admin';
 
+const CATALOG_FILTERS: CatalogFilter[] = ['all', 'alive', 'deceased', 'pending', 'unlinked'];
+
+/**
+ * Catalogue filters live in the URL so they survive back-navigation/refresh. Both
+ * params are optional (omitted at their default) so links to this route need no search.
+ */
 export const Route = createFileRoute('/_app/admin/celebrities/')({
+    validateSearch: (search: Record<string, unknown>): { filter?: CatalogFilter; q?: string } => {
+        const filter = CATALOG_FILTERS.includes(search.filter as CatalogFilter)
+            ? (search.filter as CatalogFilter)
+            : undefined;
+        const q = typeof search.q === 'string' && search.q ? search.q : undefined;
+        return {
+            ...(filter && filter !== 'all' ? { filter } : {}),
+            ...(q ? { q } : {}),
+        };
+    },
     component: AdminCatalogue,
 });
 
 function AdminCatalogue() {
-    const [filter, setFilter] = useState<CatalogFilter>('all');
-    const [search, setSearch] = useState('');
-    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const navigate = Route.useNavigate();
+    const { filter = 'all', q = '' } = Route.useSearch();
+    // Local mirror of the URL query so typing stays instant; debounced back to the URL.
+    const [search, setSearch] = useState(q);
     const [selected, setSelected] = useState<Set<string>>(() => new Set());
 
-    // Debounce the search box so each keystroke doesn't fire a request.
+    const setFilter = useCallback(
+        (next: CatalogFilter) =>
+            navigate({ search: (prev) => ({ ...prev, filter: next }), replace: true }),
+        [navigate],
+    );
+
+    // Debounce the search box back into the URL so each keystroke doesn't fire a request.
     useEffect(() => {
-        const id = setTimeout(() => setDebouncedSearch(search), 300);
+        const id = setTimeout(() => {
+            if (search !== q)
+                navigate({ search: (prev) => ({ ...prev, q: search }), replace: true });
+        }, 300);
         return () => clearTimeout(id);
-    }, [search]);
+    }, [search, q, navigate]);
+
+    // Re-sync the input when the URL query changes from the outside (back/forward).
+    useEffect(() => setSearch(q), [q]);
 
     // "unlinked" is a Wikidata-link axis, not a status — map it to that param so it
     // matches every status (alive/deceased/pending) with no wikidataId.
     const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage } =
         useAdminCelebrities(
             filter === 'unlinked'
-                ? { search: debouncedSearch, status: 'all', wikidata: 'unlinked' }
-                : { search: debouncedSearch, status: filter },
+                ? { search: q, status: 'all', wikidata: 'unlinked' }
+                : { search: q, status: filter },
         );
 
     const qc = useQueryClient();
