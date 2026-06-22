@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from '@tanstack/react-router';
+import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { Bell, Search } from 'lucide-react';
 import { useUnreadNotificationsCount } from '@/lib/api/queries';
 import { cn } from '@/lib/utils';
@@ -22,8 +22,10 @@ export function TopBar({ onOpenSearch }: TopBarProps) {
 
     return (
         <header className="flex items-center gap-3 border-b border-line bg-bg/55 px-4 py-3.5 backdrop-blur-md md:gap-3.5 md:px-5.5">
-            {/* mobile: brand */}
-            <Logo cell={3.5} withWord className="md:hidden" />
+            {/* mobile: brand — taps back to the dashboard */}
+            <Link to="/dashboard" aria-label="Accueil" className="md:hidden">
+                <Logo cell={3.5} withWord />
+            </Link>
 
             {/* desktop: search */}
             <button
