@@ -87,6 +87,15 @@ export function CelebrityRow({
                 {celeb.bettors}
             </div>
             <div className="flex items-center justify-end gap-1.5">
+                <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => onMerge(celeb)}
+                    aria-label="Fusionner"
+                    className="inline-flex size-9 items-center justify-center rounded-[10px] border border-line-2 bg-surface-2 text-ink-2 hover:text-ink disabled:opacity-50"
+                >
+                    <GitMerge size={16} />
+                </button>
                 {pending ? (
                     <>
                         <WikidataSearchDialog
@@ -102,15 +111,6 @@ export function CelebrityRow({
                                 <Globe size={16} />
                             </button>
                         </WikidataSearchDialog>
-                        <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => onMerge(celeb)}
-                            aria-label="Fusionner"
-                            className="inline-flex size-9 items-center justify-center rounded-[10px] border border-line-2 bg-surface-2 text-ink-2 hover:text-ink disabled:opacity-50"
-                        >
-                            <GitMerge size={16} />
-                        </button>
                         <button
                             type="button"
                             disabled={busy}
