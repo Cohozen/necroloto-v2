@@ -45,26 +45,20 @@ ferme — à arbitrer au fil de l'eau.
   joueur) et **Célébrités** (`POST /celebrities/search`, visibilité PENDING/APPROVED). Recherche
   côté serveur (`shouldFilter={false}`), terme recherché surligné, Entrée → fiche cercle ou
   célébrité. _Reste possible_ : étendre aux paris, recherches récentes.
+- 🔔 **Notifications in-app (phases 1 & 2)** — modèle `Notification` (store par utilisateur) peuplé
+  en asynchrone via `@nestjs/event-emitter` : handlers `@OnEvent` dans `NotificationsModule`,
+  émetteurs dans les modules domaine. Événements : **décès d'une célébrité pariée**
+  (`DeathDetectionService` + saisie admin), **nouveau membre de cercle**, **jalons de saison**
+  (`SeasonSchedulerService` : ouverture des paris / ouverture / fermeture), **propositions de
+  célébrités** (`proposal.pending` → admins via `ADMIN_CLERK_IDS`, `proposal.approved`/`rejected` →
+  proposeur), **bienvenue** à la 1ère connexion (`user.welcomed`), **vainqueur de saison** (sur
+  `season.closed`, gagnant calculé par cercle via `BetsService`) et **rappel paris bientôt fermés**
+  (~3 j avant `betEndDate`, une fois via `Season.betsClosingNotifiedAt`, aux membres sans pari pour
+  l'année). Page web `/notifications` (lecture auto + suppression) + badge cloche
+  (`GET /notifications/unread-count`). Destinataires des events globaux = membres de cercle.
 
 ## 🎯 Backlog priorisable
 
-- ✅ **Notifications (phase 1)** — modèle `Notification` (store par utilisateur) peuplé en
-  asynchrone via `@nestjs/event-emitter` : handlers `@OnEvent` dans `NotificationsModule`,
-  émetteurs dans les modules domaine. Événements livrés : **décès d'une célébrité pariée**
-  (`DeathDetectionService` + saisie admin), **nouveau membre de cercle**, **jalons de saison**
-  (`SeasonSchedulerService` : ouverture des paris / ouverture / fermeture). Page web
-  `/notifications` (lecture auto à l'ouverture + suppression) + badge cloche
-  (`GET /notifications/unread-count`). Destinataires des events globaux = membres de cercle.
-- ✅ **Notifications (phase 2)** — events ajoutés sur le même store/pattern : **propositions de
-  célébrités** (`proposal.pending` → admins via `ADMIN_CLERK_IDS`, `proposal.approved`/`rejected` →
-  proposeur), **bienvenue** à la 1ère connexion (`user.welcomed` sur `UsersService.create`), **vainqueur
-  de saison** (sur `season.closed`, gagnant calculé par cercle via `BetsService`), et **rappel paris
-  bientôt fermés** (`SeasonSchedulerService`, ~3 j avant `betEndDate`, une fois via
-  `Season.betsClosingNotifiedAt`, aux membres sans pari pour l'année).
-- 🔔 **Notifications — reste phase 2+** : **vie du cercle** (retrait/promotion admin, changement de
-  réglages mises visibles / liste modifiable). ❌ **Changement de place au classement abandonné** :
-  le rang est calculé à la volée, un snapshot (`lastRank` sur `Bet` diffé après chaque scan de décès)
-  a été jugé trop coûteux pour l'intérêt.
 - 📧 **Notifications — canaux de diffusion** — sur le même store : **e-mail** via **Resend**
   (encore *pending*) et **Web Push (PWA / service worker)** pour le push mobile (Web Push API ;
   iOS ≥ 16.4 uniquement si la PWA est installée sur l'écran d'accueil — clés VAPID + table
@@ -79,15 +73,13 @@ ferme — à arbitrer au fil de l'eau.
   centralisée dans `packages/shared/scoring` (`calculPointByCelebrity`) — garder
   l'idempotence et le recalcul via `CelebritiesService.recalculatePoints`. Concrétise le copy
   déjà présent (« plus la cote est haute, plus le pari rapporte gros »).
-
-## 🧪 Propositions à arbitrer
-
-- 🎆 **Soirée live Nouvel An** — vue temps réel des décès et points qui tombent (moment fort
-  du jeu).
 - 🥇 **Palmarès all-time / historique des saisons** — classement inter-saisons, archives.
+  Idéalement **par cercle** (un palmarès propre à chaque cercle, au fil des saisons).
 - 🎖️ **Trophées / badges** — gamification (meilleure cote trouvée, saison parfaite, séries…).
-- 📣 **Partage social** — image de podium générée pour partage hors-app.
-- 🌍 **Classement global inter-cercles** — au-delà du leaderboard par cercle.
+  Une petite partie existe déjà **en front sur les profils** ; large marge pour aller beaucoup
+  plus loin.
+- 🌍 **Classement global inter-cercles** — au-delà du leaderboard par cercle, mais **uniquement
+  sur les cercles publics**.
 
 ## 🛠️ Tech / dette
 
