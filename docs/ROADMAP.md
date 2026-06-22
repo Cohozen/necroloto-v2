@@ -56,6 +56,14 @@ ferme — à arbitrer au fil de l'eau.
   (~3 j avant `betEndDate`, une fois via `Season.betsClosingNotifiedAt`, aux membres sans pari pour
   l'année). Page web `/notifications` (lecture auto + suppression) + badge cloche
   (`GET /notifications/unread-count`). Destinataires des events globaux = membres de cercle.
+- ✨ **Polissage UX post-déploiement (prod)** — lot de raffinements suite à l'usage réel : **photos
+  de célébrités** dans toutes les listes (draft, paris/pronos, admin — `CelebrityPortrait` + fallback
+  `onError`) ; admin **filtre « Sans Wikidata »** (`wikidata=unlinked`) + **indicateur** de liaison
+  par ligne ; tri des paris **décès-puis-alphabétique** ; **layout masonry** des paris desktop ;
+  membres **par ordre alphabétique** ; **dropdown « Déconnexion »** dans la sidebar desktop ; fiche :
+  **« Pari manqué »** sur un pari d'année passée non gagnant (au lieu d'un potentiel) + **lien
+  Wikidata** ; **filtres admin** et **année sélectionnée d'un cercle** persistés en **querystring**
+  (TanStack Router `validateSearch`) — survivent au retour/refresh.
 
 ## 🎯 Backlog priorisable
 

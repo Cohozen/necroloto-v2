@@ -101,7 +101,8 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   proposer**: `findAll`/`search` filter `OR[{APPROVED},{PENDING, proposedBy: viewer}]`, `findOne` 404s a
   foreign PENDING (admins pass via the `@IsAdminClaim()` decorator), and `deathFeed` is `APPROVED`-only.
   `proposedBy`/`proposedAt` ride **only** the admin payload (`findPage`, which gains a `pending` filter +
-  `proposedAt desc` order) — never the public catalogue. Admins validate via `:id/approve` (optional
+  `proposedAt desc` order, plus a `wikidata` axis `linked`/`unlinked` filtering on `wikidataId` null) —
+  never the public catalogue. Admins validate via `:id/approve` (optional
   Wikidata enrich) / `:id/reject` (kept REJECTED + pulled from every bet, so no bet keeps an unvalidated
   pick). **Merge** (`POST /:sourceId/merge/:targetId`, admin) folds a duplicate into a target: it now
   drops source `CelebritiesOnBet` rows that would collide with the target on the `(betId, celebrityId)`
@@ -188,7 +189,9 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   in `src/components/ui/` are re-themed in place. Layout chrome in `src/components/layout/`.
 - **App chrome**: avatars render the **neon-gradient initials fallback only** (the Clerk photo is
   not used); the account avatar lives in the mobile top bar (`UserMenu`, dropdown) and at the bottom
-  of the desktop side rail (no dropdown). The desktop year selector was removed. A sonner `Toaster`
+  of the desktop side rail (`SideNav`), which opens a **logout-only dropdown** (a single destructive
+  "Déconnexion", `useClerk().signOut`, guarded by `isClerkConfigured`; profile stays reachable via
+  the rail's "Profil" nav icon). The desktop year selector was removed. A sonner `Toaster`
   is mounted in `routes/__root.tsx` for app-wide toasts. Enabled buttons get `cursor: pointer` via a
   base rule in `globals.css`.
 - **Global search (⌘K)**: `GlobalSearchDialog` (`components/search/`) is a cmdk command palette
@@ -238,7 +241,13 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   `CelebrityForm`'s scoring preview keeps `new Date().getFullYear()` (cosmetic only).
 - **Admin** (`/admin/celebrities/*`): the catalogue uses `GET /celebrities/admin/list` —
   **server-side** name search, status filter and alphabetical order, paginated and driven by
-  `useInfiniteQuery` (infinite scroll). Rows carry checkboxes (+ a select-all header) feeding a
+  `useInfiniteQuery` (infinite scroll). **Filters live in the URL** (`validateSearch` on the route:
+  `filter` + `q`, both optional so existing links need no search) so back-navigation/refresh restore
+  them; the search input is a debounced local mirror written back to the URL. Each row shows a
+  `WikidataIndicator` (linked/`Sans` pill) and a portrait photo, and the status filter gains a **"Sans
+  Wikidata"** segment (maps to `status=all` + a `wikidata=unlinked` query axis on the API — celebrities
+  with `wikidataId = null`, orthogonal to the alive/deceased/pending status). Rows carry checkboxes
+  (+ a select-all header) feeding a
   floating `BulkActionBar` for **bulk delete** (`DELETE /celebrities/bulk`) and **bulk Wikidata
   sync** (`POST /jobs/bulk-enrich` — **async job**, see "Async jobs"; `BulkActionBar` shows live
   `processed/total` from the polled job, recap toast on completion); results surface via sonner
@@ -291,21 +300,40 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   in `LeaderPicksCard` (so from **both** the "Paris" tab and the leaderboard — one shared component)
   and via an **"Eye" action** on each approved row of the admin catalogue (`CelebrityRow` /
   `CelebrityCard`). Shows the portrait (Wikidata `photo` over the gradient, monogram fallback —
-  `CelebrityPortrait` gained a `photo` prop), Wikidata facts (role/category/birth/age), a `PointsHero`
+  `CelebrityPortrait` gained a `photo` prop **with an `onError` fallback to the monogram**, so a dead
+  URL degrades cleanly), Wikidata facts (role/category/birth/age), a `PointsHero`
   (awarded vs potential, on the **active season** via `useSeasonYear`), and **"Qui a parié dessus"
   grouped by season** ("Cette saison" first, then past years desc — `Bettor.year` carried from
-  `bet.year`; the API already returns every year). Bettors are gated server-side (see "Bet secrecy")
+  `bet.year`; the API already returns every year). Each bettor row shows a **per-bet `outcome`**
+  (`toCelebrityDetail` takes the active year): `scored` (+pts), `potential` (current season, still in
+  play), or **`missed`** ("Pari manqué") — a bet whose season is over without scoring (or a death that
+  fell in another year, i.e. `points === 0 && (dead || year < activeYear)`) **never shows potential
+  points it can no longer earn**. A **"Voir sur Wikidata"** link (`wikidataId` → `wikidata.org/wiki/…`)
+  shows when the celebrity is linked. Bettors are gated server-side (see "Bet secrecy")
   then narrowed to the viewer's circles. The back button uses `router.history.back()` when there is
   history (returns to the originating circle leaderboard), falling back to the catalogue link on a
-  direct/deep-link load (`useCanGoBack`). Photo upload still isn't wired; in local dev the `photo`
-  URLs may 404 (Storage not cloned). The global search palette (⌘K) navigates here too.
+  direct/deep-link load (`useCanGoBack`). Photo upload still isn't wired; in local dev the **Wikidata
+  `photo` URLs still load** (they point at Wikidata/Commons, not the un-cloned Supabase Storage). The
+  global search palette (⌘K) navigates here too.
 - **"Paris" tab** (`/circles/$id/bets`, `useCircleBets` → `GET /circle/:id/bets`): lists every
   member's bet for the selected season; before reveal (or with `betsVisible` off) the server returns
-  only the viewer's own bet and the page shows a "secret" banner. The leaderboard's `LeaderPicksCard`
-  is likewise hidden behind a "Paris secrets" card until `isSeasonRevealed(season) && betsVisible`
-  (`adapters.ts`). New circles default to **`betsVisible` on, `allowEdit` off** (`change_circle_setting_defaults`
-  migration). "Mises visibles" only applies once the season is open; "Liste modifiable" only during
-  the open season (a straggler "rallonge") — both re-copywrited in the circle settings screen.
+  only the viewer's own bet and the page shows a "secret" banner. Cards lay out in a **CSS-columns
+  masonry** (`columns-1 md:columns-2 lg:columns-3` + `break-inside-avoid`) so expanding a collapsible
+  card grows only its own column instead of stretching its grid-row neighbours. The shared
+  `LeaderPicksCard` renders each pick's **portrait photo** and **sorts picks deceased-first then
+  alphabetical** (so it applies to both this tab and the leaderboard rail). The leaderboard's
+  `LeaderPicksCard` is likewise hidden behind a "Paris secrets" card until
+  `isSeasonRevealed(season) && betsVisible` (`adapters.ts`). New circles default to **`betsVisible` on,
+  `allowEdit` off** (`change_circle_setting_defaults` migration). "Mises visibles" only applies once
+  the season is open; "Liste modifiable" only during the open season (a straggler "rallonge") — both
+  re-copywrited in the circle settings screen.
+- **Selected season persists per circle (URL)**: the chosen `year` is a search param **validated on
+  the circle *layout* route** (`/_app/circles/$id.tsx`, a common ancestor of every tab), so it is
+  shared across Classement/Paris/Membres/Réglages and survives back-navigation/refresh. `YearTabs`
+  writes it (`navigate({ search })`), children read it via `getRouteApi('/_app/circles/$id')`, and
+  `CircleTabs` forwards it (`search={(prev) => prev}`). Absent → falls back to `useSeasonYear`.
+- **Circle members** (`/circles/$id/members`): roster sorted **alphabetically** by display name
+  (`localeCompare`, fr), not by rank.
 - ⚠️ **`@necroloto/shared` is CommonJS** (`"type": "commonjs"`). Its barrel `index.js` uses
   `__exportStar`, which rollup/esbuild can't statically analyze → the web imports the subpath
   `@necroloto/shared/scoring` (a single-file module with direct named exports). `vite.config.ts`
