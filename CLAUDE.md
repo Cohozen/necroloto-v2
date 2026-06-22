@@ -53,18 +53,6 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   (schema stays Prisma-owned) and loads it locally. **Storage files (images) are NOT
   copied** — only DB rows; `storage.objects` will point at missing files. The dump
   contains real user data — keep it out of git.
-- **Docker variant** (optional, for the app itself): `docker-compose.yml` +
-  `Dockerfile.dev` run the **API (:3000) and web (:5173) in hot-reload containers**,
-  wired to the *same* host Supabase CLI stack via `host.docker.internal`. `pnpm docker:up`
-  (build + up), `pnpm docker:down`. Env lives in root `.env.docker` (copy from
-  `.env.docker.example`; uses `host.docker.internal` hosts, **not** `127.0.0.1`). The API
-  container runs `prisma generate` + `migrate deploy` on start. `node_modules` and
-  `apps/api/generated` are **container-owned anonymous volumes** (the host's macOS binaries
-  must not shadow the container's linux ones). The dev image needs `apps/web`, which the
-  root `.dockerignore` excludes — hence the dedicated `Dockerfile.dev.dockerignore`.
-  ⚠️ With `SUPABASE_URL=host.docker.internal:54321`, `getPublicUrl` bakes that host into
-  image URLs (unreachable from the browser); fine for the wired slices, but run the API
-  natively for celebrity-photo work.
 
 ## Gotchas (learned the hard way)
 

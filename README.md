@@ -38,8 +38,6 @@ necroloto-v2/
 ├── packages/
 │   └── shared/         # @necroloto/shared : scoring + enums partagés
 ├── Dockerfile          # build de l'API pour la prod (contexte = racine, déployé sur Railway)
-├── Dockerfile.dev      # image hot-reload pour la variante Docker locale (API + web)
-├── docker-compose.yml  # stack dev conteneurisée (API + web), voir « Démarrage » 2B
 ├── railway.json        # déploiement Railway
 ├── biome.json          # lint + format (Biome)
 └── turbo.json          # orchestration des builds
@@ -56,7 +54,7 @@ necroloto-v2/
 
 > **Important** — on développe toujours contre une stack **Supabase locale**, jamais
 > contre la prod. Cette stack tourne **sur la machine hôte** via la Supabase CLI (dans
-> Docker/Colima), que l'app soit ensuite lancée en natif **ou** en conteneurs.
+> Docker/Colima).
 
 ### 1. Installer + démarrer Supabase en local (étape commune)
 
@@ -70,7 +68,7 @@ pnpm --filter necroloto-api exec prisma migrate deploy   # appliquer le schéma 
 `supabase status` affiche les URLs et clés locales (notamment `SUPABASE_SECRET_KEY`)
 dont tu auras besoin ci-dessous. `supabase stop` pour arrêter la stack.
 
-### 2A. Lancer l'app en natif (recommandé)
+### 2. Lancer l'app en natif
 
 Crée les deux fichiers d'env locaux (gitignorés), puis lance API + web :
 
@@ -90,25 +88,6 @@ cp apps/api/.env.example apps/api/.env
 pnpm --filter necroloto-api start:dev     # API sur :3000
 pnpm --filter necroloto-web dev           # web sur :5173
 ```
-
-### 2B. Lancer l'app en conteneurs (variante Docker)
-
-Alternative à 2A : l'**API (:3000) et le web (:5173)** tournent en conteneurs
-**hot-reload**, branchés sur la **même** Supabase locale de l'étape 1. Supabase n'est
-pas conteneurisé ici — les conteneurs joignent l'hôte via `host.docker.internal` (et
-**non** `127.0.0.1`, qui désignerait le conteneur lui-même), d'où un fichier d'env dédié :
-
-```bash
-cp .env.docker.example .env.docker        # puis y coller SUPABASE_SECRET_KEY (et les clés Clerk)
-pnpm docker:up                            # docker compose up --build
-pnpm docker:down                          # arrêter   ·   pnpm docker:logs pour suivre
-```
-
-Le conteneur API exécute `prisma generate` + `migrate deploy` à son démarrage ; l'image
-n'est rebuildée que si `package.json`/lockfile changent. ⚠️ Comme `SUPABASE_URL` vaut
-`http://host.docker.internal:54321`, les URLs publiques d'images générées contiennent ce
-hôte (non résolu par le navigateur) — sans impact sur le reste, mais pour bosser sur les
-**photos de célébrités**, lance plutôt l'API en natif (2A).
 
 ---
 
@@ -139,10 +118,9 @@ apps/api/scripts/clone-prod-to-local.sh
 > `supabase db reset` n'est pas adapté ici : le schéma est géré par les migrations **Prisma**,
 > pas par `supabase/migrations`.
 
-Référence des variables : [apps/api/.env.example](apps/api/.env.example) (API) et
-[.env.docker.example](.env.docker.example) (variante Docker). La procédure complète de dev
-local (env local vs prod, clone des données de prod, mise en garde sur les fichiers Storage)
-est détaillée dans la section « Local dev environment » de [CLAUDE.md](CLAUDE.md).
+Référence des variables : [apps/api/.env.example](apps/api/.env.example). La procédure complète
+de dev local (env local vs prod, clone des données de prod, mise en garde sur les fichiers
+Storage) est détaillée dans la section « Local dev environment » de [CLAUDE.md](CLAUDE.md).
 
 ## Commandes (racine)
 
@@ -154,7 +132,6 @@ est détaillée dans la section « Local dev environment » de [CLAUDE.md](CLAUD
 | `pnpm lint` | Analyse Biome (lecture seule) |
 | `pnpm format` | Formatage Biome (écriture) |
 | `pnpm check` | Biome lint + fixes sûrs |
-| `pnpm docker:up` / `docker:down` / `docker:logs` | Variante Docker locale (cf. « Démarrage » 2B) |
 
 ## Règles de score
 
