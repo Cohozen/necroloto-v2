@@ -44,10 +44,10 @@ export class CelebritiesService {
         return celebrity;
     }
 
-    /** Maps a Clerk id to its DB `User.id`, or undefined (clerkId is not unique). */
+    /** Maps a Clerk id to its DB `User.id`, or undefined. */
     private async resolveViewerId(clerkId?: string): Promise<string | undefined> {
         if (!clerkId) return undefined;
-        const user = await this.prisma.user.findFirst({
+        const user = await this.prisma.user.findUnique({
             where: { clerkId },
             select: { id: true },
         });

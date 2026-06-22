@@ -179,7 +179,7 @@ export class BetsService {
         // the circle has betsVisible — except the viewer's own bet. Totals/ranks
         // are already computed above, so blanking the picks doesn't affect them.
         const viewer = viewerClerkId
-            ? await this.prisma.user.findFirst({
+            ? await this.prisma.user.findUnique({
                   where: { clerkId: viewerClerkId },
                   select: { id: true },
               })
@@ -261,7 +261,7 @@ export class BetsService {
      */
     async listVisibleByCircle(circleId: string, year: number, viewerClerkId?: string) {
         const viewer = viewerClerkId
-            ? await this.prisma.user.findFirst({
+            ? await this.prisma.user.findUnique({
                   where: { clerkId: viewerClerkId },
                   select: { id: true },
               })

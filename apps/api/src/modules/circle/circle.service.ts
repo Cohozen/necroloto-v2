@@ -209,7 +209,7 @@ export class CircleService {
         if (trimmed.length === 0) return [];
 
         const viewer = viewerClerkId
-            ? await this.prisma.user.findFirst({
+            ? await this.prisma.user.findUnique({
                   where: { clerkId: viewerClerkId },
                   select: { id: true },
               })

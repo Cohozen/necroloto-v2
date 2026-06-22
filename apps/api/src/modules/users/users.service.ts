@@ -18,7 +18,7 @@ export class UsersService {
         // (e.g. a prod row cloned locally, or a Clerk instance migration). In that
         // case we relink the existing row instead of hitting the unique(email)
         // constraint. Clerk verifies emails, so matching on email is safe.
-        const existingByClerk = await this.prisma.user.findFirst({
+        const existingByClerk = await this.prisma.user.findUnique({
             where: { clerkId: createUserDto.clerkId },
         });
         if (existingByClerk) return existingByClerk;
@@ -72,7 +72,7 @@ export class UsersService {
     }
 
     async findByClerkId(clerkId: string) {
-        return this.prisma.user.findFirst({
+        return this.prisma.user.findUnique({
             where: { clerkId },
             include: {
                 Bets: true,

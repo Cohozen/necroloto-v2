@@ -360,7 +360,7 @@ export class NotificationsService {
     private resolveUserId(clerkId: string | undefined): Promise<string | null> {
         if (!clerkId) return Promise.resolve(null);
         return this.prisma.user
-            .findFirst({ where: { clerkId }, select: { id: true } })
+            .findUnique({ where: { clerkId }, select: { id: true } })
             .then((u) => u?.id ?? null);
     }
 }
