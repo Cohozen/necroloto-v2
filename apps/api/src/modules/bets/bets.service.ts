@@ -1,5 +1,11 @@
 import { deathYear } from '@necroloto/shared';
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import {
+    BadRequestException,
+    ConflictException,
+    ForbiddenException,
+    Injectable,
+} from '@nestjs/common';
+import { Prisma } from '@/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CelebritiesService } from '../celebrities/celebrities.service';
 import { SeasonsService } from '../seasons/seasons.service';
@@ -122,15 +128,24 @@ export class BetsService {
         const ids = await this.resolveCelebrityIds(celebrityIds);
         await this.assertNoDeceased(ids, betData.year);
 
-        const bet = await this.prisma.bet.create({
-            data: {
-                ...betData,
-                CelebritiesOnBet: {
-                    create: ids.map((celebrityId) => ({ celebrityId })),
+        let bet: { id: string };
+        try {
+            bet = await this.prisma.bet.create({
+                data: {
+                    ...betData,
+                    CelebritiesOnBet: {
+                        create: ids.map((celebrityId) => ({ celebrityId })),
+                    },
                 },
-            },
-            include: betInclude,
-        });
+                include: betInclude,
+            });
+        } catch (error) {
+            // One bet per (userId, circleId, year): a duplicate is a conflict, not a 500.
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+                throw new ConflictException('Un pari existe déjà pour cette saison.');
+            }
+            throw error;
+        }
 
         // A freshly listed celebrity may already be deceased -> score it now.
         await this.scoreCelebrities(ids);
