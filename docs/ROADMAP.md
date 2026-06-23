@@ -74,6 +74,14 @@ ferme — à arbitrer au fil de l'eau.
   script de dédoublonnage `apps/api/scripts/dedupe-clerk-ids.mjs` (`--apply`, à lancer avant le
   deploy prod). Les lookups simples passent en `findUnique` ; la réconciliation par email de
   `UsersService.create` est conservée.
+- 🚫 **Pari sans célébrité déjà décédée** — `BetsService.create` / `replaceCelebrities` rejettent
+  (400, noms en clair) un pari listant une personne morte **avant** la saison via
+  `assertNoDeceased(ids, year)` (sur le `Celebrity.death` stocké, sans appel Wikidata). Un décès de
+  l'**année pariée** reste autorisé (pick gagnant / rallonge `season-open`). Filets côté front :
+  la grille du draft masque déjà les défunts et `ProposeCelebrityDialog` **grise les résultats
+  Wikidata décédés** (badge « Décédé(e) ») ; la sauvegarde remonte le message d'erreur en toast.
+  Au passage, le doublon de pari (`@@unique([userId, circleId, year])` P2002) est mappé en **409**
+  (avant : 500).
 
 ## 🎯 Backlog priorisable
 

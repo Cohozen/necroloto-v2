@@ -134,6 +134,17 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   (the flag is the only gate). The front mirrors this from `CircleSummary.seasonPhase` (+ `allowEdit`/
   `allowNewBet`) to drive the draft's read-only banners. ⚠️ this changed `allowNewBet`/`allowEdit`
   semantics: they no longer block during the open betting window.
+- **No already-deceased picks**: `BetsService.create` / `replaceCelebrities` also run
+  `assertNoDeceased(ids, year)` (after `resolveCelebrityIds`, before any write) — a celebrity already
+  dead **before** the season can't be bet on. It trusts the stored `Celebrity.death` (no Wikidata call;
+  a Wikidata proposal is enriched inline, so a freshly added dead pick already carries its date). A
+  death in the **bet's own year is allowed** (the winning pick — keeps the `season-open` rallonge edit
+  working); only `deathYear(death) !== bet.year` → **400** naming the offending celebrities. The front
+  mirrors this two ways: the draft grid hides `death`-set rows, and `ProposeCelebrityDialog` **disables
+  deceased Wikidata results** (greyed, non-clickable, "Décédé(e)" badge). The draft save handler
+  surfaces the API message verbatim via a sonner toast, so a rejected pick is named to the user.
+  ⚠️ A duplicate bet (the `@@unique([userId, circleId, year])` P2002) is mapped to **409** (not 500)
+  in `create`, like the `CelebritiesService` P2002 handling.
 - **Bet secrecy (server-side)**: other members' picks stay **secret** until the season is revealed
   (`SeasonsService.isRevealed` → `now ≥ openDate`) **and** the circle has `betsVisible`; the viewer
   always sees their own. Enforced in `celebrities.findOne` (fiche bettors), `bets.rankByYearAndCircle`
@@ -288,7 +299,9 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   season. The `/celebrities` draft is "Mon pari": it edits the bet of the **selected circle** (a
   circle selector defaults to the bet's circle, or the user's first), seeding the celebrity
   selection from it and saving via `POST /bets` (create) or `PATCH /bets/:id/celebrities` (replace,
-  ≥1 celebrity required). The draft caps selection at `MAX_BET_CELEBRITIES` (50, a shared constant
+  ≥1 celebrity required). The save mutations carry sonner `onSuccess`/`onError` toasts so the API
+  message surfaces verbatim — e.g. the **400 naming an already-deceased pick** (see "No already-deceased
+  picks"). The draft caps selection at `MAX_BET_CELEBRITIES` (50, a shared constant
   in `queries.ts`; client-side only — the API enforces no cap yet, per-circle config is in
   `docs/ROADMAP.md`). **Deceased celebrities are hidden** from the draft grid, and the draft is
   **read-only** (cards + validate disabled, with a phase-specific banner) driven by
@@ -299,7 +312,10 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   (`components/celebrities/`): a two-step flow — Wikidata search first (reuses `useWikidataSearch`),
   manual fallback ("je ne trouve pas") — calling `useProposeCelebrity`; the returned id is added
   straight to the selection and pending cards carry an "En attente" badge (`proposalStatus` on the
-  `CelebritySummary`, an axis **orthogonal** to alive/deceased). See "Celebrity proposals".
+  `CelebritySummary`, an axis **orthogonal** to alive/deceased). **Deceased Wikidata results are
+  disabled** in the search step (greyed, non-clickable, "Décédé(e)" badge — `WikidataSummaryDto.death`
+  is already returned by the search), so a dead person can't be proposed in the first place.
+  See "Celebrity proposals" and "No already-deceased picks".
 - **Celebrity fiche** (`/celebrities/$id`, `useCelebrity` → `GET /celebrities/:id`): a **read-only
   public detail** open to any authenticated user (not admin-gated). Reached by clicking a celebrity
   in `LeaderPicksCard` (so from **both** the "Paris" tab and the leaderboard — one shared component)
