@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { CelebrityForm } from '@/components/admin/CelebrityForm';
+import { PageLoader } from '@/components/feedback/PageLoader';
 import {
     useCelebrity,
     useDeleteCelebrity,
@@ -35,7 +36,7 @@ function AdminEditCelebrity() {
         <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5 p-4 md:p-6">
             <AdminHeader crumb="Éditer" />
             {isLoading ? (
-                <p className="py-12 text-center text-sm text-ink-3">Chargement de la fiche…</p>
+                <PageLoader label="Chargement de la fiche…" />
             ) : isError || !celebrity ? (
                 <p className="py-12 text-center text-sm text-coral">Cette fiche est introuvable.</p>
             ) : (

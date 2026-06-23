@@ -6,7 +6,9 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { BulkActionBar } from '@/components/admin/BulkActionBar';
 import { CatalogToolbar } from '@/components/admin/CatalogToolbar';
 import { CelebrityTable } from '@/components/admin/CelebrityTable';
+import { CelebrityTableSkeleton } from '@/components/admin/CelebrityTableSkeleton';
 import { MergeCelebrityDialog } from '@/components/admin/MergeCelebrityDialog';
+import { SectionLoader } from '@/components/feedback/SectionLoader';
 import { toAdminCelebrity } from '@/lib/api/adapters';
 import {
     useAdminCelebrities,
@@ -203,7 +205,7 @@ function AdminCatalogue() {
                 total={total}
             />
             {isLoading ? (
-                <p className="py-12 text-center text-sm text-ink-3">Chargement du catalogue…</p>
+                <CelebrityTableSkeleton />
             ) : isError ? (
                 <p className="py-12 text-center text-sm text-coral">
                     Le catalogue n'a pas pu être chargé. Réessayez plus tard.
@@ -225,9 +227,7 @@ function AdminCatalogue() {
                         busyId={busyId}
                     />
                     <div ref={sentinelRef} className="h-8" aria-hidden />
-                    {isFetchingNextPage && (
-                        <p className="py-2 text-center text-sm text-ink-3">Chargement…</p>
-                    )}
+                    {isFetchingNextPage && <SectionLoader inline label="Chargement…" />}
                 </>
             )}
 

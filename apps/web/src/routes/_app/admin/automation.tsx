@@ -3,6 +3,7 @@ import { RefreshCw, Skull, Sparkles } from 'lucide-react';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { SectionLoader } from '@/components/feedback/SectionLoader';
 import { Button } from '@/components/ui/button';
 import { useDetectDeaths, useRecentJobs } from '@/lib/api/queries';
 import type { SyncJob } from '@/lib/api/types';
@@ -102,7 +103,7 @@ function AdminAutomation() {
                 Wikidata en masse et les scans manuels apparaissent ici.
             </p>
             {isLoading ? (
-                <p className="py-12 text-center text-sm text-ink-3">Chargement de l'historique…</p>
+                <SectionLoader label="Chargement de l'historique…" />
             ) : isError ? (
                 <p className="py-12 text-center text-sm text-coral">
                     L'historique n'a pas pu être chargé.

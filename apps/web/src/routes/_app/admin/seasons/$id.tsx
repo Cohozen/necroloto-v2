@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { SeasonForm } from '@/components/admin/SeasonForm';
+import { PageLoader } from '@/components/feedback/PageLoader';
 import { ApiError } from '@/lib/api/client';
 import { useDeleteSeason, useSeason, useUpdateSeason } from '@/lib/api/queries';
 import type { CreateSeasonPayload } from '@/lib/api/types';
@@ -40,7 +41,7 @@ function AdminEditSeason() {
         <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5 p-4 md:p-6">
             <AdminHeader section="Saisons" crumb="Éditer" />
             {isLoading ? (
-                <p className="py-12 text-center text-sm text-ink-3">Chargement de la saison…</p>
+                <PageLoader label="Chargement de la saison…" />
             ) : isError || !season ? (
                 <p className="py-12 text-center text-sm text-coral">
                     Cette saison est introuvable.

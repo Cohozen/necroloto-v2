@@ -5,6 +5,7 @@ import { CircleHeader } from '@/components/circles/CircleHeader';
 import { CircleTabs } from '@/components/circles/CircleTabs';
 import { LeaderPicksCard } from '@/components/circles/LeaderPicksCard';
 import { YearTabs } from '@/components/circles/YearTabs';
+import { SectionLoader } from '@/components/feedback/SectionLoader';
 import { initialsOf, isSeasonRevealed, toLeaderPicks, userDisplayName } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
 import { useCircleBets, useCircleDetail, useSeasons, useSeasonYearTabs } from '@/lib/api/queries';
@@ -75,7 +76,7 @@ function CircleBets() {
             )}
 
             {betsQuery.isLoading ? (
-                <p className="text-[13px] text-ink-3">Chargement des paris…</p>
+                <SectionLoader label="Chargement des paris…" />
             ) : betsQuery.isError ? (
                 <p className="text-[13px] text-coral">Impossible de charger les paris.</p>
             ) : bets.length === 0 ? (

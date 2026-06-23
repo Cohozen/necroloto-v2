@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { CelebrityCard } from '@/components/celebrities/CelebrityCard';
 import { DraftTray } from '@/components/celebrities/DraftTray';
 import { ProposeCelebrityDialog } from '@/components/celebrities/ProposeCelebrityDialog';
+import { PageLoader } from '@/components/feedback/PageLoader';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -40,7 +41,7 @@ function Catalogue() {
     const summariesQuery = useCircleSummaries(user?.id, year);
 
     if (!user || celebsQuery.isLoading || betsQuery.isLoading || summariesQuery.isLoading) {
-        return <p className="p-6 text-sm text-ink-3">Chargement du draft…</p>;
+        return <PageLoader label="Chargement du draft…" />;
     }
 
     return (

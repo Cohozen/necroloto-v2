@@ -3,6 +3,7 @@ import { Bell, CheckCheck } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { EmptyArt } from '@/components/EmptyArt';
+import { SectionLoader } from '@/components/feedback/SectionLoader';
 import { NotificationRow } from '@/components/notifications/NotificationRow';
 import {
     useClearNotifications,
@@ -64,7 +65,7 @@ function Notifications() {
                 )}
             </header>
 
-            {isLoading && <p className="text-[13px] text-ink-3">Chargement…</p>}
+            {isLoading && <SectionLoader label="Chargement des notifications…" />}
 
             {isError && (
                 <p className="text-[13px] text-coral">

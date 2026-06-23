@@ -6,6 +6,7 @@ import { CircleHeader } from '@/components/circles/CircleHeader';
 import { CircleTabs } from '@/components/circles/CircleTabs';
 import { InviteDialog } from '@/components/circles/InviteDialog';
 import { LeaderboardRow } from '@/components/circles/LeaderboardRow';
+import { LeaderboardSkeleton } from '@/components/circles/LeaderboardSkeleton';
 import { LeaderPicksCard } from '@/components/circles/LeaderPicksCard';
 import { Podium } from '@/components/circles/Podium';
 import { YearTabs } from '@/components/circles/YearTabs';
@@ -87,7 +88,7 @@ function CircleLeaderboard() {
             />
 
             {rankQuery.isLoading ? (
-                <p className="text-[13px] text-ink-3">Chargement du classement…</p>
+                <LeaderboardSkeleton />
             ) : rankQuery.isError ? (
                 <p className="text-[13px] text-coral">Impossible de charger le classement.</p>
             ) : leaderboard.length === 0 ? (

@@ -7,6 +7,7 @@ import { CircleAdminHeader } from '@/components/circles/CircleAdminHeader';
 import { DangerZone } from '@/components/circles/DangerZone';
 import { InviteCodeBox } from '@/components/circles/InviteCodeBox';
 import { SettingToggleRow } from '@/components/circles/SettingToggleRow';
+import { PageLoader } from '@/components/feedback/PageLoader';
 import { Button } from '@/components/ui/button';
 import { useCurrentUser } from '@/lib/api/currentUser';
 import {
@@ -30,7 +31,7 @@ function CircleSettings() {
     const circle = circleQuery.data;
 
     if (circleQuery.isLoading) {
-        return <p className="p-6 text-sm text-ink-3">Chargement…</p>;
+        return <PageLoader label="Chargement des réglages…" />;
     }
     if (!circle) {
         return <p className="p-6 text-sm text-coral">Cercle introuvable.</p>;

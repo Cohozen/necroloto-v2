@@ -6,6 +6,7 @@ import { CelebrityPortrait } from '@/components/celebrities/CelebrityPortrait';
 import { Fact } from '@/components/celebrities/Fact';
 import { PointsHero } from '@/components/celebrities/PointsHero';
 import { StatusBadge } from '@/components/celebrities/StatusBadge';
+import { PageLoader } from '@/components/feedback/PageLoader';
 import { toCelebrityDetail } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
 import { useCelebrity, useCircleSummaries, useSeasonYear } from '@/lib/api/queries';
@@ -44,7 +45,7 @@ function CelebrityPage() {
     }, [celeb]);
 
     if (celebQuery.isLoading) {
-        return <p className="p-6 text-sm text-ink-3">Chargement de la fiche…</p>;
+        return <PageLoader label="Chargement de la fiche…" />;
     }
     if (!celeb) {
         return <p className="p-6 text-sm text-coral">Célébrité introuvable.</p>;

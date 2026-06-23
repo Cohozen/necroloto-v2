@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { CircleAdminHeader } from '@/components/circles/CircleAdminHeader';
 import { InviteDialog } from '@/components/circles/InviteDialog';
 import { MemberRow } from '@/components/circles/MemberRow';
+import { PageLoader } from '@/components/feedback/PageLoader';
 import { toCircleMember } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
 import {
@@ -53,7 +54,7 @@ function CircleMembers() {
     }, [circle, rankQuery.data, user?.id]);
 
     if (circleQuery.isLoading) {
-        return <p className="p-6 text-sm text-ink-3">Chargement…</p>;
+        return <PageLoader label="Chargement des membres…" />;
     }
     if (!circle) {
         return <p className="p-6 text-sm text-coral">Cercle introuvable.</p>;

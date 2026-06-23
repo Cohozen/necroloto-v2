@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { CalendarRange, ChevronRight, Plus } from 'lucide-react';
 import { useMemo } from 'react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { SectionLoader } from '@/components/feedback/SectionLoader';
 import { Button } from '@/components/ui/button';
 import { seasonStatus } from '@/lib/api/adapters';
 import { useSeasons } from '@/lib/api/queries';
@@ -76,7 +77,7 @@ function AdminSeasons() {
                 }
             />
             {isLoading ? (
-                <p className="py-12 text-center text-sm text-ink-3">Chargement des saisons…</p>
+                <SectionLoader label="Chargement des saisons…" />
             ) : isError ? (
                 <p className="py-12 text-center text-sm text-coral">
                     Les saisons n'ont pas pu être chargées.

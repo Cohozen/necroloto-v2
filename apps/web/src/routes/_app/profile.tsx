@@ -14,6 +14,7 @@ import {
     Zap,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { PageLoader } from '@/components/feedback/PageLoader';
 import { AchievementBadge } from '@/components/profile/AchievementBadge';
 import { EditProfileDialog } from '@/components/profile/EditProfileDialog';
 import { LogoutRow } from '@/components/profile/LogoutRow';
@@ -59,7 +60,7 @@ function Profile() {
     }, [betsQuery.data, summariesQuery.data]);
 
     if (!user) {
-        return <p className="p-6 text-sm text-ink-3">Chargement de votre profil…</p>;
+        return <PageLoader label="Chargement de votre profil…" />;
     }
 
     const name = userDisplayName(user);

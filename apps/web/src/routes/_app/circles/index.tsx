@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Hash, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { CircleCardGridSkeleton } from '@/components/circles/CircleCardSkeleton';
 import { EmptyCircles } from '@/components/circles/EmptyCircles';
 import { GhostAddCard } from '@/components/circles/GhostAddCard';
 import { HubCircleCard } from '@/components/circles/HubCircleCard';
@@ -44,7 +45,7 @@ function CirclesHub() {
     if (summaries.isLoading) {
         return (
             <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 p-4 md:p-6">
-                <p className="text-[13px] text-ink-3">Chargement de vos cercles…</p>
+                <CircleCardGridSkeleton />
             </div>
         );
     }

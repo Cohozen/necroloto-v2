@@ -2,10 +2,12 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { Plus } from 'lucide-react';
 import { useMemo } from 'react';
 import { CircleCard } from '@/components/circles/CircleCard';
+import { CircleCardGridSkeleton } from '@/components/circles/CircleCardSkeleton';
 import { BetProgressCard } from '@/components/dashboard/BetProgressCard';
 import { CountdownCard } from '@/components/dashboard/CountdownCard';
 import { DeathFeedItem } from '@/components/dashboard/DeathFeedItem';
 import { ScoreBand } from '@/components/dashboard/ScoreBand';
+import { SectionLoader } from '@/components/feedback/SectionLoader';
 import { nextCountdownTarget, toCircleSummary, toDeathFeedEntry } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
 import {
@@ -91,7 +93,7 @@ function Dashboard() {
                         </Link>
                     </div>
                     {summariesQuery.isLoading ? (
-                        <p className="text-[13px] text-ink-3">Chargement de vos cercles…</p>
+                        <CircleCardGridSkeleton count={2} className="sm:grid-cols-2" />
                     ) : circles.length === 0 ? (
                         <p className="text-[13px] text-ink-3">
                             Vous n'avez pas encore de cercle.{' '}
@@ -124,7 +126,7 @@ function Dashboard() {
                         <span className="text-xs text-ink-3">qui ont marqué</span>
                     </div>
                     {feedQuery.isLoading ? (
-                        <p className="text-[13px] text-ink-3">Chargement…</p>
+                        <SectionLoader label="Chargement des décès…" />
                     ) : feed.length === 0 ? (
                         <p className="text-[13px] text-ink-3">Aucun décès cette saison.</p>
                     ) : (
