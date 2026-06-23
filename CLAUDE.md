@@ -198,6 +198,19 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
 - **Conventions**: one component per file / one file per component; types & interfaces in
   separate files (`*.types.ts` co-located, domain models in `src/types/`). shadcn primitives
   in `src/components/ui/` are re-themed in place. Layout chrome in `src/components/layout/`.
+- **Loading states**: don't render bare grey "Chargement…" texts. The brand loading motif is the
+  **animated space-invader** (`components/feedback/LoaderInvader` — wraps `Logo`, breathes via the
+  `nl-loader-glow` keyframe / `animate-loader-glow` utility in `globals.css`; killed by the global
+  `prefers-reduced-motion` reset). Two centered wrappers consume it: **`PageLoader`** (full-area,
+  `min-h-[60vh]`, `role=status` — for route-level early returns) and **`SectionLoader`** (compact,
+  `py-12`, `inline` variant for "load more" sentinels — for inline sections). For the **big repeated
+  lists**, prefer **content-shaped skeletons** (built on the `ui/skeleton` `animate-pulse` primitive,
+  same layout classes as the real content to avoid shift): `circles/CircleCardSkeleton`
+  (+ `CircleCardGridSkeleton`), `circles/LeaderboardSkeleton`, `admin/CelebrityTableSkeleton`. Error/
+  empty branches stay as plain `text-coral`/`text-ink-3` texts — only the *loading* branch changed.
+  Button busy states already inline a `Loader2 animate-spin` (auth forms, automation scan). The
+  app-gate (`auth/AppLoadingGate`, shown while Clerk resolves the session) predates this and keeps its
+  own Logo+skeleton layout.
 - **App chrome**: avatars render the **neon-gradient initials fallback only** (the Clerk photo is
   not used); the account avatar lives in the mobile top bar (`UserMenu`, dropdown) and at the bottom
   of the desktop side rail (`SideNav`), which opens a **logout-only dropdown** (a single destructive
