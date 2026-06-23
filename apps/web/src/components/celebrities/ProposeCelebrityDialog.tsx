@@ -129,45 +129,55 @@ function SearchStep({ pending, onPick, onManual }: SearchStepProps) {
                     <p className="py-6 text-center text-sm text-ink-3">Aucun résultat.</p>
                 )}
                 {!isFetching &&
-                    data?.map((c) => (
-                        <button
-                            key={c.wikidataId}
-                            type="button"
-                            disabled={pending}
-                            onClick={() => onPick(c)}
-                            className="flex items-start gap-3 rounded-xl border border-line-2 bg-surface px-3.5 py-3 text-left transition-colors hover:border-neon/40 hover:bg-surface-2 disabled:opacity-60"
-                        >
-                            <span
-                                className={cn(
-                                    'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-[9px] border',
-                                    c.isHuman
-                                        ? 'border-neon/30 bg-neon/10 text-neon'
-                                        : 'border-line bg-surface-3 text-ink-3',
-                                )}
+                    data?.map((c) => {
+                        // A deceased person can't be a valid pick (they'd never score
+                        // for the season). Keep it visible but greyed out + non-clickable.
+                        const isDead = Boolean(c.death);
+                        return (
+                            <button
+                                key={c.wikidataId}
+                                type="button"
+                                disabled={pending || isDead}
+                                onClick={() => !isDead && onPick(c)}
+                                className="flex items-start gap-3 rounded-xl border border-line-2 bg-surface px-3.5 py-3 text-left transition-colors hover:border-neon/40 hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                {c.isHuman ? <User size={16} /> : <Globe size={16} />}
-                            </span>
-                            <span className="min-w-0 flex-1">
-                                <span className="flex items-center gap-2">
-                                    <span className="truncate text-[14.5px] font-semibold">
-                                        {c.label}
+                                <span
+                                    className={cn(
+                                        'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-[9px] border',
+                                        c.isHuman
+                                            ? 'border-neon/30 bg-neon/10 text-neon'
+                                            : 'border-line bg-surface-3 text-ink-3',
+                                    )}
+                                >
+                                    {c.isHuman ? <User size={16} /> : <Globe size={16} />}
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                    <span className="flex items-center gap-2">
+                                        <span className="truncate text-[14.5px] font-semibold">
+                                            {c.label}
+                                        </span>
+                                        <span className="shrink-0 font-mono text-[11px] text-ink-3">
+                                            {c.wikidataId}
+                                        </span>
+                                        {isDead && (
+                                            <span className="shrink-0 rounded-full border border-coral/40 bg-coral/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-coral">
+                                                Décédé(e)
+                                            </span>
+                                        )}
                                     </span>
-                                    <span className="shrink-0 font-mono text-[11px] text-ink-3">
-                                        {c.wikidataId}
+                                    {c.description && (
+                                        <span className="block truncate text-xs text-ink-3">
+                                            {c.description}
+                                        </span>
+                                    )}
+                                    <span className="mt-0.5 block font-mono text-[11px] text-ink-3">
+                                        °{yearOf(c.birth)}
+                                        {c.death ? ` — †${yearOf(c.death)}` : ''}
                                     </span>
                                 </span>
-                                {c.description && (
-                                    <span className="block truncate text-xs text-ink-3">
-                                        {c.description}
-                                    </span>
-                                )}
-                                <span className="mt-0.5 block font-mono text-[11px] text-ink-3">
-                                    °{yearOf(c.birth)}
-                                    {c.death ? ` — †${yearOf(c.death)}` : ''}
-                                </span>
-                            </span>
-                        </button>
-                    ))}
+                            </button>
+                        );
+                    })}
             </div>
 
             <button

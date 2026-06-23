@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Check, ChevronDown, Plus, Search, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { CelebrityCard } from '@/components/celebrities/CelebrityCard';
 import { DraftTray } from '@/components/celebrities/DraftTray';
 import { ProposeCelebrityDialog } from '@/components/celebrities/ProposeCelebrityDialog';
@@ -156,10 +157,16 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
     const handleValidate = () => {
         if (!canSave || !circleId) return;
         const ids = [...selected];
+        // Surface the API message verbatim — e.g. it names any already-deceased pick.
+        const handlers = {
+            onSuccess: () => toast.success('Votre liste a été enregistrée.'),
+            onError: (err: Error) =>
+                toast.error(err.message || "L'enregistrement de votre liste a échoué."),
+        };
         if (bet) {
-            replaceBet.mutate({ betId: bet.id, celebrities: ids });
+            replaceBet.mutate({ betId: bet.id, celebrities: ids }, handlers);
         } else {
-            createBet.mutate({ userId, year, circleId, celebrityIds: ids });
+            createBet.mutate({ userId, year, circleId, celebrityIds: ids }, handlers);
         }
     };
 
