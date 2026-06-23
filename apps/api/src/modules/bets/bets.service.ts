@@ -1,4 +1,5 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { deathYear } from '@necroloto/shared';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CelebritiesService } from '../celebrities/celebrities.service';
 import { SeasonsService } from '../seasons/seasons.service';
@@ -87,6 +88,28 @@ export class BetsService {
         return [...new Set(ids)];
     }
 
+    /**
+     * Refuses a bet that lists an already-deceased celebrity. We trust the stored
+     * `Celebrity.death` (no Wikidata call) — a Wikidata proposal is enriched inline,
+     * so a freshly added dead pick already carries its death date here. A death in
+     * the bet's own year is allowed (it's the winning pick); only deaths from another
+     * year (i.e. already dead before the season) are blocked.
+     */
+    private async assertNoDeceased(celebrityIds: string[], year: number): Promise<void> {
+        if (celebrityIds.length === 0) return;
+        const deceased = await this.prisma.celebrity.findMany({
+            where: { id: { in: celebrityIds }, death: { not: null } },
+            select: { name: true, death: true },
+        });
+        const alreadyDead = deceased.filter((c) => c.death && deathYear(c.death) !== year);
+        if (alreadyDead.length > 0) {
+            const names = alreadyDead.map((c) => c.name).join(', ');
+            throw new BadRequestException(
+                `Ces célébrités sont déjà décédées et ne peuvent pas être pariées : ${names}.`,
+            );
+        }
+    }
+
     async create(createBetDto: CreateBetDto) {
         const { celebrityIds = [], ...betData } = createBetDto;
 
@@ -97,6 +120,7 @@ export class BetsService {
         await this.assertCanBet(betData.year, 'create', circle?.allowNewBet);
 
         const ids = await this.resolveCelebrityIds(celebrityIds);
+        await this.assertNoDeceased(ids, betData.year);
 
         const bet = await this.prisma.bet.create({
             data: {
@@ -127,6 +151,7 @@ export class BetsService {
         if (bet) await this.assertCanBet(bet.year, 'edit', bet.Circle?.allowEdit);
 
         const ids = await this.resolveCelebrityIds(keys);
+        if (bet) await this.assertNoDeceased(ids, bet.year);
 
         await this.prisma.$transaction([
             this.prisma.celebritiesOnBet.deleteMany({ where: { betId } }),
