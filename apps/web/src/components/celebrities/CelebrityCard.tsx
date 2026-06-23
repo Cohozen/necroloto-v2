@@ -1,9 +1,9 @@
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CelebritySummary } from '@/types/celebrity';
+import { Badge } from '../ui/badge';
 import { CelebrityPortrait } from './CelebrityPortrait';
 import { StatusBadge } from './StatusBadge';
-import { Badge } from '../ui/badge';
 
 interface CelebrityCardProps {
     celebrity: CelebritySummary;
