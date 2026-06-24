@@ -418,8 +418,12 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   (helper in `auth/sso.ts`) returning to the `/sso-callback` route (`AuthenticateWithRedirectCallback`).
   All sit inside the marketing `AuthLayout` shell. Shared bits: `AuthField` (icon input + password
   reveal), `GoogleButton`, `AuthFeedback` (`getClerkErrorMessage` + coral `AuthErrorBanner` +
-  `AuthFormLoader`). Sign-up is **email + password only, no OTP** (assumes the Clerk instance does not
-  require email verification — non-`complete` status surfaces an error). Forgot-password is a 2-phase
+  `AuthFormLoader`). Sign-up is a **2-phase email + password flow with email verification**
+  (`SignUpForm`: `signUp.create` → if status isn't `complete`,
+  `prepareEmailAddressVerification({ strategy: 'email_code' })` then an OTP `code` step via
+  `attemptEmailAddressVerification` — same `InputOTP` pattern as forgot-password, plus a "Renvoyer"
+  resend; a `complete` status straight from `create` short-circuits to the session, in case email
+  verification is ever disabled). Forgot-password is a 2-phase
   `reset_password_email_code` flow (request code → OTP via the restyled `ui/input-otp` + new password).
   ⚠️ Unlike the rest of the app, these routes **require Clerk keys** — without `ClerkProvider` the
   `useSignIn`/`useSignUp` hooks throw (there is no dev fallback anymore). `main.tsx` sets
