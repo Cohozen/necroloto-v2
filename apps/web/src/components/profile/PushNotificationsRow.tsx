@@ -35,6 +35,18 @@ function describeState(
     return 'Recevez les alertes même quand l’app est fermée';
 }
 
+/** Maps a subscription failure to a human-friendly description for the toast. */
+function describeSubscribeError(error: unknown): string {
+    const message = error instanceof Error ? error.message : String(error);
+    // Chromium browsers reach the push service via Google (FCM); Brave blocks it
+    // by default ("push service error" / AbortError) until the user enables
+    // "Use Google services for push messaging" in brave://settings/privacy.
+    if (/push service/i.test(message) || (error instanceof Error && error.name === 'AbortError')) {
+        return 'Votre navigateur bloque le service de push (Brave : activez « services Google pour la messagerie push »), ou réessayez sur Chrome/Firefox/Safari.';
+    }
+    return message;
+}
+
 /** Account-settings row that toggles Web Push notifications for this device. */
 export function PushNotificationsRow() {
     const { supported, permission, isSubscribed, isBusy, subscribe, unsubscribe } =
@@ -65,8 +77,9 @@ export function PushNotificationsRow() {
         } catch (error) {
             // Surface the real cause: this is what lands in the console + toast.
             console.error('[push] toggle failed', error);
-            const message = error instanceof Error ? error.message : String(error);
-            toast.error('Impossible de mettre à jour les notifications', { description: message });
+            toast.error('Impossible de mettre à jour les notifications', {
+                description: describeSubscribeError(error),
+            });
         }
     };
 
