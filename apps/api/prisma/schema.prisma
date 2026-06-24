@@ -91,6 +91,7 @@ model User {
   Bets           Bet[]
   Membership     Membership[]
   notifications  Notification[]
+  pushSubscriptions PushSubscription[]
 }
 
 /// In-app notification owned by a user. Created asynchronously by event handlers
@@ -108,6 +109,22 @@ model Notification {
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+/// A browser Web Push subscription owned by a user. One row per push endpoint
+/// (`endpoint @unique`); `p256dh`/`auth` are the encryption keys from the
+/// PushSubscription JSON. Pruned when a push send returns 404/410 (gone).
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Celebrity {

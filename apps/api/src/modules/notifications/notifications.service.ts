@@ -3,6 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { type NotificationType, Prisma } from '@/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BetsService } from '../bets/bets.service';
+import { type PushPayload, PushService } from '../push/push.service';
 import {
     type CelebrityDiedEvent,
     type MembershipCreatedEvent,
@@ -36,6 +37,7 @@ export class NotificationsService {
     constructor(
         private prisma: PrismaService,
         private bets: BetsService,
+        private push: PushService,
     ) {}
 
     // --- Read/write API (controller) -----------------------------------------
@@ -350,11 +352,34 @@ export class NotificationsService {
 
     private async create(notification: NewNotification): Promise<void> {
         await this.prisma.notification.create({ data: notification });
+        void this.push.sendToUsers([notification.userId], this.toPushPayload(notification));
     }
 
     private async createMany(notifications: NewNotification[]): Promise<void> {
         if (notifications.length === 0) return;
         await this.prisma.notification.createMany({ data: notifications });
+        // Group by identical payload (title/body/url) so a batch with per-user
+        // copy — e.g. the season winner — still pushes the right text to each.
+        const groups = new Map<string, { userIds: string[]; payload: PushPayload }>();
+        for (const n of notifications) {
+            const payload = this.toPushPayload(n);
+            const key = `${payload.title} ${payload.body} ${payload.url ?? ''}`;
+            const group = groups.get(key);
+            if (group) group.userIds.push(n.userId);
+            else groups.set(key, { userIds: [n.userId], payload });
+        }
+        for (const { userIds, payload } of groups.values()) {
+            void this.push.sendToUsers(userIds, payload);
+        }
+    }
+
+    /** Derives the push payload + deep-link URL from a notification's data. */
+    private toPushPayload(n: NewNotification): PushPayload {
+        const data = (n.data ?? {}) as { celebrityId?: string; circleId?: string };
+        let url = '/notifications';
+        if (data.celebrityId) url = `/celebrities/${data.celebrityId}`;
+        else if (data.circleId) url = `/circles/${data.circleId}`;
+        return { title: n.title, body: n.body, url, data: n.data as Record<string, unknown> };
     }
 
     private resolveUserId(clerkId: string | undefined): Promise<string | null> {

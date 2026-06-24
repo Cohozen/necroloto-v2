@@ -10,6 +10,7 @@ import { CircleModule } from './modules/circle/circle.module';
 import { JobsModule } from './modules/jobs/jobs.module';
 import { MembershipModule } from './modules/membership/membership.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { PushModule } from './modules/push/push.module';
 import { SeasonsModule } from './modules/seasons/seasons.module';
 import { UsersModule } from './modules/users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -27,6 +28,7 @@ import { PrismaModule } from './prisma/prisma.module';
         SeasonsModule,
         JobsModule,
         AutomationModule,
+        PushModule,
         NotificationsModule,
     ],
     controllers: [AppController],
