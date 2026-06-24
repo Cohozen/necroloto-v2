@@ -5,6 +5,17 @@ ferme — à arbitrer au fil de l'eau.
 
 ## ✅ Livré
 
+- 📱 **PWA + Web Push** — l'app web est désormais **installable** (manifest + service worker via
+  `vite-plugin-pwa` en stratégie `injectManifest`, SW custom `apps/web/src/sw.ts` pour les
+  handlers `push`/`notificationclick`, icônes générées par `scripts/generate-favicon.mjs`). Les
+  **notifications in-app existantes sont poussées** vers les appareils abonnés : modèle Prisma
+  `PushSubscription` (`endpoint @unique`) + `PushModule`/`PushService` (lib `web-push`, clés VAPID),
+  branché sur le point de convergence `NotificationsService.create/createMany` (couvre donc **tous**
+  les types d'events). Subs mortes (404/410) purgées à l'envoi ; **no-op sans clés VAPID** (déployable
+  sans config). Front : toggle « Notifications push » dans `/profile` (`usePushSubscription` +
+  `POST/DELETE /push/subscribe`). ⚠️ iOS ≥ 16.4 **uniquement PWA installée sur l'écran d'accueil**.
+  Env requis : `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` (API Railway) +
+  `VITE_VAPID_PUBLIC_KEY` (web Vercel).
 - 🔄 **Synchronisation Wikidata en masse** — sélection multiple dans l'admin, **asynchrone**
   via un job runner in-process (`POST /jobs/bulk-enrich` crée un `SyncJob` et rend la main ;
   le front poll `GET /jobs/:id`). **Sémaphore global** partagé entre tous les jobs, échecs
@@ -85,10 +96,8 @@ ferme — à arbitrer au fil de l'eau.
 
 ## 🎯 Backlog priorisable
 
-- 📧 **Notifications — canaux de diffusion** — sur le même store : **e-mail** via **Resend**
-  (encore *pending*) et **Web Push (PWA / service worker)** pour le push mobile (Web Push API ;
-  iOS ≥ 16.4 uniquement si la PWA est installée sur l'écran d'accueil — clés VAPID + table
-  `PushSubscription` + lib `web-push`).
+- 📧 **Notifications — canal e-mail** — sur le même store, diffusion par **e-mail** via **Resend**
+  (encore *pending*). Le canal **Web Push** est désormais livré (voir ci-dessus).
 - 🔢 **Nombre de paris configurable par cercle** — aujourd'hui figé à
   `MAX_BET_CELEBRITIES = 50` (`apps/web/src/lib/api/queries.ts`). Champ sur le modèle
   `Circle` (Prisma) + réglage dans `/circles/$id/settings`, appliqué à la validation du

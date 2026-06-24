@@ -184,6 +184,18 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   `POST /notifications/read` (mark all), `DELETE /notifications/:id`, `DELETE /notifications`. Web: page
   `/notifications` (auto-marks read on open) + bell badge in `TopBar`. The **ranking-change** event was
   deliberately dropped (rank is computed on the fly; a snapshot was judged too costly for the value).
+- **Web Push (PWA channel)** (`modules/push`): the in-app store doubles as a **push** channel.
+  `NotificationsService.create`/`createMany` (the single convergence point for *every* notification
+  type) fire-and-forget `PushService.sendToUsers(userIds, payload)` after the DB write, so a new
+  notification type needs **no push wiring**. `PushService` (lib `web-push`, VAPID) is a **no-op when
+  `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` are absent** (boot warns; deployable without push config, like
+  `ADMIN_CLERK_IDS`). Subscriptions live in `PushSubscription` (`endpoint @unique`, `p256dh`/`auth`,
+  owned by `userId`); endpoints returning **404/410 are pruned** on send. API (`ClerkAuthGuard` +
+  `@CurrentClerkId()`): `POST /push/subscribe` (upsert by endpoint), `DELETE /push/subscribe`
+  (body `{ endpoint }`), `GET /push/vapid-public-key`. `toPushPayload` derives a deep-link `url` from
+  the notification `data` (`celebrityId`→fiche, `circleId`→cercle, else `/notifications`). Migration
+  `add_push_subscription` (table-only, safe). Env: `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/
+  `VAPID_SUBJECT` (API) + `VITE_VAPID_PUBLIC_KEY` (web). Front: see the PWA bullet below.
 
 ## Front web (`apps/web`)
 
@@ -198,6 +210,17 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
 - **Conventions**: one component per file / one file per component; types & interfaces in
   separate files (`*.types.ts` co-located, domain models in `src/types/`). shadcn primitives
   in `src/components/ui/` are re-themed in place. Layout chrome in `src/components/layout/`.
+- **PWA + Web Push**: installable app via **`vite-plugin-pwa`** (`vite.config.ts`, strategy
+  **`injectManifest`** — a custom SW is required for push). The SW is `src/sw.ts` (Workbox
+  `precacheAndRoute(self.__WB_MANIFEST)` + `push` → `showNotification` + `notificationclick` →
+  focus/open the payload `url`); registered manually in `main.tsx` via `virtual:pwa-register`
+  (`injectRegister: null`). Install icons (`pwa-192/512/512-maskable.png`) are emitted by
+  `scripts/generate-favicon.mjs` (same invader mark). Subscription flow: `usePushSubscription`
+  (`src/lib/push/`) detects support (needs `VITE_VAPID_PUBLIC_KEY`), prompts permission **from a
+  user gesture**, subscribes via `pushManager.subscribe` and syncs with `POST/DELETE /push/subscribe`.
+  UI = the **« Notifications push » toggle in `/profile`** (`components/profile/PushNotificationsRow`),
+  with an iOS « install to home screen » hint. Needs `workbox-precaching` + `workbox-window` deps.
+  ⚠️ iOS ≥ 16.4 **only when installed to the home screen**. See the API "Web Push" bullet above.
 - **Loading states**: don't render bare grey "Chargement…" texts. The brand loading motif is the
   **animated space-invader** (`components/feedback/LoaderInvader` — wraps `Logo`, breathes via the
   `nl-loader-glow` keyframe / `animate-loader-glow` utility in `globals.css`; killed by the global
