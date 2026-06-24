@@ -192,10 +192,13 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   `ADMIN_CLERK_IDS`). Subscriptions live in `PushSubscription` (`endpoint @unique`, `p256dh`/`auth`,
   owned by `userId`); endpoints returning **404/410 are pruned** on send. API (`ClerkAuthGuard` +
   `@CurrentClerkId()`): `POST /push/subscribe` (upsert by endpoint), `DELETE /push/subscribe`
-  (body `{ endpoint }`), `GET /push/vapid-public-key`. `toPushPayload` derives a deep-link `url` from
-  the notification `data` (`celebrityId`→fiche, `circleId`→cercle, else `/notifications`). Migration
-  `add_push_subscription` (table-only, safe). Env: `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/
-  `VAPID_SUBJECT` (API) + `VITE_VAPID_PUBLIC_KEY` (web). Front: see the PWA bullet below.
+  (body `{ endpoint }`), `GET /push/vapid-public-key`, and **`POST /push/test`** (global admin via
+  `AdminGuard`) which fires a test push to the caller's own devices and returns
+  `{ enabled, subscriptions }` (lets the UI tell "push disabled server-side" from "no device
+  subscribed"). `toPushPayload` derives a deep-link `url` from the notification `data`
+  (`celebrityId`→fiche, `circleId`→cercle, else `/notifications`). Migration `add_push_subscription`
+  (table-only, safe). Env: `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` (API) +
+  `VITE_VAPID_PUBLIC_KEY` (web). Front: see the PWA bullet below.
 
 ## Front web (`apps/web`)
 
@@ -219,8 +222,13 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   (`src/lib/push/`) detects support (needs `VITE_VAPID_PUBLIC_KEY`), prompts permission **from a
   user gesture**, subscribes via `pushManager.subscribe` and syncs with `POST/DELETE /push/subscribe`.
   UI = the **« Notifications push » toggle in `/profile`** (`components/profile/PushNotificationsRow`),
-  with an iOS « install to home screen » hint. Needs `workbox-precaching` + `workbox-window` deps.
-  ⚠️ iOS ≥ 16.4 **only when installed to the home screen**. See the API "Web Push" bullet above.
+  with an iOS « install to home screen » hint; admins also get a **« Tester une notification »** row
+  (`TestNotificationRow` → `POST /push/test`). Needs `workbox-precaching` + `workbox-window` deps.
+  ⚠️ **Secure context required**: push works only over HTTPS or `localhost` (a LAN `http://<ip>` has no
+  push API). ⚠️ iOS ≥ 16.4 **only when installed to the home screen**. ⚠️ **Brave** blocks Google's FCM
+  push service by default → `pushManager.subscribe` throws `AbortError: …push service error`; the toggle
+  catches this and tells the user to enable Google push messaging or use Chrome/Firefox/Safari.
+  See the API "Web Push" bullet above.
 - **Loading states**: don't render bare grey "Chargement…" texts. The brand loading motif is the
   **animated space-invader** (`components/feedback/LoaderInvader` — wraps `Logo`, breathes via the
   `nl-loader-glow` keyframe / `animate-loader-glow` utility in `globals.css`; killed by the global

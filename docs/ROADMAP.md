@@ -13,9 +13,11 @@ ferme — à arbitrer au fil de l'eau.
   branché sur le point de convergence `NotificationsService.create/createMany` (couvre donc **tous**
   les types d'events). Subs mortes (404/410) purgées à l'envoi ; **no-op sans clés VAPID** (déployable
   sans config). Front : toggle « Notifications push » dans `/profile` (`usePushSubscription` +
-  `POST/DELETE /push/subscribe`). ⚠️ iOS ≥ 16.4 **uniquement PWA installée sur l'écran d'accueil**.
-  Env requis : `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` (API Railway) +
-  `VITE_VAPID_PUBLIC_KEY` (web Vercel).
+  `POST/DELETE /push/subscribe`) + bouton admin « Tester une notification » (`POST /push/test`).
+  ⚠️ contexte sécurisé requis (HTTPS / `localhost`) ; iOS ≥ 16.4 **uniquement PWA installée sur l'écran
+  d'accueil** ; **Brave** bloque le service push Google par défaut (message d'aide dédié). Env requis :
+  `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` (API Railway) + `VITE_VAPID_PUBLIC_KEY`
+  (web Vercel).
 - 🔄 **Synchronisation Wikidata en masse** — sélection multiple dans l'admin, **asynchrone**
   via un job runner in-process (`POST /jobs/bulk-enrich` crée un `SyncJob` et rend la main ;
   le front poll `GET /jobs/:id`). **Sémaphore global** partagé entre tous les jobs, échecs
