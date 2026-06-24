@@ -136,6 +136,8 @@ model Celebrity {
   wikidataId       String?            @unique
   role             String?
   category         String?
+  nationality      String?
+  gender           String?
   status           CelebrityStatus    @default(APPROVED)
   proposedBy       String?            // User.id of the proposer (null for admin/legacy rows)
   proposedAt       DateTime?          // null for admin/legacy rows
