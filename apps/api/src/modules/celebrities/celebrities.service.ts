@@ -244,10 +244,7 @@ export class CelebritiesService {
      * is approximated as `currentYear - birthYear`). Rows without a `birth` are
      * naturally excluded once an age bound is set. Returns undefined when no bound.
      */
-    private birthRangeForAge(
-        ageMin?: number,
-        ageMax?: number,
-    ): Prisma.DateTimeFilter | undefined {
+    private birthRangeForAge(ageMin?: number, ageMax?: number): Prisma.DateTimeFilter | undefined {
         if (ageMin === undefined && ageMax === undefined) return undefined;
         const currentYear = new Date().getUTCFullYear();
         const filter: Prisma.DateTimeFilter = {};

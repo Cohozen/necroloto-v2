@@ -96,7 +96,10 @@ export class PushService implements OnModuleInit {
                             body,
                         );
                     } catch (error) {
-                        const { statusCode, body } = error as { statusCode?: number; body?: string };
+                        const { statusCode, body } = error as {
+                            statusCode?: number;
+                            body?: string;
+                        };
                         if (statusCode === 404 || statusCode === 410) {
                             stale.push(sub.endpoint);
                         } else {
