@@ -15,7 +15,20 @@ import { CreateCelebrityDto } from './dto/create-celebrity.dto';
 import { ProposeCelebrityDto } from './dto/propose-celebrity.dto';
 import { SearchCelebrityDto } from './dto/search-celebrity.dto';
 import { UpdateCelebrityDto } from './dto/update-celebrity.dto';
-import { deriveCategory, deriveGender } from './occupation-categories';
+import { CATEGORY_BUCKETS, deriveCategory, deriveGender } from './occupation-categories';
+
+/**
+ * Catalogue facet filters shared by the bet-draft (`findCataloguePage`) and the
+ * admin list (`findPage`). `category`/`nationality`/`gender` are exact matches;
+ * the age bounds are translated to a `birth` date range (see `buildFacetWhere`).
+ */
+export interface FacetFilters {
+    category?: string;
+    nationality?: string;
+    gender?: string;
+    ageMin?: number;
+    ageMax?: number;
+}
 
 /** A recent celebrity death with scoring stats, for the dashboard feed. */
 export interface DeathFeedEntry {
@@ -210,8 +223,79 @@ export class CelebritiesService {
      * order and pagination. Returns the page items plus the total, so the front
      * can drive infinite scroll.
      */
+    /**
+     * Builds the `where` fragment for the shared facet filters. Category, nationality
+     * and gender are exact matches; the age bounds become a `birth` date range. Empty
+     * filters yield an empty object (safe to spread into any `where`).
+     */
+    private buildFacetWhere(filters: FacetFilters): Prisma.CelebrityWhereInput {
+        const { category, nationality, gender, ageMin, ageMax } = filters;
+        const birth = this.birthRangeForAge(ageMin, ageMax);
+        return {
+            ...(category && { category }),
+            ...(nationality && { nationality }),
+            ...(gender && { gender }),
+            ...(birth && { birth }),
+        };
+    }
+
+    /**
+     * Translates an age range into a `birth` date filter (calendar-year bounds; age
+     * is approximated as `currentYear - birthYear`). Rows without a `birth` are
+     * naturally excluded once an age bound is set. Returns undefined when no bound.
+     */
+    private birthRangeForAge(
+        ageMin?: number,
+        ageMax?: number,
+    ): Prisma.DateTimeFilter | undefined {
+        if (ageMin === undefined && ageMax === undefined) return undefined;
+        const currentYear = new Date().getUTCFullYear();
+        const filter: Prisma.DateTimeFilter = {};
+        // age ≤ ageMax → born on/after Jan 1 of (currentYear - ageMax).
+        if (ageMax !== undefined) filter.gte = new Date(Date.UTC(currentYear - ageMax, 0, 1));
+        // age ≥ ageMin → born on/before Dec 31 of (currentYear - ageMin).
+        if (ageMin !== undefined) filter.lte = new Date(Date.UTC(currentYear - ageMin, 11, 31));
+        return filter;
+    }
+
+    /**
+     * Distinct non-null categories and nationalities among the visible catalogue,
+     * to populate the filter menus (draft + admin). Categories are returned in the
+     * canonical bucket order; nationalities alphabetically.
+     */
+    async findFacets(
+        viewerClerkId?: string,
+    ): Promise<{ categories: string[]; nationalities: string[] }> {
+        const viewerId = await this.resolveViewerId(viewerClerkId);
+        const visible: Prisma.CelebrityWhereInput = {
+            OR: [
+                { status: 'APPROVED' },
+                ...(viewerId ? [{ status: 'PENDING' as const, proposedBy: viewerId }] : []),
+            ],
+        };
+        const [categoryRows, nationalityRows] = await Promise.all([
+            this.prisma.celebrity.findMany({
+                where: { ...visible, category: { not: null } },
+                distinct: ['category'],
+                select: { category: true },
+            }),
+            this.prisma.celebrity.findMany({
+                where: { ...visible, nationality: { not: null } },
+                distinct: ['nationality'],
+                select: { nationality: true },
+                orderBy: { nationality: 'asc' },
+            }),
+        ]);
+        const present = new Set(categoryRows.map((c) => c.category));
+        const categories = CATEGORY_BUCKETS.filter((bucket) => present.has(bucket));
+        const nationalities = nationalityRows
+            .map((n) => n.nationality)
+            .filter((n): n is string => Boolean(n));
+        return { categories, nationalities };
+    }
+
     async findCataloguePage(
-        params: { search?: string; take: number; skip: number },
+        params: { search?: string; take: number; skip: number } & FacetFilters,
         viewerClerkId?: string,
     ): Promise<{ items: Awaited<ReturnType<CelebritiesService['findAll']>>; total: number }> {
         const { search, take, skip } = params;
@@ -223,6 +307,7 @@ export class CelebritiesService {
                 ...(viewerId ? [{ status: 'PENDING' as const, proposedBy: viewerId }] : []),
             ],
             ...(search && { name: { contains: search, mode: 'insensitive' } }),
+            ...this.buildFacetWhere(params),
         };
 
         const [items, total] = await this.prisma.$transaction([
@@ -244,13 +329,15 @@ export class CelebritiesService {
      * filter (alive/deceased) and alphabetical order. Returns the page items plus
      * the total count matching the filter, so the front can drive infinite scroll.
      */
-    async findPage(params: {
-        search?: string;
-        status?: 'all' | 'alive' | 'deceased' | 'pending';
-        wikidata?: 'linked' | 'unlinked';
-        take: number;
-        skip: number;
-    }): Promise<{ items: Awaited<ReturnType<CelebritiesService['findAll']>>; total: number }> {
+    async findPage(
+        params: {
+            search?: string;
+            status?: 'all' | 'alive' | 'deceased' | 'pending';
+            wikidata?: 'linked' | 'unlinked';
+            take: number;
+            skip: number;
+        } & FacetFilters,
+    ): Promise<{ items: Awaited<ReturnType<CelebritiesService['findAll']>>; total: number }> {
         const { search, status = 'all', wikidata, take, skip } = params;
         const where: Prisma.CelebrityWhereInput = {
             ...(search && {
@@ -261,6 +348,7 @@ export class CelebritiesService {
             ...(status === 'pending' && { status: 'PENDING' }),
             ...(wikidata === 'unlinked' && { wikidataId: null }),
             ...(wikidata === 'linked' && { wikidataId: { not: null } }),
+            ...this.buildFacetWhere(params),
         };
 
         // The pending review queue reads newest-first; the rest stay alphabetical.

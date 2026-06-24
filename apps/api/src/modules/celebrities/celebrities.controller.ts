@@ -132,10 +132,25 @@ export class CelebritiesController {
     findCataloguePage(
         @CurrentClerkId() clerkId?: string,
         @Query('search') search?: string,
+        @Query('category') category?: string,
+        @Query('nationality') nationality?: string,
+        @Query('gender') gender?: string,
+        @Query('ageMin', new ParseIntPipe({ optional: true })) ageMin?: number,
+        @Query('ageMax', new ParseIntPipe({ optional: true })) ageMax?: number,
         @Query('take', new DefaultValuePipe(24), ParseIntPipe) take = 24,
         @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip = 0,
     ) {
-        return this.celebritiesService.findCataloguePage({ search, take, skip }, clerkId);
+        return this.celebritiesService.findCataloguePage(
+            { search, category, nationality, gender, ageMin, ageMax, take, skip },
+            clerkId,
+        );
+    }
+
+    // Distinct categories/nationalities present in the visible catalogue, to
+    // populate the filter menus. Declared before ":id" so "facets" isn't an id.
+    @Get('facets')
+    findFacets(@CurrentClerkId() clerkId?: string) {
+        return this.celebritiesService.findFacets(clerkId);
     }
 
     // Admin-only: paginated catalogue (name search, status filter, alphabetical).
@@ -146,10 +161,26 @@ export class CelebritiesController {
         @Query('search') search?: string,
         @Query('status') status?: 'all' | 'alive' | 'deceased' | 'pending',
         @Query('wikidata') wikidata?: 'linked' | 'unlinked',
+        @Query('category') category?: string,
+        @Query('nationality') nationality?: string,
+        @Query('gender') gender?: string,
+        @Query('ageMin', new ParseIntPipe({ optional: true })) ageMin?: number,
+        @Query('ageMax', new ParseIntPipe({ optional: true })) ageMax?: number,
         @Query('take', new DefaultValuePipe(24), ParseIntPipe) take = 24,
         @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip = 0,
     ) {
-        return this.celebritiesService.findPage({ search, status, wikidata, take, skip });
+        return this.celebritiesService.findPage({
+            search,
+            status,
+            wikidata,
+            category,
+            nationality,
+            gender,
+            ageMin,
+            ageMax,
+            take,
+            skip,
+        });
     }
 
     // Recent deaths for the dashboard feed. Declared before ":id" for clarity.
