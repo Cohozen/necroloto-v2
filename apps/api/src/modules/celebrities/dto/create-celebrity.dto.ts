@@ -26,4 +26,12 @@ export class CreateCelebrityDto {
     @IsOptional()
     @IsString()
     category?: string;
+
+    @IsOptional()
+    @IsString()
+    nationality?: string;
+
+    @IsOptional()
+    @IsString()
+    gender?: string;
 }

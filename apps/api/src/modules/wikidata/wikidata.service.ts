@@ -12,6 +12,10 @@ export interface WikidataSummary {
     photoFilename?: string;
     /** Q-ids of the entity's occupations (P106), in Wikidata order. */
     occupationIds: string[];
+    /** Q-ids of the entity's countries of citizenship (P27), in Wikidata order. */
+    citizenshipIds: string[];
+    /** Q-id of the entity's sex/gender (P21), if any. */
+    genderId?: string;
     /** True if the entity is an instance of human (P31 = Q5). */
     isHuman: boolean;
 }
@@ -93,9 +97,9 @@ export class WikidataService {
             (c) => (c.mainsnak?.datavalue?.value as { id?: string } | undefined)?.id === 'Q5',
         );
         const photoFilename = claims.P18?.[0]?.mainsnak?.datavalue?.value as string | undefined;
-        const occupationIds = (claims.P106 ?? [])
-            .map((c) => (c.mainsnak?.datavalue?.value as { id?: string } | undefined)?.id)
-            .filter((id): id is string => Boolean(id));
+        const occupationIds = this.parseEntityIds(claims.P106);
+        const citizenshipIds = this.parseEntityIds(claims.P27);
+        const genderId = this.parseEntityIds(claims.P21)[0];
 
         return {
             wikidataId: entity.id,
@@ -105,8 +109,17 @@ export class WikidataService {
             death: this.parseTimeClaim(claims.P570),
             photoFilename,
             occupationIds,
+            citizenshipIds,
+            genderId,
             isHuman,
         };
+    }
+
+    /** Extracts the entity Q-ids referenced by a claim (P106/P27/P21…), in order. */
+    private parseEntityIds(claim?: RawSnak[]): string[] {
+        return (claim ?? [])
+            .map((c) => (c.mainsnak?.datavalue?.value as { id?: string } | undefined)?.id)
+            .filter((id): id is string => Boolean(id));
     }
 
     /**
@@ -121,6 +134,30 @@ export class WikidataService {
         const entity = (json?.entities ?? {})[qid] as RawEntity | undefined;
         const label = entity?.labels?.fr?.value ?? entity?.labels?.en?.value;
         return label ? label.charAt(0).toUpperCase() + label.slice(1) : undefined;
+    }
+
+    /**
+     * Resolves several entities' labels (FR → EN, capitalised) in one request.
+     * Used to turn occupation/citizenship Q-ids into human-readable strings without
+     * one round-trip per id. Q-ids with no label are simply absent from the map.
+     */
+    async resolveLabels(qids: string[]): Promise<Map<string, string>> {
+        const out = new Map<string, string>();
+        const unique = [...new Set(qids)];
+        if (unique.length === 0) return out;
+        for (let i = 0; i < unique.length; i += 50) {
+            const batch = unique.slice(i, i + 50);
+            const url =
+                `${this.api}?action=wbgetentities&format=json` +
+                `&ids=${batch.join('|')}&props=labels&languages=fr|en`;
+            const json = await this.fetchJson(url);
+            const entities = (json?.entities ?? {}) as Record<string, RawEntity>;
+            for (const [qid, entity] of Object.entries(entities)) {
+                const label = entity.labels?.fr?.value ?? entity.labels?.en?.value;
+                if (label) out.set(qid, label.charAt(0).toUpperCase() + label.slice(1));
+            }
+        }
+        return out;
     }
 
     private parseTimeClaim(claim?: RawSnak[]): Date | undefined {

@@ -15,6 +15,7 @@ import { CreateCelebrityDto } from './dto/create-celebrity.dto';
 import { ProposeCelebrityDto } from './dto/propose-celebrity.dto';
 import { SearchCelebrityDto } from './dto/search-celebrity.dto';
 import { UpdateCelebrityDto } from './dto/update-celebrity.dto';
+import { deriveCategory, deriveGender } from './occupation-categories';
 
 /** A recent celebrity death with scoring stats, for the dashboard feed. */
 export interface DeathFeedEntry {
@@ -486,10 +487,18 @@ export class CelebritiesService {
             ? await this.importPhoto(id, summary.photoFilename)
             : celebrity.photo;
 
-        // Map the first Wikidata occupation (P106) to the free-text role.
-        const role = summary.occupationIds[0]
-            ? ((await this.wikidata.resolveLabel(summary.occupationIds[0])) ?? celebrity.role)
-            : celebrity.role;
+        // Resolve the first occupation (P106) and first citizenship (P27) labels in
+        // one request → free-text `role` and `nationality`. The coarse `category` /
+        // `gender` filters come from static maps (no extra Wikidata call).
+        const occupationId = summary.occupationIds[0];
+        const citizenshipId = summary.citizenshipIds[0];
+        const labels = await this.wikidata.resolveLabels(
+            [occupationId, citizenshipId].filter((qid): qid is string => Boolean(qid)),
+        );
+        const role = labels.get(occupationId ?? '') ?? celebrity.role;
+        const nationality = labels.get(citizenshipId ?? '') ?? celebrity.nationality;
+        const category = deriveCategory(summary.occupationIds) ?? celebrity.category;
+        const gender = deriveGender(summary.genderId) ?? celebrity.gender;
 
         const updated = await this.prisma.celebrity.update({
             where: { id },
@@ -499,6 +508,9 @@ export class CelebritiesService {
                 death: summary.death ?? celebrity.death,
                 photo,
                 role,
+                nationality,
+                category,
+                gender,
             },
         });
         await this.recalculatePoints(id);
