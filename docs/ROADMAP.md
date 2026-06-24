@@ -39,7 +39,9 @@ ferme — à arbitrer au fil de l'eau.
   qui détecte et score en direct + déclenchement manuel (`POST /automation/detect-deaths`).
   Chaque run = `SyncJob` (`DEATH_SCAN`), visible sur `/admin/automation`.
 - 🔐 **Écrans auth custom** — `SignInForm` / `SignUpForm` / `ForgotPasswordForm` (hooks
-  headless Clerk, Google SSO, reset par code) remplacent les widgets prebuilt.
+  headless Clerk, Google SSO, reset par code) remplacent les widgets prebuilt. Inscription =
+  flux 2 phases e-mail/mot de passe + **vérification par code e-mail** (`email_code`, OTP) avec
+  champ de confirmation du mot de passe.
 - ⏳ **Compte à rebours dashboard** — `CountdownCard` (rail droit, après `BetProgressCard`)
   décompte néon J/H/M dérivé client-side de `useSeasons()` via `nextCountdownTarget`
   (`adapters.ts`) : **fin des paris** (`betEndDate`, corail) si une fenêtre est ouverte, sinon

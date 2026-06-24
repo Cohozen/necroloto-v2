@@ -423,7 +423,8 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   `prepareEmailAddressVerification({ strategy: 'email_code' })` then an OTP `code` step via
   `attemptEmailAddressVerification` — same `InputOTP` pattern as forgot-password, plus a "Renvoyer"
   resend; a `complete` status straight from `create` short-circuits to the session, in case email
-  verification is ever disabled). Forgot-password is a 2-phase
+  verification is ever disabled). Sign-up has a **confirm-password field** validated client-side
+  before `create` (mismatch → inline error + toast, no Clerk call). Forgot-password is a 2-phase
   `reset_password_email_code` flow (request code → OTP via the restyled `ui/input-otp` + new password).
   ⚠️ Unlike the rest of the app, these routes **require Clerk keys** — without `ClerkProvider` the
   `useSignIn`/`useSignUp` hooks throw (there is no dev fallback anymore). `main.tsx` sets
