@@ -22,7 +22,6 @@ export const Route = createFileRoute('/_app/circles/$id/settings')({
     component: CircleSettings,
 });
 
-const YEAR = new Date().getFullYear();
 const MAX_NAME = 30;
 
 function CircleSettings() {
