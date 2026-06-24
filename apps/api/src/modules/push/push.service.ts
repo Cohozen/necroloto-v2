@@ -96,12 +96,12 @@ export class PushService implements OnModuleInit {
                             body,
                         );
                     } catch (error) {
-                        const status = (error as { statusCode?: number }).statusCode;
-                        if (status === 404 || status === 410) {
+                        const { statusCode, body } = error as { statusCode?: number; body?: string };
+                        if (statusCode === 404 || statusCode === 410) {
                             stale.push(sub.endpoint);
                         } else {
                             this.logger.warn(
-                                `push send failed (${status ?? '?'}) for ${sub.endpoint}`,
+                                `push send failed (${statusCode ?? '?'}) for ${sub.endpoint}: ${body ?? (error as Error).message}`,
                             );
                         }
                     }
@@ -116,6 +116,26 @@ export class PushService implements OnModuleInit {
         } catch (error) {
             this.logger.error('sendToUsers failed', error as Error);
         }
+    }
+
+    /**
+     * Sends a test push to the current user's own devices. Returns how many
+     * subscriptions were targeted so the caller can tell the user whether a
+     * device was actually registered.
+     */
+    async sendTest(
+        clerkId: string | undefined,
+    ): Promise<{ enabled: boolean; subscriptions: number }> {
+        const userId = await this.resolveUserId(clerkId);
+        if (!userId) return { enabled: this.enabled, subscriptions: 0 };
+
+        const subscriptions = await this.prisma.pushSubscription.count({ where: { userId } });
+        await this.sendToUsers([userId], {
+            title: 'Notification de test 🔔',
+            body: 'Si vous voyez ceci, les notifications push fonctionnent !',
+            url: '/notifications',
+        });
+        return { enabled: this.enabled, subscriptions };
     }
 
     private resolveUserId(clerkId: string | undefined): Promise<string | null> {
