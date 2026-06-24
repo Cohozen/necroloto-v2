@@ -29,6 +29,7 @@ export function SignUpForm() {
     const [phase, setPhase] = useState<'signup' | 'verify'>('signup');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [code, setCode] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -45,6 +46,12 @@ export function SignUpForm() {
         e.preventDefault();
         if (submitting) return;
         setError(null);
+        if (password !== confirmPassword) {
+            const message = 'Les deux mots de passe ne correspondent pas.';
+            setError(message);
+            toast.error(message);
+            return;
+        }
         setSubmitting(true);
         try {
             const result = await signUp.create({ emailAddress: email, password });
@@ -200,6 +207,15 @@ export function SignUpForm() {
                     value={password}
                     onChange={setPassword}
                     placeholder="8 caractères minimum"
+                    autoComplete="new-password"
+                />
+                <AuthField
+                    label="Confirmer le mot de passe"
+                    icon={Lock}
+                    type="password"
+                    value={confirmPassword}
+                    onChange={setConfirmPassword}
+                    placeholder="Ressaisissez le mot de passe"
                     autoComplete="new-password"
                 />
 
