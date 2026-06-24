@@ -284,8 +284,10 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   `/admin/seasons/*` — season CRUD). UI aggregates the raw CRUD doesn't expose get dedicated
   endpoints (`GET /circle/user/:id/summary` — returns `allowEdit`/`allowNewBet`, `bettingOpen`,
   `seasonPhase` **and `revealed`**; `GET /circle/:id/bets` for the "Paris" tab (viewer-aware secrecy);
-  `GET /celebrities/deaths/feed`; `GET /celebrities/admin/list` for the paginated admin catalogue;
-  `DELETE /celebrities/bulk` for bulk delete and `POST /jobs/bulk-enrich` for **async** bulk Wikidata
+  `GET /celebrities/deaths/feed`; `GET /celebrities/catalogue` for the **public paginated bet-draft
+  catalogue** (living-only, alphabetical, server-side name search, `take`/`skip`; same visibility as
+  `findAll` — approved to all, own pending to self); `GET /celebrities/admin/list` for the paginated
+  admin catalogue; `DELETE /celebrities/bulk` for bulk delete and `POST /jobs/bulk-enrich` for **async** bulk Wikidata
   sync (see "Async jobs"); `GET /seasons`, `GET /seasons/active`); simpler ones (dashboard score band,
   profile stats) are composed client-side from existing endpoints.
 - **Dashboard countdown** (`CountdownCard`, right rail after `BetProgressCard`): a neon J/H/M
@@ -347,7 +349,14 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   message surfaces verbatim — e.g. the **400 naming an already-deceased pick** (see "No already-deceased
   picks"). The draft caps selection at `MAX_BET_CELEBRITIES` (50, a shared constant
   in `queries.ts`; client-side only — the API enforces no cap yet, per-circle config is in
-  `docs/ROADMAP.md`). **Deceased celebrities are hidden** from the draft grid, and the draft is
+  `docs/ROADMAP.md`). The grid is **paginated with infinite scroll** (`useCatalogueCelebrities` →
+  `GET /celebrities/catalogue`, `CATALOGUE_PAGE = 24`, `IntersectionObserver` sentinel + `SectionLoader`,
+  mirroring `useAdminCelebrities`): server-side **alphabetical order** and **debounced name search**,
+  so the whole catalogue is no longer loaded at once (the old `useCelebrities`/`GET /celebrities` is
+  unused by the draft now). ⚠️ a selected pick on a not-yet-loaded page only shows as checked once
+  scrolled to — the `DraftTray` count stays correct regardless. The redundant "N / 50 sélectionnées"
+  header/mobile badges were removed (the always-visible `DraftTray` carries the count).
+  **Deceased celebrities are hidden** server-side (the catalogue endpoint filters `death: null`), and the draft is
   **read-only** (cards + validate disabled, with a phase-specific banner) driven by
   `CircleSummary.seasonPhase` + `allowEdit`/`allowNewBet` (see "Bet locks": free during `betting`,
   flag-gated in `season-open`, locked `before`/`closed`). The fiche's bettors list is gated
@@ -392,6 +401,15 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   `allowEdit` off** (`change_circle_setting_defaults` migration). "Mises visibles" only applies once
   the season is open; "Liste modifiable" only during the open season (a straggler "rallonge") — both
   re-copywrited in the circle settings screen.
+- **Circle creation** (`/circles/new`): the three season toggles are all **wired** now
+  (`allowNewBet`/`allowEdit`/`betsVisible`, the latter two previously decorative — `CreateCirclePayload`
+  carries them, the API DTO already accepted them). A read-only **season info block** shows the active
+  season's betting/season windows + status badge (`useActiveSeason` + `seasonStatus`/`SEASON_STATUS_LABEL`).
+  The **"Liste modifiable" toggle is disabled while the active season is `bets-open`** (the rallonge only
+  matters once bets close — `betsOpen` forces the sent value to `false`), with a "Réglable une fois les
+  paris fermés" hint; `SettingToggleRow` gained `disabled`/`hint` props.
+- **Dashboard "Décès récents"** (`DeathFeedItem`): each row is a `Link` to `/celebrities/$id`
+  (`entry.id` is the `celebrityId`), with a coral hover affordance.
 - **Selected season persists per circle (URL)**: the chosen `year` is a search param **validated on
   the circle *layout* route** (`/_app/circles/$id.tsx`, a common ancestor of every tab), so it is
   shared across Classement/Paris/Membres/Réglages and survives back-navigation/refresh. `YearTabs`

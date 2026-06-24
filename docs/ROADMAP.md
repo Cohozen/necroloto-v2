@@ -80,6 +80,14 @@ ferme — à arbitrer au fil de l'eau.
   Wikidata** ; **filtres admin** et **année sélectionnée d'un cercle** persistés en **querystring**
   (TanStack Router `validateSearch`) — survivent au retour/refresh ; **favicon** dérivé du logo
   « invader » néon de la TopBar (`apps/web/public/`, généré par `scripts/generate-favicon.mjs`).
+- ✨ **Polissage UX (lot 2)** — **draft de paris paginé en scroll infini** (nouvel endpoint public
+  `GET /celebrities/catalogue` : vivants seulement, alphabétique, recherche serveur débouncée,
+  `take`/`skip` ; `useCatalogueCelebrities` + sentinel `IntersectionObserver`, calqué sur l'admin) —
+  le catalogue n'est plus chargé d'un coup ; badge « N / 50 sélectionnées » retiré (le `DraftTray` le
+  porte déjà). **Création de cercle** : bloc dates de la saison active (fenêtres paris/saison + statut)
+  + les 3 toggles désormais **câblés** (`allowEdit`/`betsVisible` n'étaient que décoratifs), « Liste
+  modifiable » **désactivé tant que les paris sont ouverts** (la rallonge n'a de sens qu'une fois
+  fermés). **Décès récents du dashboard** rendus cliquables vers la fiche célébrité.
 - 🛡️ **Validation DTO** — tous les DTOs portent désormais des décorateurs class-validator
   (dates via `@Type(() => Date)`), et le `ValidationPipe` global tourne en **whitelist +
   forbidNonWhitelisted** (`apps/api/src/main.ts`) : les champs inconnus sont retirés/rejetés (400)
