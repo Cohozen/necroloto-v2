@@ -203,6 +203,42 @@ export class CelebritiesService {
     }
 
     /**
+     * Paginated catalogue for the bet draft: same visibility as `findAll`
+     * (approved to all, own pending to self) but excludes deceased picks (the
+     * draft only bets on the living), with name search (insensitive), alphabetical
+     * order and pagination. Returns the page items plus the total, so the front
+     * can drive infinite scroll.
+     */
+    async findCataloguePage(
+        params: { search?: string; take: number; skip: number },
+        viewerClerkId?: string,
+    ): Promise<{ items: Awaited<ReturnType<CelebritiesService['findAll']>>; total: number }> {
+        const { search, take, skip } = params;
+        const viewerId = await this.resolveViewerId(viewerClerkId);
+        const where: Prisma.CelebrityWhereInput = {
+            death: null,
+            OR: [
+                { status: 'APPROVED' },
+                ...(viewerId ? [{ status: 'PENDING' as const, proposedBy: viewerId }] : []),
+            ],
+            ...(search && { name: { contains: search, mode: 'insensitive' } }),
+        };
+
+        const [items, total] = await this.prisma.$transaction([
+            this.prisma.celebrity.findMany({
+                where,
+                orderBy: { name: 'asc' },
+                take,
+                skip,
+                include: { CelebritiesOnBet: true },
+            }),
+            this.prisma.celebrity.count({ where }),
+        ]);
+
+        return { items, total };
+    }
+
+    /**
      * Paginated catalogue for the admin UI: name search (insensitive), status
      * filter (alive/deceased) and alphabetical order. Returns the page items plus
      * the total count matching the filter, so the front can drive infinite scroll.

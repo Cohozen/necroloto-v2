@@ -125,6 +125,19 @@ export class CelebritiesController {
         return this.celebritiesService.findAll(clerkId);
     }
 
+    // Paginated, alphabetically-ordered catalogue for the bet draft (living picks
+    // only, name search). Declared before ":id" so "catalogue" is not parsed as
+    // an id. Any authenticated user — visibility filters pending to its proposer.
+    @Get('catalogue')
+    findCataloguePage(
+        @CurrentClerkId() clerkId?: string,
+        @Query('search') search?: string,
+        @Query('take', new DefaultValuePipe(24), ParseIntPipe) take = 24,
+        @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip = 0,
+    ) {
+        return this.celebritiesService.findCataloguePage({ search, take, skip }, clerkId);
+    }
+
     // Admin-only: paginated catalogue (name search, status filter, alphabetical).
     // Declared before ":id" so "admin" is not parsed as an id.
     @Get('admin/list')
