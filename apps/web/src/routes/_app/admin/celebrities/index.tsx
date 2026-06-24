@@ -8,6 +8,7 @@ import { CatalogToolbar } from '@/components/admin/CatalogToolbar';
 import { CelebrityTable } from '@/components/admin/CelebrityTable';
 import { CelebrityTableSkeleton } from '@/components/admin/CelebrityTableSkeleton';
 import { MergeCelebrityDialog } from '@/components/admin/MergeCelebrityDialog';
+import { CelebrityFilters } from '@/components/celebrities/CelebrityFilters';
 import { SectionLoader } from '@/components/feedback/SectionLoader';
 import { toAdminCelebrity } from '@/lib/api/adapters';
 import {
@@ -18,23 +19,43 @@ import {
     useRejectCelebrity,
     useSyncJob,
 } from '@/lib/api/queries';
+import type { AdminCelebrityStatus, CelebrityFilterValues } from '@/lib/api/types';
+import { AGE_BUCKETS, GENDER_OPTIONS } from '@/lib/celebrities/facets';
 import type { AdminCelebrity, CatalogFilter } from '@/types/admin';
 
 const CATALOG_FILTERS: CatalogFilter[] = ['all', 'alive', 'deceased', 'pending', 'unlinked'];
 
+interface CatalogueSearch extends CelebrityFilterValues {
+    filter?: CatalogFilter;
+    q?: string;
+}
+
 /**
- * Catalogue filters live in the URL so they survive back-navigation/refresh. Both
- * params are optional (omitted at their default) so links to this route need no search.
+ * Catalogue filters live in the URL so they survive back-navigation/refresh. Every
+ * param is optional (omitted at its default) so links to this route need no search.
  */
 export const Route = createFileRoute('/_app/admin/celebrities/')({
-    validateSearch: (search: Record<string, unknown>): { filter?: CatalogFilter; q?: string } => {
+    validateSearch: (search: Record<string, unknown>): CatalogueSearch => {
+        const str = (v: unknown) => (typeof v === 'string' && v ? v : undefined);
         const filter = CATALOG_FILTERS.includes(search.filter as CatalogFilter)
             ? (search.filter as CatalogFilter)
             : undefined;
-        const q = typeof search.q === 'string' && search.q ? search.q : undefined;
+        const q = str(search.q);
+        const category = str(search.category);
+        const nationality = str(search.nationality);
+        const gender = GENDER_OPTIONS.includes(search.gender as (typeof GENDER_OPTIONS)[number])
+            ? (search.gender as string)
+            : undefined;
+        const age = AGE_BUCKETS.some((b) => b.id === search.age)
+            ? (search.age as string)
+            : undefined;
         return {
             ...(filter && filter !== 'all' ? { filter } : {}),
             ...(q ? { q } : {}),
+            ...(category ? { category } : {}),
+            ...(nationality ? { nationality } : {}),
+            ...(gender ? { gender } : {}),
+            ...(age ? { age } : {}),
         };
     },
     component: AdminCatalogue,
@@ -42,7 +63,8 @@ export const Route = createFileRoute('/_app/admin/celebrities/')({
 
 function AdminCatalogue() {
     const navigate = Route.useNavigate();
-    const { filter = 'all', q = '' } = Route.useSearch();
+    const { filter = 'all', q = '', category, nationality, gender, age } = Route.useSearch();
+    const facetFilters: CelebrityFilterValues = { category, nationality, gender, age };
     // Local mirror of the URL query so typing stays instant; debounced back to the URL.
     const [search, setSearch] = useState(q);
     const [selected, setSelected] = useState<Set<string>>(() => new Set());
@@ -50,6 +72,21 @@ function AdminCatalogue() {
     const setFilter = useCallback(
         (next: CatalogFilter) =>
             navigate({ search: (prev) => ({ ...prev, filter: next }), replace: true }),
+        [navigate],
+    );
+
+    const setFacetFilters = useCallback(
+        (next: CelebrityFilterValues) =>
+            navigate({
+                search: (prev) => ({
+                    ...prev,
+                    category: next.category,
+                    nationality: next.nationality,
+                    gender: next.gender,
+                    age: next.age,
+                }),
+                replace: true,
+            }),
         [navigate],
     );
 
@@ -67,12 +104,15 @@ function AdminCatalogue() {
 
     // "unlinked" is a Wikidata-link axis, not a status — map it to that param so it
     // matches every status (alive/deceased/pending) with no wikidataId.
+    let status: AdminCelebrityStatus = 'all';
+    let wikidata: 'unlinked' | undefined;
+    if (filter === 'unlinked') {
+        wikidata = 'unlinked';
+    } else {
+        status = filter;
+    }
     const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage } =
-        useAdminCelebrities(
-            filter === 'unlinked'
-                ? { search: q, status: 'all', wikidata: 'unlinked' }
-                : { search: q, status: filter },
-        );
+        useAdminCelebrities({ search: q, status, wikidata, filters: facetFilters });
 
     const qc = useQueryClient();
     const bulkDelete = useBulkDeleteCelebrities();
@@ -204,6 +244,7 @@ function AdminCatalogue() {
                 onFilterChange={setFilter}
                 total={total}
             />
+            <CelebrityFilters filters={facetFilters} onChange={setFacetFilters} />
             {isLoading ? (
                 <CelebrityTableSkeleton />
             ) : isError ? (

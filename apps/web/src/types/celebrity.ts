@@ -17,6 +17,10 @@ export interface CelebritySummary {
     proposalStatus: CelebrityProposalStatus;
     /** Coarse category used for filtering, when known. */
     category?: string;
+    /** Country of citizenship (Wikidata P27), when known. */
+    nationality?: string;
+    /** Gender label (Homme/Femme/Autre), when known. */
+    gender?: string;
     /** Portrait URL (Wikidata/upload), when known — falls back to a monogram. */
     photo?: string;
 }

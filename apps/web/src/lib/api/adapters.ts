@@ -222,6 +222,8 @@ export function toCelebritySummary(c: ApiCelebrity): CelebritySummary {
         status: celebrityStatus(c.death),
         proposalStatus: proposalStatus(c.status),
         category: c.category ?? undefined,
+        nationality: c.nationality ?? undefined,
+        gender: c.gender ?? undefined,
         photo: c.photo ?? undefined,
     };
 }

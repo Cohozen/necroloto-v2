@@ -37,7 +37,26 @@ export interface ApiCelebrity {
     wikidataId: string | null;
     role: string | null;
     category: string | null;
+    nationality: string | null;
+    gender: string | null;
     status: CelebrityProposalStatus;
+}
+
+/** Distinct facet values present in the catalogue (GET /celebrities/facets). */
+export interface CelebrityFacetsDto {
+    categories: string[];
+    nationalities: string[];
+}
+
+/**
+ * Catalogue filter selection (draft + admin). `age` is an `AGE_BUCKETS` id,
+ * resolved to `ageMin`/`ageMax` query params; the others are exact matches.
+ */
+export interface CelebrityFilterValues {
+    category?: string;
+    nationality?: string;
+    gender?: string;
+    age?: string;
 }
 
 export interface ApiCelebritiesOnBet {

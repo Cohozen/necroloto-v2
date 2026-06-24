@@ -1,4 +1,4 @@
-import type { SortByRank } from './types';
+import type { CelebrityFilterValues, SortByRank } from './types';
 
 /** Centralized TanStack Query keys. */
 export const queryKeys = {
@@ -19,9 +19,15 @@ export const queryKeys = {
     },
     celebrities: {
         list: () => ['celebrities', 'list'] as const,
-        catalogue: (search: string) => ['celebrities', 'catalogue', search] as const,
-        adminList: (search: string, status: string, wikidata: string) =>
-            ['celebrities', 'admin-list', search, status, wikidata] as const,
+        catalogue: (search: string, filters: CelebrityFilterValues) =>
+            ['celebrities', 'catalogue', search, filters] as const,
+        adminList: (
+            search: string,
+            status: string,
+            wikidata: string,
+            filters: CelebrityFilterValues,
+        ) => ['celebrities', 'admin-list', search, status, wikidata, filters] as const,
+        facets: () => ['celebrities', 'facets'] as const,
         detail: (id: string) => ['celebrities', 'detail', id] as const,
         deathFeed: (year: number, limit: number) => ['celebrities', 'deaths', year, limit] as const,
         wikidata: (name: string) => ['celebrities', 'wikidata', name] as const,

@@ -2,6 +2,7 @@
 // keys.ts; Api*->UI adapters live in adapters.ts.
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { appendFilterParams } from '@/lib/celebrities/facets';
 import { useApiClient } from './context';
 import { useCurrentUser } from './currentUser';
 import { queryKeys } from './keys';
@@ -18,6 +19,8 @@ import type {
     ApiSeason,
     ApiUser,
     BulkDeleteResult,
+    CelebrityFacetsDto,
+    CelebrityFilterValues,
     CircleSearchResultDto,
     CircleSummaryDto,
     CreateBetPayload,
@@ -288,11 +291,15 @@ export const CATALOGUE_PAGE = 24;
  * picks only, server-side name search and alphabetical order. Drives infinite
  * scroll, mirroring `useAdminCelebrities`.
  */
-export function useCatalogueCelebrities(params: { search: string }) {
+export function useCatalogueCelebrities(params: {
+    search: string;
+    filters?: CelebrityFilterValues;
+}) {
     const api = useApiClient();
     const search = params.search.trim();
+    const filters = params.filters ?? {};
     return useInfiniteQuery({
-        queryKey: queryKeys.celebrities.catalogue(search),
+        queryKey: queryKeys.celebrities.catalogue(search, filters),
         initialPageParam: 0,
         queryFn: ({ pageParam }) => {
             const qs = new URLSearchParams({
@@ -300,12 +307,22 @@ export function useCatalogueCelebrities(params: { search: string }) {
                 skip: String(pageParam),
             });
             if (search) qs.set('search', search);
+            appendFilterParams(qs, filters);
             return api.get<AdminCelebrityPage>(`/celebrities/catalogue?${qs.toString()}`);
         },
         getNextPageParam: (lastPage, allPages) => {
             const loaded = allPages.reduce((acc, page) => acc + page.items.length, 0);
             return loaded < lastPage.total ? loaded : undefined;
         },
+    });
+}
+
+/** Distinct categories/nationalities present in the catalogue, for the filter menus. */
+export function useCelebrityFacets() {
+    const api = useApiClient();
+    return useQuery({
+        queryKey: queryKeys.celebrities.facets(),
+        queryFn: () => api.get<CelebrityFacetsDto>('/celebrities/facets'),
     });
 }
 
@@ -323,12 +340,14 @@ export function useAdminCelebrities(params: {
     status: AdminCelebrityStatus;
     /** Wikidata-link axis, orthogonal to `status` (e.g. "unlinked" = wikidataId null). */
     wikidata?: 'linked' | 'unlinked';
+    filters?: CelebrityFilterValues;
 }) {
     const api = useApiClient();
     const search = params.search.trim();
     const { status, wikidata } = params;
+    const filters = params.filters ?? {};
     return useInfiniteQuery({
-        queryKey: queryKeys.celebrities.adminList(search, status, wikidata ?? ''),
+        queryKey: queryKeys.celebrities.adminList(search, status, wikidata ?? '', filters),
         initialPageParam: 0,
         queryFn: ({ pageParam }) => {
             const qs = new URLSearchParams({
@@ -338,6 +357,7 @@ export function useAdminCelebrities(params: {
             });
             if (search) qs.set('search', search);
             if (wikidata) qs.set('wikidata', wikidata);
+            appendFilterParams(qs, filters);
             return api.get<AdminCelebrityPage>(`/celebrities/admin/list?${qs.toString()}`);
         },
         getNextPageParam: (lastPage, allPages) => {

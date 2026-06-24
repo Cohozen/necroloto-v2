@@ -3,6 +3,7 @@ import { Check, ChevronDown, Plus, Search, Users } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { CelebrityCard } from '@/components/celebrities/CelebrityCard';
+import { CelebrityFilters } from '@/components/celebrities/CelebrityFilters';
 import { DraftTray } from '@/components/celebrities/DraftTray';
 import { ProposeCelebrityDialog } from '@/components/celebrities/ProposeCelebrityDialog';
 import { PageLoader } from '@/components/feedback/PageLoader';
@@ -26,7 +27,7 @@ import {
     useSeasonYear,
     useUserBets,
 } from '@/lib/api/queries';
-import type { ApiBet, CircleSummaryDto } from '@/lib/api/types';
+import type { ApiBet, CelebrityFilterValues, CircleSummaryDto } from '@/lib/api/types';
 
 export const Route = createFileRoute('/_app/celebrities/')({
     component: Catalogue,
@@ -94,7 +95,8 @@ function DraftScreen({ userId, year, bets, circles }: DraftScreenProps) {
         return () => clearTimeout(t);
     }, [query]);
 
-    const catalogueQuery = useCatalogueCelebrities({ search: debouncedQuery });
+    const [filters, setFilters] = useState<CelebrityFilterValues>({});
+    const catalogueQuery = useCatalogueCelebrities({ search: debouncedQuery, filters });
 
     const selectedCircle = circles.find((c) => c.id === circleId);
     // Lock follows the season phase: during the betting window everyone edits
@@ -249,6 +251,8 @@ function DraftScreen({ userId, year, bets, circles }: DraftScreenProps) {
                     </ProposeCelebrityDialog>
                 )}
             </div>
+
+            <CelebrityFilters filters={filters} onChange={setFilters} />
 
             {locked && (
                 <p className="rounded-xl border border-line-2 bg-surface px-3.5 py-2.5 text-[13px] text-ink-2">
