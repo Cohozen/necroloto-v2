@@ -14,39 +14,59 @@ function isIosNeedsInstall(): boolean {
     return isIos && !standalone;
 }
 
+/** The helper text under the toggle, depending on support / permission / state. */
+function describeState(
+    supported: boolean,
+    permission: NotificationPermission,
+    isSubscribed: boolean,
+): string {
+    if (!supported && isIosNeedsInstall()) {
+        return "Ajoutez l'app à l'écran d'accueil pour les activer";
+    }
+    if (!supported) {
+        return 'Non disponible sur cet appareil';
+    }
+    if (permission === 'denied') {
+        return 'Autorisation bloquée dans le navigateur';
+    }
+    if (isSubscribed) {
+        return 'Activées sur cet appareil';
+    }
+    return 'Recevez les alertes même quand l’app est fermée';
+}
+
 /** Account-settings row that toggles Web Push notifications for this device. */
 export function PushNotificationsRow() {
     const { supported, permission, isSubscribed, isBusy, subscribe, unsubscribe } =
         usePushSubscription();
 
-    const description = !supported
-        ? isIosNeedsInstall()
-            ? "Ajoutez l'app à l'écran d'accueil pour les activer"
-            : 'Non disponible sur cet appareil'
-        : permission === 'denied'
-          ? 'Autorisation bloquée dans le navigateur'
-          : isSubscribed
-            ? 'Activées sur cet appareil'
-            : 'Recevez les alertes même quand l’app est fermée';
+    const description = describeState(supported, permission, isSubscribed);
+    const isDisabled = !supported || permission === 'denied';
 
     const handleToggle = async (checked: boolean) => {
         try {
-            if (checked) {
-                await subscribe();
-                // subscribe() resolves without throwing even if permission was denied.
-                if (Notification.permission === 'denied') {
-                    toast.error('Notifications refusées', {
-                        description: 'Autorisez les notifications dans votre navigateur.',
-                    });
-                } else if (Notification.permission === 'granted') {
-                    toast.success('Notifications activées');
-                }
-            } else {
+            if (!checked) {
                 await unsubscribe();
                 toast.success('Notifications désactivées');
+                return;
             }
-        } catch {
-            toast.error('Impossible de mettre à jour les notifications');
+
+            await subscribe();
+            // subscribe() resolves without throwing even if permission was denied.
+            if (Notification.permission === 'denied') {
+                toast.error('Notifications refusées', {
+                    description: 'Autorisez les notifications dans votre navigateur.',
+                });
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                toast.success('Notifications activées');
+            }
+        } catch (error) {
+            // Surface the real cause: this is what lands in the console + toast.
+            console.error('[push] toggle failed', error);
+            const message = error instanceof Error ? error.message : String(error);
+            toast.error('Impossible de mettre à jour les notifications', { description: message });
         }
     };
 
@@ -55,11 +75,11 @@ export function PushNotificationsRow() {
             icon={Bell}
             title="Notifications push"
             description={description}
-            disabled={!supported || permission === 'denied'}
+            disabled={isDisabled}
             control={
                 <Switch
                     checked={isSubscribed}
-                    disabled={!supported || isBusy || permission === 'denied'}
+                    disabled={isDisabled || isBusy}
                     onCheckedChange={handleToggle}
                     aria-label="Activer les notifications push"
                 />

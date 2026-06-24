@@ -21,6 +21,7 @@ import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { PushNotificationsRow } from '@/components/profile/PushNotificationsRow';
 import { SettingsRow } from '@/components/profile/SettingsRow';
 import { StatTile } from '@/components/profile/StatTile';
+import { TestNotificationRow } from '@/components/profile/TestNotificationRow';
 import { initialsOf, monthYearLabel, userDisplayName } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
 import { useCircleSummaries, useUserBets } from '@/lib/api/queries';
@@ -196,6 +197,7 @@ function Profile() {
                             onClick={() => setEditOpen(true)}
                         />
                         <PushNotificationsRow />
+                        {isAdmin && <TestNotificationRow />}
                     </div>
                     {isClerkConfigured && (
                         <div className="overflow-hidden rounded-2xl border border-line bg-surface">

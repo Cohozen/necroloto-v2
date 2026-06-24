@@ -69,12 +69,14 @@ export function usePushSubscription(): PushSubscriptionState {
             if (result !== 'granted') return;
 
             const reg = await navigator.serviceWorker.ready;
-            const sub =
-                (await reg.pushManager.getSubscription()) ??
-                (await reg.pushManager.subscribe({
+
+            let sub = await reg.pushManager.getSubscription();
+            if (!sub) {
+                sub = await reg.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
-                }));
+                });
+            }
 
             await api.post('/push/subscribe', sub.toJSON());
             setIsSubscribed(true);
