@@ -9,6 +9,10 @@ interface SettingToggleRowProps {
     /** Controlled state (optional — falls back to defaultChecked when omitted). */
     checked?: boolean;
     onCheckedChange?: (checked: boolean) => void;
+    /** Greys out the row and locks the toggle (e.g. setting not applicable yet). */
+    disabled?: boolean;
+    /** Optional hint shown under the description (e.g. why the toggle is locked). */
+    hint?: string;
 }
 
 /** Season-setting row (nl-setrow) — icon, label, description and a toggle. */
@@ -19,20 +23,27 @@ export function SettingToggleRow({
     defaultChecked,
     checked,
     onCheckedChange,
+    disabled,
+    hint,
 }: SettingToggleRowProps) {
     return (
-        <div className="flex items-center gap-3.5 rounded-[13px] border border-line bg-surface p-3.5">
+        <div
+            className="flex items-center gap-3.5 rounded-[13px] border border-line bg-surface p-3.5 data-[disabled=true]:opacity-55"
+            data-disabled={disabled}
+        >
             <span className="flex size-[38px] shrink-0 items-center justify-center rounded-[11px] border border-neon/25 bg-neon/10 text-neon">
                 <Icon size={19} />
             </span>
             <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold">{title}</div>
                 <div className="mt-0.5 text-xs text-ink-3">{description}</div>
+                {hint && <div className="mt-1 text-[11px] font-medium text-ink-3">{hint}</div>}
             </div>
             <Switch
                 defaultChecked={checked === undefined ? defaultChecked : undefined}
                 checked={checked}
                 onCheckedChange={onCheckedChange}
+                disabled={disabled}
             />
         </div>
     );

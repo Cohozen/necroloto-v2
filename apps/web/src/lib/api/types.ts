@@ -256,6 +256,10 @@ export interface CreateCirclePayload {
     name: string;
     visibility?: CircleVisibility;
     allowNewBet: boolean;
+    /** Late-season "rallonge": edit an existing bet once bets are closed. */
+    allowEdit?: boolean;
+    /** Whether members see each other's picks once the season is revealed. */
+    betsVisible?: boolean;
     /** Clerk-resolved creator user id; the API adds the ADMIN membership. */
     creatorUserId: string;
 }

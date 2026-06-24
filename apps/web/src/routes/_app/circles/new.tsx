@@ -1,27 +1,48 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { ChevronLeft, Eye, Globe, Lock, Ticket, Users, WalletCards, Zap } from 'lucide-react';
+import {
+    CalendarRange,
+    ChevronLeft,
+    Eye,
+    Globe,
+    Lock,
+    Ticket,
+    Users,
+    WalletCards,
+    Zap,
+} from 'lucide-react';
 import { useState } from 'react';
 import { ChoiceCard } from '@/components/circles/ChoiceCard';
 import { SettingToggleRow } from '@/components/circles/SettingToggleRow';
 import { Button } from '@/components/ui/button';
+import { seasonStatus } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
-import { useCreateCircle } from '@/lib/api/queries';
+import { useActiveSeason, useCreateCircle } from '@/lib/api/queries';
+import { SEASON_STATUS_LABEL } from '@/types/season';
 
 export const Route = createFileRoute('/_app/circles/new')({
     component: CreateCircle,
 });
 
-const YEAR = new Date().getFullYear();
 const MAX_NAME = 30;
+
+const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 
 function CreateCircle() {
     const navigate = useNavigate();
     const { user } = useCurrentUser();
     const createCircle = useCreateCircle();
+    const { data: activeSeason } = useActiveSeason();
 
     const [name, setName] = useState('');
     const [visibility, setVisibility] = useState<'private' | 'public'>('private');
     const [allowNewBet, setAllowNewBet] = useState(true);
+    const [allowEdit, setAllowEdit] = useState(false);
+    const [betsVisible, setBetsVisible] = useState(true);
+
+    // The "rallonge" (allowEdit) only matters once bets are closed — during the
+    // open betting window everyone edits freely, so the toggle is locked then.
+    const betsOpen = activeSeason ? seasonStatus(activeSeason) === 'bets-open' : false;
 
     const trimmedName = name.trim();
     const canSubmit = !!user && trimmedName.length > 0 && !createCircle.isPending;
@@ -33,6 +54,8 @@ function CreateCircle() {
                 name: trimmedName,
                 visibility: visibility === 'private' ? 'PRIVATE' : 'PUBLIC',
                 allowNewBet,
+                allowEdit: betsOpen ? false : allowEdit,
+                betsVisible,
                 creatorUserId: user.id,
             },
             {
@@ -115,6 +138,31 @@ function CreateCircle() {
                     <span className="text-[13px] font-semibold text-ink-2">
                         Réglages de la saison
                     </span>
+
+                    {activeSeason && (
+                        <div className="flex flex-col gap-2 rounded-[13px] border border-line bg-surface-2 p-3.5">
+                            <div className="flex items-center justify-between gap-2.5">
+                                <span className="flex items-center gap-2 text-[13px] font-semibold text-ink-2">
+                                    <CalendarRange size={16} className="text-neon" />
+                                    Saison {activeSeason.year}
+                                </span>
+                                <span className="rounded-full border border-neon/30 bg-neon/10 px-2.5 py-0.5 text-[11px] font-semibold text-neon">
+                                    {SEASON_STATUS_LABEL[seasonStatus(activeSeason)]}
+                                </span>
+                            </div>
+                            <div className="flex flex-col gap-1 text-xs text-ink-3">
+                                <span>
+                                    Paris : {fmtDate(activeSeason.betStartDate)} →{' '}
+                                    {fmtDate(activeSeason.betEndDate)}
+                                </span>
+                                <span>
+                                    Saison : {fmtDate(activeSeason.openDate)} →{' '}
+                                    {fmtDate(activeSeason.closeDate)}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
                     <SettingToggleRow
                         icon={Ticket}
                         title="Autoriser de nouveaux paris"
@@ -126,12 +174,17 @@ function CreateCircle() {
                         icon={WalletCards}
                         title="Liste modifiable"
                         description="Laisse modifier sa sélection une fois les paris fermés, jusqu'à la fin de saison"
-                        defaultChecked
+                        checked={betsOpen ? false : allowEdit}
+                        onCheckedChange={setAllowEdit}
+                        disabled={betsOpen}
+                        hint={betsOpen ? 'Réglable une fois les paris fermés' : undefined}
                     />
                     <SettingToggleRow
                         icon={Eye}
                         title="Mises visibles"
                         description="Chacun voit sur qui les autres ont parié"
+                        checked={betsVisible}
+                        onCheckedChange={setBetsVisible}
                     />
                 </div>
 
