@@ -280,6 +280,35 @@ export function useDeathFeed(year = CURRENT_YEAR, limit = 10) {
     });
 }
 
+/** Page size for the bet-draft catalogue infinite scroll. */
+export const CATALOGUE_PAGE = 24;
+
+/**
+ * Paginated catalogue for the bet draft (GET /celebrities/catalogue): living
+ * picks only, server-side name search and alphabetical order. Drives infinite
+ * scroll, mirroring `useAdminCelebrities`.
+ */
+export function useCatalogueCelebrities(params: { search: string }) {
+    const api = useApiClient();
+    const search = params.search.trim();
+    return useInfiniteQuery({
+        queryKey: queryKeys.celebrities.catalogue(search),
+        initialPageParam: 0,
+        queryFn: ({ pageParam }) => {
+            const qs = new URLSearchParams({
+                take: String(CATALOGUE_PAGE),
+                skip: String(pageParam),
+            });
+            if (search) qs.set('search', search);
+            return api.get<AdminCelebrityPage>(`/celebrities/catalogue?${qs.toString()}`);
+        },
+        getNextPageParam: (lastPage, allPages) => {
+            const loaded = allPages.reduce((acc, page) => acc + page.items.length, 0);
+            return loaded < lastPage.total ? loaded : undefined;
+        },
+    });
+}
+
 // --- Celebrities (admin) ---
 
 /** Page size for the admin catalogue infinite scroll. */

@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Check, ChevronDown, Plus, Search, Users } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { CelebrityCard } from '@/components/celebrities/CelebrityCard';
 import { DraftTray } from '@/components/celebrities/DraftTray';
 import { ProposeCelebrityDialog } from '@/components/celebrities/ProposeCelebrityDialog';
 import { PageLoader } from '@/components/feedback/PageLoader';
+import { SectionLoader } from '@/components/feedback/SectionLoader';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -18,14 +19,14 @@ import { toCelebritySummary } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
 import {
     MAX_BET_CELEBRITIES,
-    useCelebrities,
+    useCatalogueCelebrities,
     useCircleSummaries,
     useCreateBet,
     useReplaceBetCelebrities,
     useSeasonYear,
     useUserBets,
 } from '@/lib/api/queries';
-import type { ApiBet, ApiCelebrity, CircleSummaryDto } from '@/lib/api/types';
+import type { ApiBet, CircleSummaryDto } from '@/lib/api/types';
 
 export const Route = createFileRoute('/_app/celebrities/')({
     component: Catalogue,
@@ -36,11 +37,10 @@ const TOTAL = MAX_BET_CELEBRITIES;
 function Catalogue() {
     const { user } = useCurrentUser();
     const year = useSeasonYear();
-    const celebsQuery = useCelebrities();
     const betsQuery = useUserBets(user?.id);
     const summariesQuery = useCircleSummaries(user?.id, year);
 
-    if (!user || celebsQuery.isLoading || betsQuery.isLoading || summariesQuery.isLoading) {
+    if (!user || betsQuery.isLoading || summariesQuery.isLoading) {
         return <PageLoader label="Chargement du draft…" />;
     }
 
@@ -48,7 +48,6 @@ function Catalogue() {
         <DraftScreen
             userId={user.id}
             year={year}
-            celebrities={celebsQuery.data ?? []}
             bets={betsQuery.data ?? []}
             circles={summariesQuery.data ?? []}
         />
@@ -58,12 +57,11 @@ function Catalogue() {
 interface DraftScreenProps {
     userId: string;
     year: number;
-    celebrities: ApiCelebrity[];
     bets: ApiBet[];
     circles: CircleSummaryDto[];
 }
 
-function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenProps) {
+function DraftScreen({ userId, year, bets, circles }: DraftScreenProps) {
     const createBet = useCreateBet();
     const replaceBet = useReplaceBetCelebrities();
 
@@ -89,6 +87,14 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
     }, [circleId, yearBets]);
 
     const [query, setQuery] = useState('');
+    // Search runs server-side — debounce so each keystroke doesn't refetch.
+    const [debouncedQuery, setDebouncedQuery] = useState('');
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedQuery(query.trim()), 250);
+        return () => clearTimeout(t);
+    }, [query]);
+
+    const catalogueQuery = useCatalogueCelebrities({ search: debouncedQuery });
 
     const selectedCircle = circles.find((c) => c.id === circleId);
     // Lock follows the season phase: during the betting window everyone edits
@@ -120,10 +126,10 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
         }
     }, [selectedCircle, phase, flagOpen, bet]);
 
-    // Deceased celebrities are no longer draftable — only living ones are shown.
+    // The server paginates living-only picks, alphabetically, filtered by search.
     const cards = useMemo(
-        () => celebrities.map(toCelebritySummary).filter((c) => c.status !== 'deceased'),
-        [celebrities],
+        () => (catalogueQuery.data?.pages.flatMap((p) => p.items) ?? []).map(toCelebritySummary),
+        [catalogueQuery.data],
     );
 
     const toggle = (id: string) => {
@@ -147,10 +153,20 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
         });
     };
 
-    const results = useMemo(() => {
-        const q = query.trim().toLowerCase();
-        return cards.filter((c) => q === '' || c.name.toLowerCase().includes(q));
-    }, [cards, query]);
+    // Infinite scroll: load the next page when the sentinel scrolls into view.
+    const { hasNextPage, isFetchingNextPage, fetchNextPage } = catalogueQuery;
+    const sentinelRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        const node = sentinelRef.current;
+        if (!node) return;
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+                fetchNextPage();
+            }
+        });
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
     const isSaving = createBet.isPending || replaceBet.isPending;
     const canSave = !!circleId && selected.size > 0 && !isSaving && !locked;
@@ -173,16 +189,11 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 md:p-6">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-                <div>
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-                        Draft · saison {year}
-                    </span>
-                    <h1 className="font-display text-3xl font-extrabold">Composez votre liste</h1>
-                </div>
-                <span className="hidden md:inline-flex h-[34px] items-center rounded-full border border-neon/40 bg-neon/10 px-3 text-[13px] font-semibold text-neon">
-                    {selected.size} / {TOTAL} sélectionnées
+            <div>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">
+                    Draft · saison {year}
                 </span>
+                <h1 className="font-display text-3xl font-extrabold">Composez votre liste</h1>
             </div>
 
             {/* circle selector — the bet is saved against the chosen circle */}
@@ -194,31 +205,26 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
                     </Link>
                 </p>
             ) : (
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <button
-                                type="button"
-                                className="inline-flex h-10 w-fit items-center gap-2 rounded-xl border border-line-2 bg-surface px-3.5 text-[14px] font-semibold text-ink-2 hover:text-ink"
-                            >
-                                <Users size={16} className="text-ink-3" />
-                                {selectedCircle?.name ?? 'Choisir un cercle'}
-                                <ChevronDown size={15} className="text-ink-3" />
-                            </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-60">
-                            {circles.map((c) => (
-                                <DropdownMenuItem key={c.id} onSelect={() => setCircleId(c.id)}>
-                                    <Users size={15} /> {c.name}
-                                    {c.id === circleId && <Check size={15} className="ml-auto" />}
-                                </DropdownMenuItem>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <span className="inline-flex md:hidden h-[34px] items-center rounded-full border border-neon/40 bg-neon/10 px-3 text-[13px] font-semibold text-neon">
-                        {selected.size} / {TOTAL} sélectionnées
-                    </span>
-                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button
+                            type="button"
+                            className="inline-flex h-10 w-fit items-center gap-2 rounded-xl border border-line-2 bg-surface px-3.5 text-[14px] font-semibold text-ink-2 hover:text-ink"
+                        >
+                            <Users size={16} className="text-ink-3" />
+                            {selectedCircle?.name ?? 'Choisir un cercle'}
+                            <ChevronDown size={15} className="text-ink-3" />
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-60">
+                        {circles.map((c) => (
+                            <DropdownMenuItem key={c.id} onSelect={() => setCircleId(c.id)}>
+                                <Users size={15} /> {c.name}
+                                {c.id === circleId && <Check size={15} className="ml-auto" />}
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
             )}
 
             <div className="flex items-center gap-2.5">
@@ -251,7 +257,7 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
             )}
 
             <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {results.map((celebrity) => (
+                {cards.map((celebrity) => (
                     <CelebrityCard
                         key={celebrity.id}
                         celebrity={celebrity}
@@ -262,9 +268,15 @@ function DraftScreen({ userId, year, celebrities, bets, circles }: DraftScreenPr
                 ))}
             </div>
 
-            {results.length === 0 && (
+            {catalogueQuery.isLoading && <SectionLoader label="Chargement des célébrités…" />}
+
+            {!catalogueQuery.isLoading && cards.length === 0 && (
                 <p className="py-10 text-center text-ink-3">Aucune célébrité ne correspond.</p>
             )}
+
+            {/* infinite-scroll sentinel */}
+            <div ref={sentinelRef} className="h-8" aria-hidden />
+            {isFetchingNextPage && <SectionLoader inline label="Chargement…" />}
 
             {(createBet.isError || replaceBet.isError) && (
                 <p className="text-[13px] text-coral">

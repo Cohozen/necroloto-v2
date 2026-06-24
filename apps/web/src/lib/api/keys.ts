@@ -19,6 +19,7 @@ export const queryKeys = {
     },
     celebrities: {
         list: () => ['celebrities', 'list'] as const,
+        catalogue: (search: string) => ['celebrities', 'catalogue', search] as const,
         adminList: (search: string, status: string, wikidata: string) =>
             ['celebrities', 'admin-list', search, status, wikidata] as const,
         detail: (id: string) => ['celebrities', 'detail', id] as const,
