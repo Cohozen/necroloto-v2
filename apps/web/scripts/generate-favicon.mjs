@@ -113,4 +113,11 @@ function buildPng(size) {
 writeFileSync(join(PUBLIC_DIR, 'favicon.svg'), buildSvg());
 writeFileSync(join(PUBLIC_DIR, 'favicon-32.png'), buildPng(32));
 writeFileSync(join(PUBLIC_DIR, 'apple-touch-icon.png'), buildPng(180));
-console.log('favicon.svg, favicon-32.png, apple-touch-icon.png written to public/');
+// PWA install icons (manifest). The mark sits on the full near-black canvas, so
+// the same render doubles as a `maskable` icon (background fills the safe zone).
+writeFileSync(join(PUBLIC_DIR, 'pwa-192.png'), buildPng(192));
+writeFileSync(join(PUBLIC_DIR, 'pwa-512.png'), buildPng(512));
+writeFileSync(join(PUBLIC_DIR, 'pwa-512-maskable.png'), buildPng(512));
+console.log(
+    'favicon.svg, favicon-32.png, apple-touch-icon.png, pwa-192/512/512-maskable.png written to public/',
+);

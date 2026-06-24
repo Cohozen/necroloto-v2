@@ -1,3 +1,4 @@
+import { registerSW } from 'virtual:pwa-register';
 import { ClerkProvider } from '@clerk/clerk-react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
@@ -19,6 +20,9 @@ import '@fontsource/pixelify-sans/700.css';
 import '@fontsource/space-mono/400.css';
 import '@fontsource/space-mono/700.css';
 import './styles/globals.css';
+
+// Register the PWA service worker (push + offline precaching). Auto-updates.
+registerSW({ immediate: true });
 
 const router = createRouter({ routeTree });
 

@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
-    Bell,
     Bot,
     CalendarRange,
     Lock,
@@ -19,9 +18,9 @@ import { AchievementBadge } from '@/components/profile/AchievementBadge';
 import { EditProfileDialog } from '@/components/profile/EditProfileDialog';
 import { LogoutRow } from '@/components/profile/LogoutRow';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
+import { PushNotificationsRow } from '@/components/profile/PushNotificationsRow';
 import { SettingsRow } from '@/components/profile/SettingsRow';
 import { StatTile } from '@/components/profile/StatTile';
-import { Switch } from '@/components/ui/switch';
 import { initialsOf, monthYearLabel, userDisplayName } from '@/lib/api/adapters';
 import { useCurrentUser } from '@/lib/api/currentUser';
 import { useCircleSummaries, useUserBets } from '@/lib/api/queries';
@@ -196,13 +195,7 @@ function Profile() {
                             description="Modifier votre identité de joueur"
                             onClick={() => setEditOpen(true)}
                         />
-                        <SettingsRow
-                            icon={Bell}
-                            title="Notifications"
-                            description="Bientôt disponible"
-                            disabled
-                            control={<Switch disabled />}
-                        />
+                        <PushNotificationsRow />
                     </div>
                     {isClerkConfigured && (
                         <div className="overflow-hidden rounded-2xl border border-line bg-surface">
