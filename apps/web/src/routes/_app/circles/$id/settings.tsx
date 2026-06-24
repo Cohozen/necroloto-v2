@@ -155,7 +155,7 @@ function SettingsForm({ circle }: { circle: ApiCircle }) {
                 {/* season settings */}
                 <div className="flex flex-col gap-2.5">
                     <span className="text-[13px] font-semibold text-ink-2">
-                        Réglages de la saison <span className="text-ink-3">{YEAR}</span>
+                        Réglages de la saison
                     </span>
                     <SettingToggleRow
                         icon={Ticket}

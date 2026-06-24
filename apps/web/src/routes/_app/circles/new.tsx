@@ -113,7 +113,7 @@ function CreateCircle() {
                 {/* season settings */}
                 <div className="flex flex-col gap-2.5">
                     <span className="text-[13px] font-semibold text-ink-2">
-                        Réglages de la saison <span className="text-ink-3">{YEAR}</span>
+                        Réglages de la saison
                     </span>
                     <SettingToggleRow
                         icon={Ticket}
@@ -125,7 +125,7 @@ function CreateCircle() {
                     <SettingToggleRow
                         icon={WalletCards}
                         title="Liste modifiable"
-                        description="Modifier sa sélection jusqu'au 31 déc."
+                        description="Laisse modifier sa sélection une fois les paris fermés, jusqu'à la fin de saison"
                         defaultChecked
                     />
                     <SettingToggleRow
