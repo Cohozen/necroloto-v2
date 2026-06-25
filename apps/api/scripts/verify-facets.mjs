@@ -46,14 +46,18 @@ try {
         const cat = facets.categories[0];
         const page = await celebrities.findCataloguePage({ category: cat, take: 50, skip: 0 });
         const allMatch = page.items.every((i) => i.category === cat);
-        console.log(`\nfindCataloguePage({category:"${cat}"}): ${page.total} rows, allMatch=${allMatch}`);
+        console.log(
+            `\nfindCataloguePage({category:"${cat}"}): ${page.total} rows, allMatch=${allMatch}`,
+        );
     }
 
     // Age filter sanity: 60+ should only return birthdays ≤ (currentYear-60).
     const old = await celebrities.findCataloguePage({ ageMin: 60, take: 50, skip: 0 });
     const cutoff = new Date().getUTCFullYear() - 60;
     const ageOk = old.items.every((i) => i.birth && new Date(i.birth).getUTCFullYear() <= cutoff);
-    console.log(`findCataloguePage({ageMin:60}): ${old.total} rows, all born ≤ ${cutoff}: ${ageOk}`);
+    console.log(
+        `findCataloguePage({ageMin:60}): ${old.total} rows, all born ≤ ${cutoff}: ${ageOk}`,
+    );
 } catch (err) {
     console.error('verify-facets error:', err);
     process.exitCode = 1;
