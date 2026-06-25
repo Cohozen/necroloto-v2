@@ -30,6 +30,8 @@ Front: Vite 6, React 19, TanStack Router + Query, Tailwind v4, shadcn/ui.
 - Integration checks (need `apps/api/.env`, run against real Supabase, mostly read-only):
   `node apps/api/scripts/verify-phase3.mjs`, `verify-auth.mjs`, `verify-storage.mjs`,
   `verify-jobs.mjs` (async job runner — needs `dist/`, i.e. `pnpm --filter necroloto-api build` first).
+  `verify-facets.mjs` enriches a sample from Wikidata (fills nationality/gender/category) and checks the
+  facet filters + `findFacets`; doubles as a local backfill helper (also needs `dist/`).
 
 ## Local dev environment
 
@@ -95,7 +97,8 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   immediately usable in their bet. **Dedup**: a Wikidata pick reuses any existing row for that
   `wikidataId @unique` (refused if that entity is already REJECTED; P2002 race re-fetches the existing
   row, à la `UsersService.create`); a manual entry reuses an exact case-insensitive name match. With a
-  `wikidataId` the row is **enriched inline** (`enrich` → dates/photo/role + `recalculatePoints`).
+  `wikidataId` the row is **enriched inline** (`enrich` → dates/photo/role + facets + `recalculatePoints`;
+  see "Celebrity facets & filters").
   **Visibility, not scoring**: status governs *who sees* the row, never points — `recalculatePoints` is
   untouched, so a PENDING that dies still scores for its proposer. A PENDING is visible **only to its
   proposer**: `findAll`/`search` filter `OR[{APPROVED},{PENDING, proposedBy: viewer}]`, `findOne` 404s a
@@ -108,6 +111,19 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   drops source `CelebritiesOnBet` rows that would collide with the target on the `(betId, celebrityId)`
   PK **before** redirecting the rest, then `recalculatePoints(target)` (the old naive `updateMany` would
   500 on a bet listing both).
+- **Celebrity facets & filters (Wikidata-derived)**: beyond birth/death/photo/`role`, `enrich` fills three
+  **filter facets** on `Celebrity` (migration `add_celebrity_facets`, additive nullable cols): `nationality`
+  (P27 country of citizenship → FR label), `gender` (P21 → `Homme`/`Femme`/`Autre`, via `deriveGender`) and
+  `category` (the **coarse bucket** mapped from the P106 occupation Q-id by the curated
+  `modules/celebrities/occupation-categories.ts` — ~12 buckets like `Cinéma & TV`/`Musique`/`Sport`; the
+  free-text `role` keeps the exact 1st-occupation label). `WikidataService` parses P27/P21 and exposes a
+  **batched `resolveLabels`** (one call for role + nationality labels). **Facets are filter-only, never
+  scoring**; existing rows are backfilled by re-running the **bulk-enrich** job (`enrich` is idempotent).
+  Filtering is **server-side & orthogonal**: a shared `buildFacetWhere` (category/nationality/gender exact
+  match + age range → `birth` date bounds) feeds **both** `findCataloguePage` (draft) and `findPage` (admin);
+  `GET /celebrities/facets` returns the distinct categories (bucket order) + nationalities to populate the
+  menus. ⚠️ admin **status** and the **wikidata** axis (`linked`/`unlinked`) are independent params now (they
+  combine freely — no more folding `unlinked` into the status enum).
 - **Seasons drive "the current year"**: a `Season` (`year @unique` + `openDate`/`betStartDate`/
   `betEndDate`/`closeDate`) is configured by global admins. ⚠️ **Betting precedes the season**: a
   season's betting window (`[betStartDate, betEndDate]`) is normally the ~month *before* `openDate`
@@ -285,8 +301,9 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   endpoints (`GET /circle/user/:id/summary` — returns `allowEdit`/`allowNewBet`, `bettingOpen`,
   `seasonPhase` **and `revealed`**; `GET /circle/:id/bets` for the "Paris" tab (viewer-aware secrecy);
   `GET /celebrities/deaths/feed`; `GET /celebrities/catalogue` for the **public paginated bet-draft
-  catalogue** (living-only, alphabetical, server-side name search, `take`/`skip`; same visibility as
-  `findAll` — approved to all, own pending to self); `GET /celebrities/admin/list` for the paginated
+  catalogue** (living-only, alphabetical, server-side name search + **facet filters**, `take`/`skip`; same
+  visibility as `findAll` — approved to all, own pending to self); `GET /celebrities/facets` for the filter
+  menus (see "Celebrity facets & filters"); `GET /celebrities/admin/list` for the paginated
   admin catalogue; `DELETE /celebrities/bulk` for bulk delete and `POST /jobs/bulk-enrich` for **async** bulk Wikidata
   sync (see "Async jobs"); `GET /seasons`, `GET /seasons/active`); simpler ones (dashboard score band,
   profile stats) are composed client-side from existing endpoints.
@@ -304,29 +321,31 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
 - **Admin** (`/admin/celebrities/*`): the catalogue uses `GET /celebrities/admin/list` —
   **server-side** name search, status filter and alphabetical order, paginated and driven by
   `useInfiniteQuery` (infinite scroll). **Filters live in the URL** (`validateSearch` on the route:
-  `filter` + `q`, both optional so existing links need no search) so back-navigation/refresh restore
-  them; the search input is a debounced local mirror written back to the URL. Each row shows a
-  `WikidataIndicator` (linked/`Sans` pill) and a portrait photo, and the status filter gains a **"Sans
-  Wikidata"** segment (maps to `status=all` + a `wikidata=unlinked` query axis on the API — celebrities
-  with `wikidataId = null`, orthogonal to the alive/deceased/pending status). Rows carry checkboxes
-  (+ a select-all header) feeding a
+  `filter` (status) + `wikidata` + facet params + `q`, all optional so existing links need no search) so
+  back-navigation/refresh restore them; the search input is a debounced local mirror written back to the URL.
+  Filters render in the **shared unified bar** (`CelebrityFilters`, see the draft bullet): a **Statut**
+  dropdown (all/alive/deceased/pending — replaces the old segmented control, incl. the **"En attente"**
+  proposal queue), an independent **Wikidata** dropdown (`linked`/`unlinked` — pulled out of the status
+  segments so it **combines** with any status) + the Catégorie/Nationalité/Genre/Âge facet dropdowns +
+  reset + count. The **"Nouvelle célébrité"** button moved up into the `AdminHeader actions` slot;
+  `CatalogToolbar` is now just the search field. Each row shows a `WikidataIndicator` (linked/`Sans` pill)
+  and a portrait photo. Rows carry checkboxes (+ a select-all header) feeding a
   floating `BulkActionBar` for **bulk delete** (`DELETE /celebrities/bulk`) and **bulk Wikidata
   sync** (`POST /jobs/bulk-enrich` — **async job**, see "Async jobs"; `BulkActionBar` shows live
   `processed/total` from the polled job, recap toast on completion); results surface via sonner
   toasts. Only the **per-row "Recalculer" button stays decorative**
   (recalc is automatic on update server-side). The form sends ISO dates; `wikidataId` is set only
   via `POST /celebrities/:id/enrich` (no field on the create/update DTOs), reached through the
-  `WikidataSearchDialog`. The status filter gains an **"En attente"** tab (`status=pending`); pending
-  rows show the proposal badge and swap their edit/recalc actions for **approve / reject / verify-on-
-  Wikidata / merge** (`useApproveCelebrity`/`useRejectCelebrity`/`useMergeCelebrities`; see "Celebrity
+  `WikidataSearchDialog`. Pending rows (Statut = "En attente", `status=pending`) show the proposal badge and
+  swap their edit/recalc actions for **approve / reject / verify-on-Wikidata / merge**
+  (`useApproveCelebrity`/`useRejectCelebrity`/`useMergeCelebrities`; see "Celebrity
   proposals"). Merge opens `MergeCelebrityDialog` (search the approved catalogue for the target).
   Photo upload (`POST /celebrities/:id/photo`, multipart) is **not wired
   yet** — the client only does JSON. **Responsive**: the catalogue is a dense `CelebrityTable`
   (`hidden md:block`, widened Statut/Actions tracks so a pending row's two badges + four actions fit)
   on desktop, swapped for a stacked `CelebrityCard` list (`md:hidden`, large touch targets, labelled
-  approve/reject buttons) on mobile; the `CatalogToolbar` stacks (full-width search, horizontally
-  scrollable filter pills via the `no-scrollbar` utility) and the `BulkActionBar` lets its buttons take
-  a full-width row below `sm`. All `/admin/*` routes are gated by the `_app/admin.tsx` layout
+  approve/reject buttons) on mobile; the filter bar **wraps** (`flex-wrap`, no horizontal scroll) and the
+  `BulkActionBar` lets its buttons take a full-width row below `sm`. All `/admin/*` routes are gated by the `_app/admin.tsx` layout
   route on the Clerk `public_metadata.roles` admin claim (mirrors the API `AdminGuard`); non-admins
   get the `AdminForbidden` screen. The gate is bypassed when Clerk is unconfigured (previewable dev).
 - **Admin — Seasons** (`/admin/seasons/*`): list + create/edit on the `SeasonForm` component
@@ -351,9 +370,14 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   in `queries.ts`; client-side only — the API enforces no cap yet, per-circle config is in
   `docs/ROADMAP.md`). The grid is **paginated with infinite scroll** (`useCatalogueCelebrities` →
   `GET /celebrities/catalogue`, `CATALOGUE_PAGE = 24`, `IntersectionObserver` sentinel + `SectionLoader`,
-  mirroring `useAdminCelebrities`): server-side **alphabetical order** and **debounced name search**,
-  so the whole catalogue is no longer loaded at once (the old `useCelebrities`/`GET /celebrities` is
-  unused by the draft now). ⚠️ a selected pick on a not-yet-loaded page only shows as checked once
+  mirroring `useAdminCelebrities`): server-side **alphabetical order**, **debounced name search** and
+  **facet filters** (Catégorie/Nationalité/Genre/Âge), so the whole catalogue is no longer loaded at once
+  (the old `useCelebrities`/`GET /celebrities` is unused by the draft now). Filters render in the **shared
+  `CelebrityFilters` bar** (built on the reusable `FilterSelect` dropdown + `lib/celebrities/facets.ts`
+  constants): one `flex-wrap` row of dropdowns (age is a dropdown, **not** pills) + an always-visible reset
+  (disabled when idle) + an inline result count; the same bar serves the admin (which passes a `leading`
+  slot for its Statut/Wikidata selectors). The **"Ajouter" button moved to the page header**, search is
+  full-width. ⚠️ a selected pick on a not-yet-loaded page only shows as checked once
   scrolled to — the `DraftTray` count stays correct regardless. The redundant "N / 50 sélectionnées"
   header/mobile badges were removed (the always-visible `DraftTray` carries the count).
   **Deceased celebrities are hidden** server-side (the catalogue endpoint filters `death: null`), and the draft is
@@ -375,7 +399,9 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   and via an **"Eye" action** on each approved row of the admin catalogue (`CelebrityRow` /
   `CelebrityCard`). Shows the portrait (Wikidata `photo` over the gradient, monogram fallback —
   `CelebrityPortrait` gained a `photo` prop **with an `onError` fallback to the monogram**, so a dead
-  URL degrades cleanly), Wikidata facts (role/category/birth/age), a `PointsHero`
+  URL degrades cleanly) with a **gender-aware status badge** (`StatusBadge` agrees Vivant/Vivante ·
+  Décédé/Décédée from `gender`, inclusive `·e` fallback — also used on the draft/admin cards), Wikidata
+  facts (role/category/**nationality**/birth/age), a `PointsHero`
   (awarded vs potential, on the **active season** via `useSeasonYear`), and **"Qui a parié dessus"
   grouped by season** ("Cette saison" first, then past years desc — `Bettor.year` carried from
   `bet.year`; the API already returns every year). Each bettor row shows a **per-bet `outcome`**

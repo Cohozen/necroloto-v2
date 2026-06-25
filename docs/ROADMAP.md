@@ -5,6 +5,17 @@ ferme — à arbitrer au fil de l'eau.
 
 ## ✅ Livré
 
+- 🏷️ **Facettes catalogue & filtres** — `enrich` récupère trois facettes Wikidata sur `Celebrity`
+  (migration additive `add_celebrity_facets`) : **nationalité** (P27), **genre** (P21 → Homme/Femme/Autre)
+  et **catégorie** (bucket grossier mappé depuis l'occupation P106 via `occupation-categories.ts` — ~12
+  buckets ; le `role` texte-libre reste). Filtrage **server-side & orthogonal** partagé (`buildFacetWhere` :
+  catégorie/nationalité/genre + tranche d'âge → bornes `birth`) sur le draft (`findCataloguePage`) et l'admin
+  (`findPage`) ; `GET /celebrities/facets` peuple les menus. UI : **barre de filtres unifiée** qui passe à la
+  ligne (`CelebrityFilters` + `FilterSelect`, âge en dropdown, reset toujours visible, compteur inline),
+  axe **Wikidata lié/non-lié** sorti du statut (combinable), bouton d'ajout remonté en en-tête. Aussi : **label
+  vivant/décédé genré** (`StatusBadge`) et **nationalité affichée sur la fiche**. Script `verify-facets.mjs`
+  (vérif + backfill local). _Reste_ : relancer le bulk-enrich post-déploiement pour peupler les fiches prod ;
+  photo-upload toujours non câblé.
 - 📱 **PWA + Web Push** — l'app web est désormais **installable** (manifest + service worker via
   `vite-plugin-pwa` en stratégie `injectManifest`, SW custom `apps/web/src/sw.ts` pour les
   handlers `push`/`notificationclick`, icônes générées par `scripts/generate-favicon.mjs`). Les
