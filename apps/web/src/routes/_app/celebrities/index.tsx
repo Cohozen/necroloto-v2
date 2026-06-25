@@ -240,9 +240,7 @@ function DraftScreen({ userId, year, bets, circles }: DraftScreenProps) {
             )}
 
             <div className="flex h-10 w-full items-center gap-2.5 rounded-xl border border-line-2 bg-surface px-3.5 text-[13px] text-ink-3 focus-within:border-neon/60">
-                <Search
-                    size={16}
-                />
+                <Search size={16} />
                 <Input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
