@@ -10,11 +10,6 @@ export function LandingHero() {
             className="relative px-5 pb-16 pt-14 text-center lg:pb-[88px] lg:pt-[88px]"
         >
             <div className="mx-auto w-full max-w-[1180px]">
-                <span className="inline-flex h-[30px] items-center gap-2 rounded-full border border-neon/40 bg-neon/10 px-3.5 text-xs font-semibold tracking-[0.04em] text-neon">
-                    <span className="size-[7px] animate-pulse-dot rounded-full bg-neon" />
-                    Saison 2026 · inscriptions ouvertes
-                </span>
-
                 <h1 className="mt-[22px] font-arcade text-[clamp(40px,13vw,96px)] leading-[0.9] tracking-[0.02em] text-glow-neon [text-shadow:0_0_calc(var(--glow)*30px)_rgb(var(--neon-rgb)/calc(var(--glow)*0.45))]">
                     NECRO<span className="text-neon">LOTO</span>
                 </h1>
