@@ -289,7 +289,8 @@ function AdminCatalogue() {
                 actions={
                     <Button asChild size="sm" className="h-[38px]">
                         <Link to="/admin/celebrities/new">
-                            <Plus size={15} strokeWidth={2.2} /> Nouvelle célébrité
+                            <Plus size={15} strokeWidth={2.2} />{' '}
+                            <span className="hidden md:inline">Nouvelle célébrité</span>
                         </Link>
                     </Button>
                 }

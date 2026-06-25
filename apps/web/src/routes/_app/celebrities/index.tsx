@@ -191,7 +191,7 @@ function DraftScreen({ userId, year, bets, circles }: DraftScreenProps) {
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 md:p-6">
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center justify-between gap-3">
                 <div>
                     <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">
                         Draft · saison {year}
@@ -239,16 +239,15 @@ function DraftScreen({ userId, year, bets, circles }: DraftScreenProps) {
                 </DropdownMenu>
             )}
 
-            <div className="relative">
+            <div className="flex h-10 w-full items-center gap-2.5 rounded-xl border border-line-2 bg-surface px-3.5 text-[13px] text-ink-3 focus-within:border-neon/60">
                 <Search
                     size={16}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3"
                 />
                 <Input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Rechercher une célébrité…"
-                    className="h-11 pl-10"
+                    className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-ink-3"
                 />
             </div>
 
