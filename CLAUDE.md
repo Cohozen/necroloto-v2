@@ -171,9 +171,14 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   no Redis), tracked in the `SyncJob` table (status + progress counters + JSON `payload`/`result`).
   `JobsService.enqueueBulkEnrich` creates the row and **fire-and-forgets** the worker (`void
   this.runBulkEnrich(...)`), so `POST /jobs/bulk-enrich` returns a `202` immediately; the front polls
-  `GET /jobs/:id`. A **single global `Semaphore`** (hand-rolled — `p-limit` v6 is ESM-only, breaks the
+  `GET /jobs/:id`. A **single global `Semaphore(2)`** (hand-rolled — `p-limit` v6 is ESM-only, breaks the
   CJS build) caps concurrent Wikidata `enrich` calls **across all jobs**, so launching several syncs
-  at once stays polite. Per-item failures are isolated into `result.errors`. ⚠️ The in-process
+  at once stays polite. Per-item failures are isolated into `result.errors`. ⚠️ **Wikidata rate-limiting**:
+  each `enrich` fans out into several Wikidata calls, so a big bulk sync used to trip Wikidata's per-IP
+  limiter (HTTP 429) after ~70 items and then cascade into all-errors (no backoff). `WikidataService.
+  fetchJson` now **retries 429/503 with backoff** (honours `Retry-After`); the low semaphore + the photo
+  skip (`enrich` only downloads the Commons photo when the row has none) keep bulk backfills under the limit.
+  ⚠️ The in-process
   trade-off: a job left `RUNNING`/`PENDING` when the process restarts (Railway redeploy) is
   **reconciled to `FAILED`** on boot (`onApplicationBootstrap`) — there is no resume. Death detection
   (`DeathDetectionService`, daily `@Cron` at 4h + manual `POST /automation/detect-deaths`) is wrapped

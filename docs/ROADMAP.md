@@ -14,8 +14,10 @@ ferme — à arbitrer au fil de l'eau.
   ligne (`CelebrityFilters` + `FilterSelect`, âge en dropdown, reset toujours visible, compteur inline),
   axe **Wikidata lié/non-lié** sorti du statut (combinable), bouton d'ajout remonté en en-tête. Aussi : **label
   vivant/décédé genré** (`StatusBadge`) et **nationalité affichée sur la fiche**. Script `verify-facets.mjs`
-  (vérif + backfill local). _Reste_ : relancer le bulk-enrich post-déploiement pour peupler les fiches prod ;
-  photo-upload toujours non câblé.
+  (vérif + backfill local). **Bulk-enrich résilient au rate-limiting** : `WikidataService.fetchJson` retry
+  429/503 avec backoff (`Retry-After`), sémaphore baissé à 2, et photo re-téléchargée **seulement si absente**
+  (un scan complet de prod tombait en cascade de 429 après ~70 fiches). _Reste_ : relancer le bulk-enrich
+  post-déploiement pour peupler les fiches prod ; photo-upload toujours non câblé.
 - 📱 **PWA + Web Push** — l'app web est désormais **installable** (manifest + service worker via
   `vite-plugin-pwa` en stratégie `injectManifest`, SW custom `apps/web/src/sw.ts` pour les
   handlers `push`/`notificationclick`, icônes générées par `scripts/generate-favicon.mjs`). Les
