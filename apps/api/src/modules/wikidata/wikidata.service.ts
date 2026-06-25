@@ -175,14 +175,49 @@ export class WikidataService {
         return new Date(Date.UTC(year, month - 1, day));
     }
 
+    /**
+     * Fetches JSON, retrying on rate-limit/transient errors (429/503) with backoff.
+     * Wikidata trips a per-IP rate limiter under bulk load and then 429s every
+     * subsequent call; honouring `Retry-After` (or an exponential fallback) lets a
+     * bulk sync ride out the limit instead of cascading into all-errors.
+     */
     private async fetchJson(url: string): Promise<any> {
-        const res = await fetch(url, {
-            headers: { 'User-Agent': this.userAgent, Accept: 'application/json' },
-        });
-        if (!res.ok) {
+        const maxAttempts = 4;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            const res = await fetch(url, {
+                headers: { 'User-Agent': this.userAgent, Accept: 'application/json' },
+            });
+            if (res.ok) return res.json();
+
+            const retryable = res.status === 429 || res.status === 503;
+            if (retryable && attempt < maxAttempts) {
+                const waitMs = this.retryDelayMs(res, attempt);
+                this.logger.warn(
+                    `Wikidata ${res.status} (attempt ${attempt}/${maxAttempts}); retry in ${waitMs}ms`,
+                );
+                await this.delay(waitMs);
+                continue;
+            }
             this.logger.error(`Wikidata request failed (${res.status}): ${url}`);
             throw new Error(`Wikidata request failed: ${res.status}`);
         }
-        return res.json();
+        // Unreachable (the loop returns or throws), but keeps the type-checker happy.
+        throw new Error('Wikidata request failed');
+    }
+
+    /** Backoff before a retry: honour `Retry-After` (seconds), else exponential, capped 30s. */
+    private retryDelayMs(res: Response, attempt: number): number {
+        const cap = 30_000;
+        const header = res.headers.get('retry-after');
+        const seconds = Number(header);
+        if (header && Number.isFinite(seconds) && seconds > 0) {
+            return Math.min(seconds * 1000, cap);
+        }
+        const backoff = 1000 * 2 ** (attempt - 1); // 1s, 2s, 4s…
+        return Math.min(backoff, cap);
+    }
+
+    private delay(ms: number): Promise<void> {
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 }

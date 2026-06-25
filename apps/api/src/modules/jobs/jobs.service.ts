@@ -22,8 +22,12 @@ export interface DeathScanSummary {
 @Injectable()
 export class JobsService implements OnApplicationBootstrap {
     private readonly logger = new Logger('Jobs');
-    /** Global cap on parallel Wikidata enrich calls, shared by every job. */
-    private readonly wikidata = new Semaphore(3);
+    /**
+     * Global cap on parallel Wikidata enrich calls, shared by every job. Kept low
+     * (each enrich fans out into several Wikidata requests) so bulk syncs stay under
+     * Wikidata's per-IP rate limit; `WikidataService` also backs off on 429.
+     */
+    private readonly wikidata = new Semaphore(2);
 
     constructor(
         private prisma: PrismaService,

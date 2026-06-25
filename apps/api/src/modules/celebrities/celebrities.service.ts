@@ -550,11 +550,12 @@ export class CelebritiesService {
     }
 
     /**
-     * Enriches a celebrity from Wikidata: fills birth/death/photo/role and stores
-     * the linked `wikidataId`. The entity is taken from `wikidataId` (explicit choice),
-     * else the celebrity's existing link, else the best match for its name.
-     * Wikidata values win over existing ones; missing values are left untouched.
-     * Re-runnable; recomputes points afterwards (a death may now be known).
+     * Enriches a celebrity from Wikidata: fills birth/death/role + facets
+     * (nationality/gender/category) and stores the linked `wikidataId`. The entity is
+     * taken from `wikidataId` (explicit choice), else the celebrity's existing link,
+     * else the best match for its name. Wikidata values win over existing ones; missing
+     * values are left untouched, and the photo is downloaded **only when absent** (re-syncs
+     * keep it). Re-runnable; recomputes points afterwards (a death may now be known).
      */
     async enrich(id: string, wikidataId?: string) {
         const celebrity = await this.prisma.celebrity.findUnique({ where: { id } });
@@ -568,9 +569,12 @@ export class CelebritiesService {
             throw new NotFoundException('No Wikidata match found');
         }
 
-        const photo = summary.photoFilename
-            ? await this.importPhoto(id, summary.photoFilename)
-            : celebrity.photo;
+        // Only download from Commons when the celebrity has no photo yet — re-syncs
+        // (e.g. bulk facet backfill) keep the existing one and skip the heavy fetch.
+        let photo = celebrity.photo;
+        if (!photo && summary.photoFilename) {
+            photo = await this.importPhoto(id, summary.photoFilename);
+        }
 
         // Resolve the first occupation (P106) and first citizenship (P27) labels in
         // one request → free-text `role` and `nationality`. The coarse `category` /
