@@ -71,7 +71,7 @@ export function CelebrityCard({
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-                <StatusBadge status={celeb.status} />
+                <StatusBadge status={celeb.status} gender={celeb.gender} />
                 {pending && (
                     <span className="inline-flex h-6 items-center rounded-full border border-coral/40 bg-coral/10 px-2 text-[11px] font-semibold text-coral">
                         En attente

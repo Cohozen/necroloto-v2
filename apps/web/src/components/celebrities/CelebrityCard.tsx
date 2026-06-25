@@ -15,7 +15,7 @@ interface CelebrityCardProps {
 
 /** Selectable celebrity card for the draft grid (nl-celeb). */
 export function CelebrityCard({ celebrity, selected, onToggle, disabled }: CelebrityCardProps) {
-    const { id, name, age, born, role, status, proposalStatus, photo } = celebrity;
+    const { id, name, age, born, role, status, proposalStatus, gender, photo } = celebrity;
     const isPending = proposalStatus === 'pending';
     const meta = [age > 0 ? `${age} ans` : null, born > 0 ? `${born}` : null]
         .filter(Boolean)
@@ -54,7 +54,11 @@ export function CelebrityCard({ celebrity, selected, onToggle, disabled }: Celeb
                 <div className="text-xs text-ink-3 truncate">{role || '—'}</div>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
-                <StatusBadge status={status} className="h-6 px-1 text-[10px] md:text-xs" />
+                <StatusBadge
+                    status={status}
+                    gender={gender}
+                    className="h-6 px-1 text-[10px] md:text-xs"
+                />
                 {isPending && (
                     <Badge variant="secondary" className="h-6 px-1 text-[10px] md:text-xs px-2.5">
                         En attente

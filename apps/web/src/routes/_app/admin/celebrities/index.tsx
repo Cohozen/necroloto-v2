@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { Plus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { AdminHeader } from '@/components/admin/AdminHeader';
@@ -9,7 +10,9 @@ import { CelebrityTable } from '@/components/admin/CelebrityTable';
 import { CelebrityTableSkeleton } from '@/components/admin/CelebrityTableSkeleton';
 import { MergeCelebrityDialog } from '@/components/admin/MergeCelebrityDialog';
 import { CelebrityFilters } from '@/components/celebrities/CelebrityFilters';
+import { FilterSelect } from '@/components/celebrities/FilterSelect';
 import { SectionLoader } from '@/components/feedback/SectionLoader';
+import { Button } from '@/components/ui/button';
 import { toAdminCelebrity } from '@/lib/api/adapters';
 import {
     useAdminCelebrities,
@@ -23,16 +26,33 @@ import type { AdminCelebrityStatus, CelebrityFilterValues } from '@/lib/api/type
 import { AGE_BUCKETS, GENDER_OPTIONS } from '@/lib/celebrities/facets';
 import type { AdminCelebrity, CatalogFilter } from '@/types/admin';
 
-const CATALOG_FILTERS: CatalogFilter[] = ['all', 'alive', 'deceased', 'pending', 'unlinked'];
+const CATALOG_FILTERS: CatalogFilter[] = ['all', 'alive', 'deceased', 'pending'];
+
+type WikidataFilter = 'linked' | 'unlinked';
+
+/** Status dropdown options. */
+const STATUS_OPTIONS = [
+    { value: 'alive', label: 'Vivant·e' },
+    { value: 'deceased', label: 'Décédé·e' },
+    { value: 'pending', label: 'En attente' },
+];
+
+/** Wikidata-link axis options (orthogonal to status). */
+const WIKIDATA_OPTIONS = [
+    { value: 'linked', label: 'Lié' },
+    { value: 'unlinked', label: 'Non lié' },
+];
 
 interface CatalogueSearch extends CelebrityFilterValues {
     filter?: CatalogFilter;
+    wikidata?: WikidataFilter;
     q?: string;
 }
 
 /**
  * Catalogue filters live in the URL so they survive back-navigation/refresh. Every
  * param is optional (omitted at its default) so links to this route need no search.
+ * Status and the Wikidata-link axis are independent, so they combine freely.
  */
 export const Route = createFileRoute('/_app/admin/celebrities/')({
     validateSearch: (search: Record<string, unknown>): CatalogueSearch => {
@@ -40,6 +60,10 @@ export const Route = createFileRoute('/_app/admin/celebrities/')({
         const filter = CATALOG_FILTERS.includes(search.filter as CatalogFilter)
             ? (search.filter as CatalogFilter)
             : undefined;
+        const wikidata =
+            search.wikidata === 'linked' || search.wikidata === 'unlinked'
+                ? (search.wikidata as WikidataFilter)
+                : undefined;
         const q = str(search.q);
         const category = str(search.category);
         const nationality = str(search.nationality);
@@ -51,6 +75,7 @@ export const Route = createFileRoute('/_app/admin/celebrities/')({
             : undefined;
         return {
             ...(filter && filter !== 'all' ? { filter } : {}),
+            ...(wikidata ? { wikidata } : {}),
             ...(q ? { q } : {}),
             ...(category ? { category } : {}),
             ...(nationality ? { nationality } : {}),
@@ -63,15 +88,35 @@ export const Route = createFileRoute('/_app/admin/celebrities/')({
 
 function AdminCatalogue() {
     const navigate = Route.useNavigate();
-    const { filter = 'all', q = '', category, nationality, gender, age } = Route.useSearch();
+    const {
+        filter = 'all',
+        wikidata,
+        q = '',
+        category,
+        nationality,
+        gender,
+        age,
+    } = Route.useSearch();
     const facetFilters: CelebrityFilterValues = { category, nationality, gender, age };
     // Local mirror of the URL query so typing stays instant; debounced back to the URL.
     const [search, setSearch] = useState(q);
     const [selected, setSelected] = useState<Set<string>>(() => new Set());
 
-    const setFilter = useCallback(
-        (next: CatalogFilter) =>
-            navigate({ search: (prev) => ({ ...prev, filter: next }), replace: true }),
+    const setStatus = useCallback(
+        (next?: string) =>
+            navigate({
+                search: (prev) => ({ ...prev, filter: next as CatalogFilter | undefined }),
+                replace: true,
+            }),
+        [navigate],
+    );
+
+    const setWikidata = useCallback(
+        (next?: string) =>
+            navigate({
+                search: (prev) => ({ ...prev, wikidata: next as WikidataFilter | undefined }),
+                replace: true,
+            }),
         [navigate],
     );
 
@@ -90,6 +135,16 @@ function AdminCatalogue() {
         [navigate],
     );
 
+    // Reset every filter axis (status + wikidata + facets) at once.
+    const resetAll = useCallback(
+        () =>
+            navigate({
+                search: (prev) => ({ q: prev.q }),
+                replace: true,
+            }),
+        [navigate],
+    );
+
     // Debounce the search box back into the URL so each keystroke doesn't fire a request.
     useEffect(() => {
         const id = setTimeout(() => {
@@ -102,15 +157,8 @@ function AdminCatalogue() {
     // Re-sync the input when the URL query changes from the outside (back/forward).
     useEffect(() => setSearch(q), [q]);
 
-    // "unlinked" is a Wikidata-link axis, not a status — map it to that param so it
-    // matches every status (alive/deceased/pending) with no wikidataId.
-    let status: AdminCelebrityStatus = 'all';
-    let wikidata: 'unlinked' | undefined;
-    if (filter === 'unlinked') {
-        wikidata = 'unlinked';
-    } else {
-        status = filter;
-    }
+    // Status and the Wikidata-link axis are independent params, so they combine freely.
+    const status: AdminCelebrityStatus = filter;
     const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage } =
         useAdminCelebrities({ search: q, status, wikidata, filters: facetFilters });
 
@@ -236,15 +284,42 @@ function AdminCatalogue() {
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 p-4 md:p-6">
-            <AdminHeader crumb="Admin" />
-            <CatalogToolbar
-                search={search}
-                onSearchChange={setSearch}
-                filter={filter}
-                onFilterChange={setFilter}
-                total={total}
+            <AdminHeader
+                crumb="Admin"
+                actions={
+                    <Button asChild size="sm" className="h-[38px]">
+                        <Link to="/admin/celebrities/new">
+                            <Plus size={15} strokeWidth={2.2} /> Nouvelle célébrité
+                        </Link>
+                    </Button>
+                }
             />
-            <CelebrityFilters filters={facetFilters} onChange={setFacetFilters} />
+            <CatalogToolbar search={search} onSearchChange={setSearch} />
+            <CelebrityFilters
+                filters={facetFilters}
+                onChange={setFacetFilters}
+                count={total}
+                hasExtraActive={filter !== 'all' || !!wikidata}
+                onReset={resetAll}
+                leading={
+                    <>
+                        <FilterSelect
+                            placeholder="Statut"
+                            allLabel="Tous"
+                            value={filter === 'all' ? undefined : filter}
+                            options={STATUS_OPTIONS}
+                            onSelect={setStatus}
+                        />
+                        <FilterSelect
+                            placeholder="Wikidata"
+                            allLabel="Tous"
+                            value={wikidata}
+                            options={WIKIDATA_OPTIONS}
+                            onSelect={setWikidata}
+                        />
+                    </>
+                }
+            />
             {isLoading ? (
                 <CelebrityTableSkeleton />
             ) : isError ? (

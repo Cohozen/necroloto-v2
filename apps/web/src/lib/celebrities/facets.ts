@@ -20,6 +20,11 @@ export const AGE_BUCKETS: AgeBucket[] = [
     { id: '75plus', label: '75 +', min: 75 },
 ];
 
+/** Age buckets as `{ value, label }` options for the filter dropdown. */
+export function ageBucketOptions(): { value: string; label: string }[] {
+    return AGE_BUCKETS.map((b) => ({ value: b.id, label: b.label }));
+}
+
 /** Gender labels (mirror the API's `deriveGender`). */
 export const GENDER_OPTIONS = ['Homme', 'Femme', 'Autre'] as const;
 

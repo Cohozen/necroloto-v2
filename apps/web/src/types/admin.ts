@@ -12,6 +12,8 @@ export interface AdminCelebrity {
     proposalStatus: CelebrityProposalStatus;
     /** Whether the entry is linked to a Wikidata entity. */
     hasWikidata: boolean;
+    /** Gender label (Homme/Femme/Autre) — agrees the status wording. */
+    gender?: string;
     /** Portrait URL (Wikidata/upload), when known — falls back to a monogram. */
     photo?: string;
     /** Points awarded once deceased (0 while alive). */
@@ -20,4 +22,5 @@ export interface AdminCelebrity {
     bettors: number;
 }
 
-export type CatalogFilter = 'all' | 'alive' | 'deceased' | 'pending' | 'unlinked';
+/** Status axis of the admin catalogue (Wikidata-link is an orthogonal axis). */
+export type CatalogFilter = 'all' | 'alive' | 'deceased' | 'pending';

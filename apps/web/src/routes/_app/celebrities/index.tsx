@@ -191,11 +191,21 @@ function DraftScreen({ userId, year, bets, circles }: DraftScreenProps) {
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 md:p-6">
-            <div>
-                <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-                    Draft · saison {year}
-                </span>
-                <h1 className="font-display text-3xl font-extrabold">Composez votre liste</h1>
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">
+                        Draft · saison {year}
+                    </span>
+                    <h1 className="font-display text-3xl font-extrabold">Composez votre liste</h1>
+                </div>
+                {!locked && (
+                    <ProposeCelebrityDialog onProposed={addToSelection}>
+                        <Button>
+                            <Plus size={17} strokeWidth={2.2} />{' '}
+                            <span className="hidden md:inline">Ajouter</span>
+                        </Button>
+                    </ProposeCelebrityDialog>
+                )}
             </div>
 
             {/* circle selector — the bet is saved against the chosen circle */}
@@ -229,30 +239,24 @@ function DraftScreen({ userId, year, bets, circles }: DraftScreenProps) {
                 </DropdownMenu>
             )}
 
-            <div className="flex items-center gap-2.5">
-                <div className="relative flex-1">
-                    <Search
-                        size={16}
-                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3"
-                    />
-                    <Input
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Rechercher une célébrité…"
-                        className="h-11 pl-10"
-                    />
-                </div>
-                {!locked && (
-                    <ProposeCelebrityDialog onProposed={addToSelection}>
-                        <Button>
-                            <Plus size={17} strokeWidth={2.2} />{' '}
-                            <span className="hidden md:inline">Ajouter</span>
-                        </Button>
-                    </ProposeCelebrityDialog>
-                )}
+            <div className="relative">
+                <Search
+                    size={16}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3"
+                />
+                <Input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Rechercher une célébrité…"
+                    className="h-11 pl-10"
+                />
             </div>
 
-            <CelebrityFilters filters={filters} onChange={setFilters} />
+            <CelebrityFilters
+                filters={filters}
+                onChange={setFilters}
+                count={catalogueQuery.data?.pages[0]?.total}
+            />
 
             {locked && (
                 <p className="rounded-xl border border-line-2 bg-surface px-3.5 py-2.5 text-[13px] text-ink-2">

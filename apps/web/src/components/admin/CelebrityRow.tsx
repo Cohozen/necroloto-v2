@@ -62,7 +62,7 @@ export function CelebrityRow({
             </div>
             <div className="font-mono text-[13px] text-ink-2">{celeb.born}</div>
             <div className="flex flex-wrap items-center gap-1.5">
-                <StatusBadge status={celeb.status} />
+                <StatusBadge status={celeb.status} gender={celeb.gender} />
                 {pending && (
                     <span className="inline-flex h-6 items-center rounded-full border border-coral/40 bg-coral/10 px-2 text-[11px] font-semibold text-coral">
                         En attente

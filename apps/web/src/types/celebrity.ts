@@ -54,6 +54,10 @@ export interface CelebrityDetail {
     role?: string;
     /** Coarse category used for the chip, when known. */
     category?: string;
+    /** Country of citizenship, when known. */
+    nationality?: string;
+    /** Gender label (Homme/Femme/Autre) — agrees the status wording. */
+    gender?: string;
     /** Birth year, 0 when unknown. */
     born: number;
     age: number;

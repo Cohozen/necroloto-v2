@@ -15,6 +15,20 @@ export const Route = createFileRoute('/_app/celebrities/$id')({
     component: CelebrityPage,
 });
 
+/** Labelled pill fact (e.g. category, nationality) for the fiche fact grid. */
+function ChipFact({ label, value }: { label: string; value?: string }) {
+    return (
+        <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">
+                {label}
+            </span>
+            <span className="inline-flex h-[26px] w-fit items-center rounded-full border border-line-2 bg-surface-3 px-2.5 text-xs font-semibold text-ink-2">
+                {value ?? '—'}
+            </span>
+        </div>
+    );
+}
+
 function CelebrityPage() {
     const { id } = Route.useParams();
     const router = useRouter();
@@ -101,20 +115,18 @@ function CelebrityPage() {
                             className="aspect-square w-full"
                         />
                         <div className="absolute bottom-4 left-4 z-10">
-                            <StatusBadge status={celeb.status} deathLabel={celeb.deathLabel} />
+                            <StatusBadge
+                                status={celeb.status}
+                                gender={celeb.gender}
+                                deathLabel={celeb.deathLabel}
+                            />
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 rounded-2xl border border-line bg-surface p-[18px]">
                         <Fact label="Naissance" value={celeb.born > 0 ? `${celeb.born}` : '—'} />
                         <Fact label="Âge" value={celeb.age > 0 ? `${celeb.age} ans` : '—'} />
-                        <div className="col-span-2 flex flex-col gap-1.5">
-                            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-                                Catégorie
-                            </span>
-                            <span className="inline-flex h-[26px] w-fit items-center rounded-full border border-line-2 bg-surface-3 px-2.5 text-xs font-semibold text-ink-2">
-                                {celeb.category ?? '—'}
-                            </span>
-                        </div>
+                        <ChipFact label="Catégorie" value={celeb.category} />
+                        <ChipFact label="Nationalité" value={celeb.nationality} />
                     </div>
                 </div>
 
