@@ -117,7 +117,17 @@ export class CelebritiesController {
     @Post(':id/enrich')
     @UseGuards(AdminGuard)
     enrich(@Param('id') id: string, @Body() dto: EnrichCelebrityDto) {
-        return this.celebritiesService.enrich(id, dto.wikidataId);
+        return this.celebritiesService.enrich(id, dto.wikidataId, {
+            forcePhoto: dto.forcePhoto,
+            photoOnly: dto.photoOnly,
+        });
+    }
+
+    // Admin-only: detach the Wikidata link (keeps the already-filled data).
+    @Delete(':id/wikidata')
+    @UseGuards(AdminGuard)
+    unlinkWikidata(@Param('id') id: string) {
+        return this.celebritiesService.unlinkWikidata(id);
     }
 
     @Get()

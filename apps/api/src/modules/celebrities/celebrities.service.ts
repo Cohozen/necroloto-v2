@@ -544,6 +544,20 @@ export class CelebritiesService {
         });
     }
 
+    /**
+     * Detaches the Wikidata link (sets `wikidataId` to null). The already-filled
+     * data (dates, photo, facets) is kept — only the source link is removed, so a
+     * later re-enrich can re-search by name. No scoring impact.
+     */
+    async unlinkWikidata(id: string) {
+        const celebrity = await this.prisma.celebrity.findUnique({ where: { id } });
+        if (!celebrity) throw new NotFoundException('Celebrity not found');
+        return this.prisma.celebrity.update({
+            where: { id },
+            data: { wikidataId: null },
+        });
+    }
+
     /** Wikidata candidates for a name, for admin disambiguation. */
     searchWikidata(name: string): Promise<WikidataSummary[]> {
         return this.wikidata.searchByName(name);
@@ -555,9 +569,15 @@ export class CelebritiesService {
      * taken from `wikidataId` (explicit choice), else the celebrity's existing link,
      * else the best match for its name. Wikidata values win over existing ones; missing
      * values are left untouched, and the photo is downloaded **only when absent** (re-syncs
-     * keep it). Re-runnable; recomputes points afterwards (a death may now be known).
+     * keep it) unless `opts.forcePhoto` is set. Re-runnable; recomputes points afterwards
+     * (a death may now be known). With `opts.photoOnly`, only the photo is resynchronised
+     * (forced) — dates/role/facets and the rescore are skipped.
      */
-    async enrich(id: string, wikidataId?: string) {
+    async enrich(
+        id: string,
+        wikidataId?: string,
+        opts?: { forcePhoto?: boolean; photoOnly?: boolean },
+    ) {
         const celebrity = await this.prisma.celebrity.findUnique({ where: { id } });
         if (!celebrity) throw new NotFoundException('Celebrity not found');
 
@@ -569,10 +589,22 @@ export class CelebritiesService {
             throw new NotFoundException('No Wikidata match found');
         }
 
+        // Photo-only sync: re-download the photo (forced) and touch nothing else —
+        // no facet labels, no rescore (the photo never affects scoring).
+        if (opts?.photoOnly) {
+            if (!summary.photoFilename) return celebrity;
+            const photo = await this.importPhoto(id, summary.photoFilename);
+            return this.prisma.celebrity.update({
+                where: { id },
+                data: { wikidataId: summary.wikidataId, photo },
+            });
+        }
+
         // Only download from Commons when the celebrity has no photo yet — re-syncs
-        // (e.g. bulk facet backfill) keep the existing one and skip the heavy fetch.
+        // (e.g. bulk facet backfill) keep the existing one and skip the heavy fetch,
+        // unless the caller forces a refresh.
         let photo = celebrity.photo;
-        if (!photo && summary.photoFilename) {
+        if (summary.photoFilename && (!photo || opts?.forcePhoto)) {
             photo = await this.importPhoto(id, summary.photoFilename);
         }
 
