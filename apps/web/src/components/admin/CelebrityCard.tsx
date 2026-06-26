@@ -84,7 +84,7 @@ export function CelebrityCard({
                         {celeb.bettors}
                     </span>
                     <span className="font-mono text-[13px] font-medium text-ink-3">
-                        °{celeb.born}
+                        {celeb.born}
                     </span>
                 </span>
             </div>

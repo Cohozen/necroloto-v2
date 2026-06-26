@@ -10,6 +10,8 @@ interface WikidataIndicatorProps {
 /** Compact pill flagging whether a catalogue row is linked to Wikidata. */
 export function WikidataIndicator({ linked, className }: WikidataIndicatorProps) {
     const label = linked ? 'Lié à Wikidata' : 'Sans Wikidata';
+    if (!linked) return null;
+    
     return (
         <span
             role="img"

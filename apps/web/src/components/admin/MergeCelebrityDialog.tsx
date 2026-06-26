@@ -102,7 +102,7 @@ export function MergeCelebrityDialog({ source, onClose }: MergeCelebrityDialogPr
                                 )}
                             </span>
                             <span className="shrink-0 font-mono text-[12px] text-ink-3">
-                                °{c.born || '?'}
+                                {c.born || '?'}
                             </span>
                         </button>
                     ))}

@@ -148,18 +148,6 @@ export function CelebrityRow({
                         >
                             <Pencil size={16} />
                         </Link>
-                        <button
-                            type="button"
-                            aria-label="Recalculer les points"
-                            className={cn(
-                                'inline-flex size-9 items-center justify-center rounded-[10px] border bg-surface-2',
-                                dead
-                                    ? 'border-neon/40 text-neon'
-                                    : 'border-line-2 text-ink-2 hover:text-ink',
-                            )}
-                        >
-                            <RefreshCw size={16} />
-                        </button>
                     </>
                 )}
             </div>

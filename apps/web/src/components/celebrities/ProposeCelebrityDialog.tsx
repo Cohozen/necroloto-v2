@@ -171,7 +171,7 @@ function SearchStep({ pending, onPick, onManual }: SearchStepProps) {
                                         </span>
                                     )}
                                     <span className="mt-0.5 block font-mono text-[11px] text-ink-3">
-                                        °{yearOf(c.birth)}
+                                        {yearOf(c.birth)}
                                         {c.death ? ` — †${yearOf(c.death)}` : ''}
                                     </span>
                                 </span>
