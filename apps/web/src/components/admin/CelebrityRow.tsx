@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Check, Eye, GitMerge, Globe, Pencil, RefreshCw, User, X } from 'lucide-react';
+import { Check, Eye, GitMerge, Globe, Pencil, User, X } from 'lucide-react';
 import { CelebrityPortrait } from '@/components/celebrities/CelebrityPortrait';
 import { StatusBadge } from '@/components/celebrities/StatusBadge';
 import { Checkbox } from '@/components/ui/checkbox';
