@@ -1,6 +1,20 @@
 import { calculPointByCelebrity } from '@necroloto/shared/scoring';
 import { Link } from '@tanstack/react-router';
-import { Calendar, Camera, Check, Globe, Plus, Sparkles, Trash2, User } from 'lucide-react';
+import {
+    Calendar,
+    Camera,
+    Check,
+    Flag,
+    Globe,
+    ImageIcon,
+    Link2Off,
+    Plus,
+    RefreshCw,
+    Sparkles,
+    Tags,
+    Trash2,
+    User,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CelebrityPortrait } from '@/components/celebrities/CelebrityPortrait';
 import { StatusBadge } from '@/components/celebrities/StatusBadge';
@@ -20,6 +34,12 @@ interface CelebrityFormProps {
     onDelete?: () => void;
     /** Enrich from a chosen Wikidata QID (edit mode — runs immediately). */
     onEnrich?: (wikidataId: string) => void;
+    /** Re-download only the photo from Wikidata (edit mode, linked celebrity). */
+    onSyncPhoto?: () => void;
+    /** Re-enrich the whole fiche from Wikidata, forcing the photo (edit mode, linked). */
+    onSyncAll?: () => void;
+    /** Detach the Wikidata link (edit mode, linked celebrity). */
+    onUnlinkWikidata?: () => void;
     /** Number of lists betting on this celebrity (edit mode, for the scoring inset). */
     bettors?: number;
     isSaving?: boolean;
@@ -57,6 +77,9 @@ export function CelebrityForm({
     onSave,
     onDelete,
     onEnrich,
+    onSyncPhoto,
+    onSyncAll,
+    onUnlinkWikidata,
     bettors = 0,
     isSaving,
     isDeleting,
@@ -139,6 +162,7 @@ export function CelebrityForm({
                         <CelebrityPortrait
                             name={trimmedName || '?'}
                             status={deceased ? 'deceased' : 'alive'}
+                            photo={celebrity?.photo}
                             rounded="rounded-[18px]"
                             className="aspect-square w-full"
                         />
@@ -199,6 +223,26 @@ export function CelebrityForm({
                 />
             </div>
 
+            {/* Wikidata-derived facets — read-only (used for catalogue filters) */}
+            {!create && (
+                <div className="mt-[18px] grid gap-[18px] sm:grid-cols-2">
+                    <IconField
+                        label="Catégorie"
+                        icon={Tags}
+                        readOnly
+                        value={celebrity?.category ?? ''}
+                        placeholder="Non renseignée"
+                    />
+                    <IconField
+                        label="Nationalité"
+                        icon={Flag}
+                        readOnly
+                        value={celebrity?.nationality ?? ''}
+                        placeholder="Non renseignée"
+                    />
+                </div>
+            )}
+
             {/* Wikidata link + search */}
             <div className="mt-[18px] flex flex-col gap-2">
                 <span className="text-[13px] font-semibold text-ink-2">Wikidata</span>
@@ -233,6 +277,38 @@ export function CelebrityForm({
                 <p className="flex items-center gap-1.5 text-xs text-ink-3">
                     <Globe size={12} /> Naissance, décès et photo sont repris depuis Wikidata.
                 </p>
+                {!create && wikidataId && (
+                    <div className="flex flex-wrap gap-2.5">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={onSyncPhoto}
+                            disabled={isEnriching}
+                        >
+                            <ImageIcon size={15} strokeWidth={2} />
+                            Synchroniser la photo
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={onSyncAll}
+                            disabled={isEnriching}
+                        >
+                            <RefreshCw size={15} strokeWidth={2} />
+                            Tout synchroniser
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={onUnlinkWikidata}
+                            disabled={isEnriching}
+                            className="text-coral hover:bg-coral/10 hover:text-coral"
+                        >
+                            <Link2Off size={15} strokeWidth={2} />
+                            Retirer la source
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {/* status block */}

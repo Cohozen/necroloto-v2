@@ -483,6 +483,18 @@ export function useEnrichCelebrity() {
     });
 }
 
+/** Detach the Wikidata link from a celebrity (DELETE /celebrities/:id/wikidata). */
+export function useUnlinkWikidata(id: string) {
+    const api = useApiClient();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: () => api.delete<ApiCelebrity>(`/celebrities/${id}/wikidata`),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['celebrities'] });
+        },
+    });
+}
+
 /**
  * Propose a missing celebrity from the bet draft (POST /celebrities/propose).
  * The API creates it PENDING (or returns an existing dedup match). Invalidates

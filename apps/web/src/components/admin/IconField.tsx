@@ -22,6 +22,8 @@ interface IconFieldProps {
     trailing?: ReactNode;
     /** Helper / validation line below the input. */
     message?: ReactNode;
+    /** Display-only value (no editing) — for Wikidata-derived facts. */
+    readOnly?: boolean;
 }
 
 const stateRing = {
@@ -44,6 +46,7 @@ export function IconField({
     state = 'default',
     trailing,
     message,
+    readOnly,
 }: IconFieldProps) {
     const controlled = onChange !== undefined;
     return (
@@ -55,17 +58,23 @@ export function IconField({
             <div
                 className={cn(
                     'flex h-[50px] items-center gap-2.5 rounded-xl border bg-surface-2 px-3.5 transition-colors',
-                    stateRing[state],
+                    readOnly ? 'border-line-2 opacity-80' : stateRing[state],
                 )}
             >
                 <Icon size={18} className="shrink-0 text-ink-3" />
                 <input
                     type={type}
-                    {...(controlled
-                        ? { value: value ?? '', onChange: (e) => onChange?.(e.target.value) }
-                        : { defaultValue })}
+                    readOnly={readOnly}
+                    {...(readOnly
+                        ? { value: value ?? '' }
+                        : controlled
+                          ? { value: value ?? '', onChange: (e) => onChange?.(e.target.value) }
+                          : { defaultValue })}
                     placeholder={placeholder}
-                    className="min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-3 [color-scheme:dark]"
+                    className={cn(
+                        'min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-3 [color-scheme:dark]',
+                        readOnly && 'cursor-default text-ink-2',
+                    )}
                 />
                 {trailing}
                 {state === 'ok' && !trailing && <Check size={18} className="shrink-0 text-neon" />}

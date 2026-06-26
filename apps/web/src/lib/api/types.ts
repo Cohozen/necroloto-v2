@@ -333,6 +333,10 @@ export type UpdateCelebrityPayload = Partial<CreateCelebrityPayload>;
 export interface EnrichCelebrityPayload {
     /** Explicit Wikidata QID; the API falls back to the existing link or name. */
     wikidataId?: string;
+    /** Re-download the Commons photo even when one already exists. */
+    forcePhoto?: boolean;
+    /** Only resynchronise the photo (skips dates/role/facets and the rescore). */
+    photoOnly?: boolean;
 }
 
 /** A player proposing a missing celebrity from the bet draft (POST /celebrities/propose). */
