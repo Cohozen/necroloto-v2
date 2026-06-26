@@ -26,6 +26,11 @@ ferme — à arbitrer au fil de l'eau.
   bulk-enrich. Plus **« Retirer la source »** (`DELETE /celebrities/:id/wikidata` → `wikidataId` null,
   données conservées). Pages d'édition/création élargies à `max-w-6xl` (alignées sur la liste admin).
   Détail → `CLAUDE.md` §Async jobs + §Front admin.
+- 🎯 **Hero fiche : joueurs impactés par saison** — le `PointsHero` de la fiche célébrité compte
+  désormais les **vrais** joueurs concernés par les points affichés (le scoring étant annuel) :
+  parieurs de la **saison du décès** pour les points attribués, parieurs de la **saison active** pour
+  le gain potentiel — au lieu du total toutes saisons. `toCelebrityDetail` expose `impactedBettors`
+  (la liste « Qui a parié » montre toujours toutes les saisons). Détail → `CLAUDE.md` §fiche.
 - 📱 **PWA + Web Push** — l'app web est désormais **installable** (manifest + service worker via
   `vite-plugin-pwa` en stratégie `injectManifest`, SW custom `apps/web/src/sw.ts` pour les
   handlers `push`/`notificationclick`, icônes générées par `scripts/generate-favicon.mjs`). Les

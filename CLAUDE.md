@@ -417,7 +417,10 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   URL degrades cleanly) with a **gender-aware status badge** (`StatusBadge` agrees Vivant/Vivante ·
   Décédé/Décédée from `gender`, inclusive `·e` fallback — also used on the draft/admin cards), Wikidata
   facts (role/category/**nationality**/birth/age), a `PointsHero`
-  (awarded vs potential, on the **active season** via `useSeasonYear`), and **"Qui a parié dessus"
+  (awarded vs potential, on the **active season** via `useSeasonYear`; its **player count =
+  `CelebrityDetail.impactedBettors`**, scoped to the season the points belong to — **death-season**
+  bettors when deceased, **active-season** bettors when alive — not the all-seasons `bettors.length`,
+  since scoring is per-year), and **"Qui a parié dessus"
   grouped by season** ("Cette saison" first, then past years desc — `Bettor.year` carried from
   `bet.year`; the API already returns every year). Each bettor row shows a **per-bet `outcome`**
   (`toCelebrityDetail` takes the active year): `scored` (+pts), `potential` (current season, still in
