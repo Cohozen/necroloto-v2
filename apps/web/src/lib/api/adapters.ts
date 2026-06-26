@@ -1,7 +1,7 @@
 // Maps API DTOs (Api*) to the UI domain types consumed by the screens. Keeps the
 // transformation in one place so routes only deal with view models.
 
-import { calculPointByCelebrity } from '@necroloto/shared/scoring';
+import { calculPointByCelebrity, deathYear } from '@necroloto/shared/scoring';
 import type { AdminCelebrity } from '@/types/admin';
 import type {
     Bettor,
@@ -286,6 +286,12 @@ export function toCelebrityDetail(
         };
     });
 
+    // Players actually impacted by the points shown in the hero: for the awarded
+    // points (dead) only the death-season bettors are credited; for the potential
+    // (alive) only the current-season bettors could earn it. Scoring is per-year.
+    const impactedYear = dead && c.death ? deathYear(new Date(c.death)) : activeYear;
+    const impactedBettors = bettors.filter((b) => b.year === impactedYear).length;
+
     return {
         id: c.id,
         name: c.name,
@@ -301,6 +307,7 @@ export function toCelebrityDetail(
         photo: c.photo ?? undefined,
         wikidataId: c.wikidataId ?? undefined,
         bettors,
+        impactedBettors,
     };
 }
 

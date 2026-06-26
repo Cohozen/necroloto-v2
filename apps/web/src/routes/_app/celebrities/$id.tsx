@@ -136,7 +136,7 @@ function CelebrityPage() {
                         status={celeb.status}
                         points={celeb.points}
                         year={year}
-                        bettors={celeb.bettors.length}
+                        bettors={celeb.impactedBettors}
                         deathLabel={celeb.deathLabel}
                     />
 

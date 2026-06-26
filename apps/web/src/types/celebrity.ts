@@ -71,4 +71,9 @@ export interface CelebrityDetail {
     /** Wikidata entity id (e.g. "Q42"), when linked — powers the Wikidata link. */
     wikidataId?: string;
     bettors: Bettor[];
+    /**
+     * Players actually impacted by the hero points, scoped to the relevant season:
+     * death-season bettors when deceased, current-season bettors when alive.
+     */
+    impactedBettors: number;
 }
