@@ -18,6 +18,14 @@ ferme — à arbitrer au fil de l'eau.
   429/503 avec backoff (`Retry-After`), sémaphore baissé à 2, et photo re-téléchargée **seulement si absente**
   (un scan complet de prod tombait en cascade de 429 après ~70 fiches). _Reste_ : relancer le bulk-enrich
   post-déploiement pour peupler les fiches prod ; photo-upload toujours non câblé.
+- 🖼️ **Formulaire d'édition célébrité (admin) enrichi** — la fiche admin **affiche enfin la photo**
+  Wikidata dans le portrait (était monogramme-only) et la **catégorie / nationalité** en lecture seule
+  (`IconField` gagne un prop `readOnly`). Deux boutons de resync dans le bloc Wikidata : **« Synchroniser
+  la photo »** (`enrich` `photoOnly` — re-télécharge **uniquement** la photo, forcée) et **« Tout
+  synchroniser »** (`forcePhoto` — re-enrichit tout + force la photo), contournant le skip-photo du
+  bulk-enrich. Plus **« Retirer la source »** (`DELETE /celebrities/:id/wikidata` → `wikidataId` null,
+  données conservées). Pages d'édition/création élargies à `max-w-6xl` (alignées sur la liste admin).
+  Détail → `CLAUDE.md` §Async jobs + §Front admin.
 - 📱 **PWA + Web Push** — l'app web est désormais **installable** (manifest + service worker via
   `vite-plugin-pwa` en stratégie `injectManifest`, SW custom `apps/web/src/sw.ts` pour les
   handlers `push`/`notificationclick`, icônes générées par `scripts/generate-favicon.mjs`). Les

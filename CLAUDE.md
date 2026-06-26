@@ -177,7 +177,11 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   each `enrich` fans out into several Wikidata calls, so a big bulk sync used to trip Wikidata's per-IP
   limiter (HTTP 429) after ~70 items and then cascade into all-errors (no backoff). `WikidataService.
   fetchJson` now **retries 429/503 with backoff** (honours `Retry-After`); the low semaphore + the photo
-  skip (`enrich` only downloads the Commons photo when the row has none) keep bulk backfills under the limit.
+  skip (`enrich` only downloads the Commons photo when the row has none — bulk-enrich uses this default)
+  keep bulk backfills under the limit. ⚠️ `enrich` takes an `opts` object: `forcePhoto` (re-download even
+  when a photo exists) and `photoOnly` (resync **only** the photo — skip dates/role/facets + the rescore);
+  both default off, so existing callers are unchanged. They back the edit form's "Synchroniser la photo" /
+  "Tout synchroniser" buttons (see the admin front bullet).
   ⚠️ The in-process
   trade-off: a job left `RUNNING`/`PENDING` when the process restarts (Railway redeploy) is
   **reconciled to `FAILED`** on boot (`onApplicationBootstrap`) — there is no resume. Death detection
@@ -341,7 +345,13 @@ Develop against a **local Supabase stack**, never prod. Prod config stays as-is
   toasts. Only the **per-row "Recalculer" button stays decorative**
   (recalc is automatic on update server-side). The form sends ISO dates; `wikidataId` is set only
   via `POST /celebrities/:id/enrich` (no field on the create/update DTOs), reached through the
-  `WikidataSearchDialog`. Pending rows (Statut = "En attente", `status=pending`) show the proposal badge and
+  `WikidataSearchDialog`, and **cleared** via `DELETE /celebrities/:id/wikidata` (`useUnlinkWikidata` —
+  the form's "Retirer la source" button; keeps the already-filled data). The edit form (`CelebrityForm`,
+  edit mode + linked fiche) also shows the **actual Wikidata photo** in the portrait and two resync
+  buttons — **"Synchroniser la photo"** (`enrich` `photoOnly`) and **"Tout synchroniser"** (`forcePhoto`)
+  — plus **read-only Catégorie / Nationalité** fields (`IconField` `readOnly` prop) surfacing the
+  Wikidata-derived facets. The edit + create routes use `max-w-6xl` (matching the admin list page).
+  Pending rows (Statut = "En attente", `status=pending`) show the proposal badge and
   swap their edit/recalc actions for **approve / reject / verify-on-Wikidata / merge**
   (`useApproveCelebrity`/`useRejectCelebrity`/`useMergeCelebrities`; see "Celebrity
   proposals"). Merge opens `MergeCelebrityDialog` (search the approved catalogue for the target).
